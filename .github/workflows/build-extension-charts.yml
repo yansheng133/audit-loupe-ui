@@ -13,9 +13,12 @@ defaults:
 jobs:
   build-extension-charts:
     uses: rancher/dashboard/.github/workflows/build-extension-charts.yml@master
+    # Permissions as in Rancher's publishing guide (extensions.rancher.io, "Publishing an Extension").
     permissions:
+      actions: write
       contents: write
-      pull-requests: write
+      deployments: write
+      pages: write
     with:
       target_branch: gh-pages
       tagged_release: ${{ github.ref_name }}

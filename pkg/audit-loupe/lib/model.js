@@ -3,6 +3,18 @@
 
 // ---------- text ----------
 const ZH = {
+  layout: {
+    tabs: { attention: '需要注意', feed: '所有操作', objects: '物件', people: '人員' },
+    navCollapse: '收合選單', navExpand: '展開選單', fullEnter: '全螢幕', fullExit: '結束全螢幕',
+    tlHide: '收起時間軸', tlShow: '展開時間軸', date: '日期',
+    summaryAttn: (n, list) => `${ n } 件需要注意：${ list }`, summaryQuiet: '這段時間沒有中、高風險的操作',
+    summaryMore: (n) => `等 ${ n } 件`, sysHidden: (n) => `另有 ${ n } 筆系統元件操作沒算進來`,
+    gap: (cluster, kind, a, b) => `${ cluster } 的${ kind }收集元件在 ${ a }–${ b } 沒有回報，這段時間的紀錄可能不完整`,
+    gapOpen: (cluster, kind, a) => `${ cluster } 的${ kind }收集元件從 ${ a } 起沒有回報，這段時間的紀錄可能不完整`,
+    gapNote: '收集元件恢復後會從上次讀到的位置補送；這段期間的 log 若已被節點輪替刪掉，就補不回來。',
+    cfgRotation: '取決於設定：節點上 audit log 的輪替保留量',
+    feedEmpty: '這段時間沒有操作。', objectsHint: '點物件看它的每一步操作',
+  },
   access: {
     title: '權限覆核', at: '時間點', compareFrom: '比較起點', apply: '套用', csv: '匯出 CSV', people: '人員', search: '搜尋名字或 ID', pick: '選一個人',
     groups: '群組', role: '權限', scope: '範圍', via: '取得方式', grantedBy: '授權者', grantedAt: '授權時間', direct: '直接授予', group: '群組',
@@ -104,6 +116,18 @@ const ZH = {
 };
 
 const EN = {
+  layout: {
+    tabs: { attention: 'Needs attention', feed: 'All actions', objects: 'Objects', people: 'People' },
+    navCollapse: 'Collapse menu', navExpand: 'Expand menu', fullEnter: 'Full screen', fullExit: 'Exit full screen',
+    tlHide: 'Hide timeline', tlShow: 'Show timeline', date: 'Day',
+    summaryAttn: (n, list) => `${ n } need attention: ${ list }`, summaryQuiet: 'No medium or high risk actions in this period',
+    summaryMore: (n) => `and ${ n } more`, sysHidden: (n) => `${ n } system component actions not counted`,
+    gap: (cluster, kind, a, b) => `The ${ kind } collector on ${ cluster } did not report ${ a }–${ b }; records for that time may be incomplete`,
+    gapOpen: (cluster, kind, a) => `The ${ kind } collector on ${ cluster } has not reported since ${ a }; records for that time may be incomplete`,
+    gapNote: 'A collector resends from where it stopped once it is back; log the node has already rotated away cannot be recovered.',
+    cfgRotation: 'Depends on: audit log rotation on the nodes',
+    feedEmpty: 'No actions in this period.', objectsHint: 'Click an object to see each step',
+  },
   access: {
     title: 'Access review', at: 'As of', compareFrom: 'Compare from', apply: 'Apply', csv: 'Export CSV', people: 'People', search: 'Search name or ID', pick: 'Pick a person',
     groups: 'Groups', role: 'Permission', scope: 'Scope', via: 'Obtained', grantedBy: 'Granted by', grantedAt: 'Granted at', direct: 'Direct', group: 'Group',
@@ -453,7 +477,7 @@ export function buildModel({
 
   for (const r of rows) {
     const ts = new Date(r.ts).getTime();
-    const t = Math.round((ts - start) / 60000);
+    const t = Math.floor((ts - start) / 60000);
 
     if (t < 0 || t > 1440) {
       continue;
@@ -499,7 +523,7 @@ export function buildModel({
 
   for (const u of unattributed) {
     const ts = new Date(u.observed).getTime();
-    const t = Math.round((ts - start) / 60000);
+    const t = Math.floor((ts - start) / 60000);
 
     if (t < 0 || t > 1440) {
       continue;

@@ -3,7 +3,8 @@ import {
   sevOf, worst, isRisky, fmtDate
 } from '../lib/model';
 
-// Left column: totals, what needs attention (stories grouped by the server), who did what.
+// Left panel tabs: what needs attention (stories grouped by the server), or who did what.
+// `show` picks the tab; totals and load notices live in the change map's summary strip.
 export default {
   name:  'AuditLoupeSidePanel',
   props: {
@@ -18,6 +19,7 @@ export default {
     selEvent:  { type: String, default: null },
     loading:   { type: Boolean, default: false },
     truncated: { type: Boolean, default: false },
+    show:      { type: String, default: 'attention' },
   },
   emits: ['select', 'actor', 'lifetime'],
 
@@ -26,13 +28,6 @@ export default {
   },
 
   computed: {
-    stats() {
-      return [
-        [this.visible.length, this.T.ops],
-        [new Set(this.visible.filter((e) => e.change).map((e) => e.obj)).size, this.T.objChanged],
-        [this.visible.filter(isRisky).length, this.T.needAttention],
-      ];
-    },
     cards() {
       return this.stories.map((s) => {
         const evs = s.evs;
@@ -84,71 +79,43 @@ export default {
 
 <template>
   <div class="side">
-    <div
-      v-if="loading"
-      class="quiet"
-    >
-      {{ T.loading }}
-    </div>
-    <div
-      v-if="truncated"
-      class="quiet"
-    >
-      {{ T.truncated(2000) }}
-    </div>
-    <div class="stats">
+    <template v-if="show === 'attention'">
       <div
-        v-for="[v, k] in stats"
-        :key="k"
-        class="stat"
+        v-if="!cards.length"
+        class="quiet"
       >
-        <div class="v num">
-          {{ v }}
-        </div>
-        <div class="k">
-          {{ k }}
-        </div>
+        {{ loading ? T.loading : T.quiet }}
       </div>
-    </div>
-
-    <div class="sub">
-      <span>{{ T.needAttention }}</span><span v-if="cards.length">{{ cards.length }} {{ T.items }}</span>
-    </div>
-    <div
-      v-if="!cards.length"
-      class="quiet"
-    >
-      {{ T.quiet }}
-    </div>
-    <div
-      v-else
-      class="att-list"
-    >
-      <button
-        v-for="c in cards"
-        :key="c.id"
-        type="button"
-        class="att"
-        :class="[c.sev, {sel: c.sel}]"
-        @click="$emit('select', c.first.obj, c.first.id)"
+      <div
+        v-else
+        class="att-list"
       >
-        <span class="bar" />
-        <div class="body">
-          <div class="top">
-            <span
-              class="pill"
-              :class="c.sev"
-            >{{ T.risk(T.sev[c.sev]) }}</span>
-            <span class="num">{{ c.evs.map((e) => e.hhmm).join('、') }}</span>
-            <span>{{ c.via }}</span>
+        <button
+          v-for="c in cards"
+          :key="c.id"
+          type="button"
+          class="att"
+          :class="[c.sev, {sel: c.sel}]"
+          @click="$emit('select', c.first.obj, c.first.id)"
+        >
+          <span class="bar" />
+          <div class="body">
+            <div class="top">
+              <span
+                class="pill"
+                :class="c.sev"
+              >{{ T.risk(T.sev[c.sev]) }}</span>
+              <span class="num">{{ c.evs.map((e) => e.hhmm).join('、') }}</span>
+              <span>{{ c.via }}</span>
+            </div>
+            <span class="headline">{{ c.headline }}</span>
+            <span class="why">{{ c.why }}</span>
           </div>
-          <span class="headline">{{ c.headline }}</span>
-          <span class="why">{{ c.why }}</span>
-        </div>
-      </button>
-    </div>
+        </button>
+      </div>
+    </template>
 
-    <template v-if="people.length">
+    <template v-if="show === 'people' && people.length">
       <div class="sub">
         <span>{{ T.whoDid }}</span><span>{{ actor ? T.clickAgain : T.clickName }}</span>
       </div>
@@ -202,7 +169,10 @@ export default {
         </template>
       </div>
     </template>
-    <p class="hint">
+    <p
+      v-if="show === 'people'"
+      class="hint"
+    >
       {{ T.coverageHint }}
     </p>
   </div>

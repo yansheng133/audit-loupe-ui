@@ -19,8 +19,9 @@ export default {
     selEvent: { type: String, default: null },
     work:     { type: Array, default: () => [9, 18] },
     day:      { type: String, default: '' },
+    open:     { type: Boolean, default: true },
   },
-  emits: ['range', 'select'],
+  emits: ['range', 'select', 'toggle'],
 
   data() {
     return {
@@ -176,10 +177,13 @@ export default {
   <section class="timeline">
     <div class="tl-head">
       <span class="range num">{{ T.rangeLabel(fmtMin(a), fmtMin(b)) }}</span>
-      <span class="keys">{{ T.keys }}・{{ day }}</span>
+      <span
+        v-if="open"
+        class="keys"
+      >{{ T.keys }}・{{ day }}</span>
       <div class="presets">
         <button
-          v-for="[p, q, label] in presets"
+          v-for="[p, q, label] in (open ? presets : [])"
           :key="label"
           type="button"
           class="btn-al"
@@ -188,9 +192,18 @@ export default {
         >
           {{ label }}
         </button>
+        <button
+          type="button"
+          class="btn-al"
+          :aria-expanded="open ? 'true' : 'false'"
+          @click="$emit('toggle')"
+        >
+          {{ open ? T.layout.tlHide : T.layout.tlShow }}
+        </button>
       </div>
     </div>
     <div
+      v-show="open"
       ref="wrap"
       class="tl-wrap"
     >

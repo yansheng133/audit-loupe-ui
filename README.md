@@ -13,12 +13,15 @@ The Rancher UI extension for Audit Loupe. Backend, chart and docs: [yansheng133/
 
 ## 開發 / Develop
 
+本機不用裝 Node 24：開發伺服器跑在 SUSE BCI Node.js 24 容器裡（需要 Rancher Desktop 之類的容器引擎）。
+
 ```bash
-yarn install --frozen-lockfile
-yarn build-pkg audit-loupe
+API=https://<Rancher 網址> scripts/dev.sh
 ```
 
-本機測試可用 `yarn serve-pkgs`，再在 Rancher 的 Extensions 頁面用 Developer Load 載入。
+打開 `https://127.0.0.1:8005`（自簽憑證），在那裡登入 Rancher。改 `pkg/` 底下的檔案，瀏覽器會自動更新。macOS 掛進容器的資料夾收不到檔案變更通知，所以 `dev.sh` 預設用輪詢偵測變更，存檔後約 5～7 秒更新。不需要輪詢的環境可以加 `WATCHPACK_POLLING=false` 關掉。
+
+打包由 CI 負責（每個 PR 都會跑官方的建置測試），本機不需要另外打包。
 
 ## 發佈 / Release
 

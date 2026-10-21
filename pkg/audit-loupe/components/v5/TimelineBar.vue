@@ -1,5 +1,8 @@
 <script>
 import { fmtTime, shiftDay, eventReason } from '../../lib/v5';
+import {
+  dayLength, minuteAt, pickRange, barHeights, pctOf
+} from '../../lib/timeline';
 
 // Bottom timeline, on every tab. One merged line by default; one line per selected cluster
 // (per-minute slots when one is selected, as sent by the backend). Each slot is a bar: height =
@@ -26,18 +29,21 @@ export default {
     slotMs() {
       return (this.timeline?.slotMinutes || 10) * 60000;
     },
+    dayMs() {
+      return dayLength(this.timeline);
+    },
     gaps() {
       return this.timeline?.gaps || [];
     },
     sel() {
       const r = this.drag ? [Math.min(this.drag.a, this.drag.b), Math.max(this.drag.a, this.drag.b)] : this.range;
 
-      return r ? { left: this.pct(r[0]), width: `${ Math.max(0.5, ((r[1] - r[0]) / 864e5) * 100) }%` } : null;
+      return r ? { left: this.pct(r[0]), width: `${ Math.max(0.5, ((r[1] - r[0]) / this.dayMs) * 100) }%` } : null;
     },
   },
   methods: {
     pct(t) {
-      return `${ Math.min(100, Math.max(0, ((t - this.d0) / 864e5) * 100)) }%`;
+      return `${ pctOf(t, this.d0, this.dayMs) }%`;
     },
     // Runs of equal state merged, so a day of 1440 slots draws a handful of segments.
     segments(line) {
@@ -57,14 +63,8 @@ export default {
 
       return out;
     },
-    marks(line) {
-      return (line.slots || []).filter((s) => s.ops > 0);
-    },
     bars(line) {
-      const marks = this.marks(line);
-      const max = Math.max(1, ...marks.map((s) => s.ops));
-
-      return marks.map((s) => ({ ...s, h: Math.max(12, Math.round((Math.sqrt(s.ops) / Math.sqrt(max)) * 100)) }));
+      return barHeights(line.slots);
     },
     barTitle(s) {
       const state = this.T.states[s.state] || this.T.tl.legend[s.state] || '';
@@ -76,9 +76,8 @@ export default {
     },
     at(e) {
       const r = this.$refs.track.getBoundingClientRect();
-      const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
 
-      return this.d0 + Math.round((f * 1440)) * 60000;
+      return minuteAt((e.clientX - r.left) / r.width, this.d0, this.dayMs);
     },
     down(e) {
       const t = this.at(e);
@@ -100,21 +99,7 @@ export default {
       if (!d) {
         return;
       }
-      if (Math.abs(d.b - d.a) >= 5 * 60000) {
-        // A drag snaps outwards to whole slots, so the range matches the bars it covers.
-        const lo = Math.min(d.a, d.b) - this.d0;
-        const hi = Math.max(d.a, d.b) - this.d0;
-
-        this.$emit('range', [
-          this.d0 + Math.floor(lo / this.slotMs) * this.slotMs,
-          this.d0 + Math.min(864e5, Math.ceil(hi / this.slotMs) * this.slotMs),
-        ]);
-      } else {
-        // A click picks the slot under it.
-        const start = this.d0 + Math.floor((d.a - this.d0) / this.slotMs) * this.slotMs;
-
-        this.$emit('range', [start, start + this.slotMs]);
-      }
+      this.$emit('range', pickRange(d.a, d.b, this.d0, this.slotMs, this.dayMs));
     },
     fmt(ms) {
       return fmtTime(ms, this.tz);
@@ -158,7 +143,7 @@ export default {
       <b
         v-if="range"
         class="num"
-      >{{ fmt(range[0]) }}–{{ fmt(range[1]) }}</b>
+      >{{ fmt(range[0]) }}–{{ range[1] >= d0 + dayMs ? '24:00' : fmt(range[1]) }}</b>
       <span
         v-else
         class="muted"
@@ -205,14 +190,14 @@ export default {
             :key="`s${j}`"
             class="seg"
             :class="s.state"
-            :style="{left: pct(s.start), width: `${((s.end - s.start) / 864e5) * 100}%`}"
+            :style="{left: pct(s.start), width: `${((s.end - s.start) / dayMs) * 100}%`}"
           />
           <i
             v-for="(g, j) in lineGaps(l)"
             :key="`g${j}`"
             class="gap"
             :class="g.kind"
-            :style="{left: pct(g.fromMs), width: `${((Math.min(g.toMs, d0 + 864e5) - Math.max(g.fromMs, d0)) / 864e5) * 100}%`}"
+            :style="{left: pct(g.fromMs), width: `${((Math.min(g.toMs, d0 + dayMs) - Math.max(g.fromMs, d0)) / dayMs) * 100}%`}"
             :title="gapTitle(g)"
           />
           <i
@@ -220,7 +205,7 @@ export default {
             :key="`m${j}`"
             class="bar"
             :class="s.state"
-            :style="{left: pct(s.t), width: `${(slotMs / 864e5) * 100}%`, height: `${s.h}%`}"
+            :style="{left: pct(s.t), width: `${(slotMs / dayMs) * 100}%`, height: `${s.h}%`}"
             :title="barTitle(s)"
           />
         </div>

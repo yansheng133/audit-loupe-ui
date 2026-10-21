@@ -63,6 +63,7 @@
   .multi-pop { position: fixed; z-index: 20; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; background: var(--al-surface); border: 1px solid var(--al-border); border-radius: 4px; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); color: var(--al-fg); }
   .multi-pop label { display: flex; gap: 6px; align-items: center; margin: 0; color: var(--al-fg); font-size: 13px; }
   .tz { color: var(--al-muted); padding-left: 12px; border-left: 1px solid var(--al-border); cursor: help; }
+  .tz.slow { color: var(--dim); font-weight: 600; }
 
   .al5-progress { visibility: hidden; }
   .al5-progress.on { visibility: visible; height: 3px; background: linear-gradient(90deg, transparent, var(--al-primary), transparent); background-size: 50% 100%; background-repeat: no-repeat; animation: al5-move 1.2s linear infinite; }

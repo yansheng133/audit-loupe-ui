@@ -55,6 +55,9 @@ export default {
       seq:        0,
       full:       false,
       panelW:     savedPanelWidth(),
+      shownMs:    null,
+      shownWhat:  '',
+      openedAt:   (typeof performance !== 'undefined' ? performance.now() : 0),
     };
   },
 
@@ -146,6 +149,8 @@ export default {
     async load(cursor = null, onlySelect = false) {
       const params = apiParams(this.v, cursor);
       const my = ++this.seq;
+      // The first view counts from opening the page; later ones from the click that asked.
+      const t0 = this.shownMs === null ? this.openedAt : performance.now();
 
       this.loading = true;
       this.error = '';
@@ -166,6 +171,7 @@ export default {
           this.next = res.next ?? null;
         }
         this.detailOpen = true;
+        this.timed(t0, cursor ? 'more' : 'view', my);
       } catch (e) {
         if (my !== this.seq) {
           return;
@@ -188,6 +194,7 @@ export default {
     // call (older v0) answers a bare 404; then the whole page is asked for, as before.
     async loadDetail(key) {
       const my = ++this.seq;
+      const t0 = performance.now();
 
       this.loading = true;
       try {
@@ -196,6 +203,7 @@ export default {
         if (my === this.seq) {
           this.data = { ...(this.data || {}), detail: d };
           this.detailOpen = true;
+          this.timed(t0, 'detail', my);
         }
       } catch (e) {
         if (my !== this.seq) {
@@ -213,6 +221,31 @@ export default {
           this.loading = false;
         }
       }
+    },
+
+    // How long the screen took to show, measured in the browser after the rows are painted
+    // (requirements: the whole page within 5 seconds). Kept in window.__auditLoupeTimings for
+    // the lab measurement procedure.
+    timed(t0, what, my) {
+      // A tab in the background draws nothing, so there it counts until the rows are in place.
+      const after = (f) => (document.visibilityState === 'hidden' ? setTimeout(f, 0) : requestAnimationFrame(f));
+
+      this.$nextTick(() => after(() => {
+        if (my !== this.seq) {
+          return;
+        }
+        const ms = Math.round(performance.now() - t0);
+        const log = (window.__auditLoupeTimings = window.__auditLoupeTimings || []);
+
+        this.shownMs = ms;
+        this.shownWhat = what;
+        log.push({
+          what, ms, at: Date.now(), view: { ...this.v }
+        });
+        if (log.length > 200) {
+          log.shift();
+        }
+      }));
     },
 
     // The note row: the data note (prototype servers) and work in progress (API v0.2).
@@ -410,6 +443,12 @@ export default {
           class="tz"
           :title="T.tzHint(tz, data ? T.tzServer : 'browser')"
         >{{ T.tz }} {{ tz }}</span>
+        <span
+          v-if="shownMs !== null"
+          class="tz shown"
+          :class="{slow: shownMs > 5000}"
+          :title="T.shownHint"
+        >{{ T.shown(shownMs) }}</span>
         <button
           type="button"
           class="btn-al full-btn"

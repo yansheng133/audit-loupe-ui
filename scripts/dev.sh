@@ -6,7 +6,8 @@
 #   then open https://127.0.0.1:8005 (self-signed certificate) and log in to Rancher there.
 #
 # AL_LOCAL_API=http://host.docker.internal:18090 sends the Audit Loupe backend path to a backend
-# on this Mac (bound to 127.0.0.1 there) instead of the one in Rancher; see vue.config.js.
+# on this Mac (bound to 127.0.0.1 there) instead of the one in Rancher; AL_LOCAL_API=<directory>
+# answers it from saved fixture-<day>-<tab>.json files (mounted read-only). See vue.config.js.
 # PORT and NAME change the published port and container name, to run next to another copy.
 #
 # Needs a running container engine (Rancher Desktop). node_modules live in a named volume, not
@@ -25,6 +26,12 @@ POLL="${WATCHPACK_POLLING:-true}"
 cd "$(dirname "$0")/.."
 tty=()
 [ -t 0 ] && tty=(-it)
+local_api="${AL_LOCAL_API:-}"
+mounts=()
+if [ -n "$local_api" ] && [ -d "$local_api" ]; then
+  mounts=(-v "$(cd "$local_api" && pwd)":/al-fixtures:ro)
+  local_api=/al-fixtures
+fi
 
 exec docker run --rm --init "${tty[@]}" \
   --name "${NAME:-audit-loupe-ui-dev}" \
@@ -33,6 +40,7 @@ exec docker run --rm --init "${tty[@]}" \
   -v audit-loupe-ui-node-modules:/work/node_modules \
   -v audit-loupe-ui-npm-cache:/root/.npm \
   -v audit-loupe-ui-yarn-cache:/usr/local/share/.cache/yarn \
-  -e API -e AL_LOCAL_API="${AL_LOCAL_API:-}" -e WATCHPACK_POLLING="$POLL" \
+  ${mounts[@]+"${mounts[@]}"} \
+  -e API -e AL_LOCAL_API="$local_api" -e WATCHPACK_POLLING="$POLL" \
   "$IMAGE" \
   sh -c "npx -y $YARN install --frozen-lockfile && exec npx -y $YARN dev"

@@ -38,7 +38,8 @@ export function baseUrl(cluster = backendCluster()) {
 }
 
 export async function getJson(path, params = {}) {
-  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')).toString();
+  // URLSearchParams pass through as is, so a parameter can repeat (cluster=a&cluster=b).
+  const qs = (params instanceof URLSearchParams ? params : new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))).toString();
   const res = await fetch(`${ baseUrl() }${ path }${ qs ? `?${ qs }` : '' }`, {
     credentials: 'same-origin',
     headers:     { Accept: 'application/json' },

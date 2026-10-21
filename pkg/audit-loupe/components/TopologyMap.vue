@@ -1,7 +1,5 @@
 <script>
-import {
-  netState, sevOf, worst, KIND_TAG
-} from '../lib/model';
+import { netState, sevOf, worst, KIND_TAG } from '../lib/model';
 
 // Centre column: only objects touched in the range, grouped cluster -> project -> namespace.
 // Relation lines are drawn for the selected object only.
@@ -19,7 +17,9 @@ export default {
   emits: ['select'],
 
   data() {
-    return { paths: [], w: 0, h: 0 };
+    return {
+      paths: [], w: 0, h: 0
+    };
   },
 
   computed: {
@@ -91,12 +91,12 @@ export default {
       return {
         k,
         o,
-        st:    netState(list),
+        st:   netState(list),
         sev,
-        flag:  sev ? (sev === 'low' ? (this.T.rules[low.alerts[0]] || low.alerts[0]) : this.T.risk(this.T.sev[sev])) : '',
-        tag:   KIND_TAG[o.kind] || o.kind.slice(0, 6).toUpperCase(),
-        dots:  [...new Set(list.map((e) => e.actor))].map((a) => this.ACTORS[a]),
-        meta:  this.T.records(list.length, this.ACTORS[last.actor].label, last.hhmm),
+        flag: sev ? (sev === 'low' ? (this.T.rules[low.alerts[0]] || low.alerts[0]) : this.T.risk(this.T.sev[sev])) : '',
+        tag:  KIND_TAG[o.kind] || o.kind.slice(0, 6).toUpperCase(),
+        dots: [...new Set(list.map((e) => e.actor))].map((a) => this.ACTORS[a]),
+        meta: this.T.records(list.length, this.ACTORS[last.actor].label, last.hhmm),
       };
     },
 

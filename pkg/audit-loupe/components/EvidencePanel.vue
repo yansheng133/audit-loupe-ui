@@ -25,7 +25,7 @@ export default {
   watch: {
     ev: {
       immediate: true,
-      handler: 'loadFlagged',
+      handler:   'loadFlagged',
     },
   },
 

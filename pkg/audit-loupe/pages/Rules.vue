@@ -193,7 +193,7 @@ export default {
                       <span
                         v-for="[k, v] in scopes(x)"
                         :key="k"
-                      >{{ k }}{{ P.sep[0] }}<code>{{ v }}</code>　</span>
+                      >{{ k }}{{ P.sep[0] }}<code>{{ v }}</code>&#12288;</span>
                       <div>{{ P.reason }}{{ P.sep[0] }}{{ x.reason }}</div>
                       <div
                         v-if="x.until"

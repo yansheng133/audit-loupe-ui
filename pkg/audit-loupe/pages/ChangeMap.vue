@@ -4,9 +4,7 @@ import TopologyMap from '../components/TopologyMap.vue';
 import EvidencePanel from '../components/EvidencePanel.vue';
 import TimeAxis from '../components/TimeAxis.vue';
 import RecomputeBanner from '../components/RecomputeBanner.vue';
-import {
-  getJson, backendCluster, setBackendCluster
-} from '../lib/api';
+import { getJson, backendCluster, setBackendCluster } from '../lib/api';
 import {
   texts, buildModel, coverageOf, dayStart, fmtMin, isRisky, pad
 } from '../lib/model';
@@ -21,37 +19,42 @@ export default {
   name:       'AuditLoupeChangeMap',
   components: {
     RecomputeBanner,
-    SidePanel, TopologyMap, EvidencePanel, TimeAxis
+    SidePanel,
+    TopologyMap,
+    EvidencePanel,
+    TimeAxis
   },
 
   data() {
     const q = this.$route.query || {};
 
     return {
-      T:          texts(this.$store),
-      day:        q.day || isoDay(new Date()),
-      a:          0,
-      b:          1440,
-      cluster:    q.cluster || '',
-      project:    '',
-      ns:         '',
-      actor:      '',
-      lifetime:   '',
-      sys:        false,
-      sel:        null,
-      selEvent:   null,
-      related:    [],
-      model:      { OBJ: {}, ACTORS: {}, EVENTS: [] },
-      stories:    [],
-      clusters:   [],
+      T:        texts(this.$store),
+      day:      q.day || isoDay(new Date()),
+      a:        0,
+      b:        1440,
+      cluster:  q.cluster || '',
+      project:  '',
+      ns:       '',
+      actor:    '',
+      lifetime: '',
+      sys:      false,
+      sel:      null,
+      selEvent: null,
+      related:  [],
+      model:    {
+        OBJ: {}, ACTORS: {}, EVENTS: []
+      },
+      stories:      [],
+      clusters:     [],
       coverageRows: [],
-      work:       [9, 18],
-      loading:    false,
-      error:      null,
-      missing:    false,
-      truncated:  false,
-      backend:    backendCluster(),
-      backendIn:  backendCluster(),
+      work:         [9, 18],
+      loading:      false,
+      error:        null,
+      missing:      false,
+      truncated:    false,
+      backend:      backendCluster(),
+      backendIn:    backendCluster(),
     };
   },
 
@@ -224,7 +227,9 @@ export default {
         ]);
         const [info, rows, unattributed, actors, stories, clusters, nsProjects, coverageRows] = await Promise.all([
           getJson('/api/info'),
-          getJson('/api/timeline', { ...range, all: 1, limit: LIMIT }),
+          getJson('/api/timeline', {
+            ...range, all: 1, limit: LIMIT
+          }),
           getJson('/api/unattributed', range),
           getJson('/api/actors', range),
           getJson('/api/stories', range),
@@ -533,7 +538,7 @@ export default {
             :in-range="(e) => inRange(e) && matchesPerson(e)"
             :sel-event="selEvent"
             :ACTORS="ACTORS"
-            :OBJ="OBJ"
+            v-bind="{ OBJ }"
             :related="related"
             @pick="(id) => selEvent = id"
             @select="select"

@@ -193,23 +193,31 @@
   .lg { display: inline-block; width: 16px; height: 4px; margin-right: 4px; vertical-align: middle; background: var(--und); }
   .lg.look { background: var(--bad); }
   .lg.blind { height: 8px; background: repeating-linear-gradient(135deg, transparent 0 2px, var(--und) 2px 4px); }
-  .lg.op { width: 2px; height: 10px; background: var(--al-fg); }
+  .lg.op { width: 6px; height: 10px; background: color-mix(in srgb, var(--und) 75%, transparent); }
   .tl-rows { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 8px; margin-top: 6px; }
   .tl-label { height: 18px; font-size: 12px; color: var(--al-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tl-track { position: relative; cursor: crosshair; user-select: none; touch-action: none; }
-  .tl-line { position: relative; height: 18px; }
+  .tl-track { position: relative; overflow: hidden; cursor: crosshair; user-select: none; touch-action: none; }
+  .tl-line { position: relative; height: 34px; }
   .tl-line i { position: absolute; }
-  .seg { top: 8px; height: 3px; background: color-mix(in srgb, var(--und) 50%, transparent); }
+  .seg { bottom: 0; height: 3px; background: color-mix(in srgb, var(--und) 50%, transparent); }
+  // One bar per slot with operations: height = how many, colour = the slot's audit state.
+  .bar { bottom: 3px; min-width: 1px; background: color-mix(in srgb, var(--und) 75%, transparent); border-radius: 1px 1px 0 0; }
+  .bar.look { background: var(--bad); }
+  .bar.unclear { background: var(--dim); }
+  .bar.blind { background: repeating-linear-gradient(135deg, transparent 0 2px, var(--und) 2px 4px); }
+  .bar.clear { background: color-mix(in srgb, var(--ok) 70%, transparent); }
+  .tl-track:hover .bar { opacity: .9; }
   .seg.none { background: color-mix(in srgb, var(--und) 30%, transparent); }
   .seg.look { background: var(--bad); }
   .seg.unclear { background: var(--dim); }
   .seg.clear { background: color-mix(in srgb, var(--und) 60%, transparent); }
   .seg.unknown { background: var(--und); }
-  .seg.blind, .gap { top: 3px; height: 12px; background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--und) 70%, transparent) 4px 6px); }
+  .seg.blind, .gap { top: 0; height: 31px; background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--und) 70%, transparent) 4px 6px); }
   .gap { border-left: 1px dashed var(--dim); border-right: 1px dashed var(--dim); }
   .gap.reported { border-color: var(--al-primary); }
   .op { top: 4px; width: 1px; height: 10px; background: var(--al-fg); opacity: .6; }
-  .tl-sel { position: absolute; top: 0; bottom: 16px; background: color-mix(in srgb, var(--al-primary) 18%, transparent); border: 1px solid var(--al-primary); pointer-events: none; }
+  // The picked range stays bright; the rest of the day is shaded, so the pick is plain at a glance.
+  .tl-sel { position: absolute; top: 0; bottom: 16px; border: 2px solid var(--al-primary); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--al-surface) 62%, transparent); clip-path: inset(0 -100vmax); }
   .tl-axis { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--al-mono); }
 }
 

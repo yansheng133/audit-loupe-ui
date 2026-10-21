@@ -2,7 +2,9 @@
 import { fmtTime, shiftDay, eventReason } from '../../lib/v5';
 
 // Bottom timeline, on every tab. One merged line by default; one line per selected cluster
-// (per-minute slots when one is selected, as sent by the backend). Dragging picks a range.
+// (per-minute slots when one is selected, as sent by the backend). Each slot is a bar: height =
+// operations, colour = audit state. Clicking a slot picks it; dragging picks a range. The
+// whole page then counts only that range (API v0.2); the timeline stays the whole day.
 export default {
   name:  'AlTimelineBar',
   props: {
@@ -30,7 +32,7 @@ export default {
     sel() {
       const r = this.drag ? [Math.min(this.drag.a, this.drag.b), Math.max(this.drag.a, this.drag.b)] : this.range;
 
-      return r ? { left: this.pct(r[0]), width: `${ Math.max(0.2, ((r[1] - r[0]) / 864e5) * 100) }%` } : null;
+      return r ? { left: this.pct(r[0]), width: `${ Math.max(0.5, ((r[1] - r[0]) / 864e5) * 100) }%` } : null;
     },
   },
   methods: {
@@ -58,6 +60,17 @@ export default {
     marks(line) {
       return (line.slots || []).filter((s) => s.ops > 0);
     },
+    bars(line) {
+      const marks = this.marks(line);
+      const max = Math.max(1, ...marks.map((s) => s.ops));
+
+      return marks.map((s) => ({ ...s, h: Math.max(12, Math.round((Math.sqrt(s.ops) / Math.sqrt(max)) * 100)) }));
+    },
+    barTitle(s) {
+      const state = this.T.states[s.state] || this.T.tl.legend[s.state] || '';
+
+      return `${ this.fmt(s.t) }–${ this.fmt(s.t + this.slotMs) } ・ ${ state } ・ ${ this.T.tl.ops(s.ops, s.alerts) }`;
+    },
     lineGaps(line) {
       return this.gaps.filter((g) => line.cluster === null || g.cluster === line.cluster);
     },
@@ -84,8 +97,23 @@ export default {
       const d = this.drag;
 
       this.drag = null;
-      if (d && Math.abs(d.b - d.a) >= 5 * 60000) {
-        this.$emit('range', [Math.min(d.a, d.b), Math.max(d.a, d.b)]);
+      if (!d) {
+        return;
+      }
+      if (Math.abs(d.b - d.a) >= 5 * 60000) {
+        // A drag snaps outwards to whole slots, so the range matches the bars it covers.
+        const lo = Math.min(d.a, d.b) - this.d0;
+        const hi = Math.max(d.a, d.b) - this.d0;
+
+        this.$emit('range', [
+          this.d0 + Math.floor(lo / this.slotMs) * this.slotMs,
+          this.d0 + Math.min(864e5, Math.ceil(hi / this.slotMs) * this.slotMs),
+        ]);
+      } else {
+        // A click picks the slot under it.
+        const start = this.d0 + Math.floor((d.a - this.d0) / this.slotMs) * this.slotMs;
+
+        this.$emit('range', [start, start + this.slotMs]);
       }
     },
     fmt(ms) {
@@ -144,6 +172,7 @@ export default {
         {{ T.tl.clearRange }}
       </button>
       <span class="muted small">{{ timeline ? T.tl.slot(timeline.slotMinutes) : '' }}</span>
+      <span class="muted small">{{ T.tl.hint }}</span>
       <div class="legend">
         <span><i class="lg look" />{{ T.tl.legend.look }}</span>
         <span><i class="lg blind" />{{ T.tl.legend.blind }}</span>
@@ -187,10 +216,12 @@ export default {
             :title="gapTitle(g)"
           />
           <i
-            v-for="(s, j) in marks(l)"
+            v-for="(s, j) in bars(l)"
             :key="`m${j}`"
-            class="op"
-            :style="{left: pct(s.t)}"
+            class="bar"
+            :class="s.state"
+            :style="{left: pct(s.t), width: `${(slotMs / 864e5) * 100}%`, height: `${s.h}%`}"
+            :title="barTitle(s)"
           />
         </div>
         <div

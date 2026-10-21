@@ -143,10 +143,12 @@ const ZH = {
     merged:     '全部叢集',
     state:      '稽核狀態',
     range:      '時間範圍',
-    rangeAll:   '整天（拖曳時間列可選範圍）',
+    rangeAll:   '整天',
+    hint:       '點一格或拖曳時間列選範圍，整頁只算範圍內的紀錄',
+    ops:        (n, a) => `${ n } 筆操作${ a ? `（${ a } 筆警示）` : '' }`,
     clearRange: '清除範圍',
     legend:     {
-      look: '有要看的物件', blind: '看不到（沒有收集）', unknown: '狀態還無法判斷', op: '操作'
+      look: '有要看的物件', blind: '看不到（沒有收集）', unknown: '狀態還無法判斷', op: '長條高度＝操作量'
     },
     slot: (m) => `每 ${ m } 分鐘一格`,
   },
@@ -290,10 +292,12 @@ const EN = {
     merged:     'All clusters',
     state:      'audit state',
     range:      'Range',
-    rangeAll:   'Whole day (drag the timeline to pick a range)',
+    rangeAll:   'Whole day',
+    hint:       'Click a slot or drag the timeline to pick a range; the page then counts only that range',
+    ops:        (n, a) => `${ n } operation${ n === 1 ? '' : 's' }${ a ? ` (${ a } alert${ a === 1 ? '' : 's' })` : '' }`,
     clearRange: 'Clear range',
     legend:     {
-      look: 'Objects to look at', blind: 'Blind (not collected)', unknown: 'Not decidable yet', op: 'Operation'
+      look: 'Objects to look at', blind: 'Blind (not collected)', unknown: 'Not decidable yet', op: 'Bar height = operations'
     },
     slot: (m) => `${ m }-minute slots`,
   },
@@ -446,6 +450,10 @@ export function apiParams(v, cursor) {
   }
   if (v.select) {
     p.set('select', v.select);
+  }
+  if (v.from !== null && v.from !== undefined && v.to !== null && v.to !== undefined) {
+    p.set('from', String(v.from));
+    p.set('to', String(v.to));
   }
   if (cursor) {
     p.set('cursor', cursor);

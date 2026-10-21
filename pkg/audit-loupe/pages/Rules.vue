@@ -1,5 +1,6 @@
 <script>
 import RecomputeBanner from '../components/RecomputeBanner.vue';
+import IdentitiesSection from '../components/IdentitiesSection.vue';
 import { getJson } from '../lib/api';
 import { texts, fmtDate } from '../lib/model';
 
@@ -8,7 +9,7 @@ import { texts, fmtDate } from '../lib/model';
 export default {
   name: 'AuditLoupeRules',
 
-  components: { RecomputeBanner },
+  components: { RecomputeBanner, IdentitiesSection },
 
   data() {
     return {
@@ -101,7 +102,7 @@ export default {
     </div>
     <RecomputeBanner
       ref="banner"
-      @done="load"
+      @done="load(); $refs.ids && $refs.ids.load()"
     />
     <div
       v-if="error"
@@ -209,6 +210,8 @@ export default {
           </table>
         </div>
       </section>
+
+      <IdentitiesSection ref="ids" />
 
       <section class="col">
         <div class="col-head">

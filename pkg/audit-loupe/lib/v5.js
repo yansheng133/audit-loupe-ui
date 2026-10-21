@@ -60,6 +60,15 @@ const ZH = {
     'collector-stopped':  (c) => `收集元件 ${ c } 停止回報`,
     'collector-resumed':  (c) => `收集元件 ${ c } 恢復回報`,
     'collector-silent':   (c) => `收集元件 ${ c } 沒有回報`,
+    'collector-reported': (c, why) => `收集元件 ${ c } 回報這段沒有收集（${ why }）`,
+    'reported-gap-start': (c, why) => `收集元件 ${ c } 回報從這裡開始沒有收集（${ why }）`,
+    'reported-gap-end':   (c) => `收集元件 ${ c } 回報的缺口到這裡為止`,
+  },
+  cause: {
+    'collector-restart':    '收集元件重新啟動，停機期間不補讀',
+    'collector-state-lost': '收集元件的讀取位置遺失',
+    'file-removed':         '輪替出去的檔案在讀完前被刪除',
+    'file-replaced':        '檔案在讀完前被換掉',
   },
   progress: {
     index:     '正在建立開頁用的索引（升級後第一次啟動），這段期間開頁會比較慢',
@@ -212,6 +221,15 @@ const EN = {
     'collector-stopped':  (c) => `Collector ${ c } stopped reporting`,
     'collector-resumed':  (c) => `Collector ${ c } resumed reporting`,
     'collector-silent':   (c) => `Collector ${ c } did not report`,
+    'collector-reported': (c, why) => `Collector ${ c } reported nothing was collected here (${ why })`,
+    'reported-gap-start': (c, why) => `Collector ${ c } reported that collection stopped here (${ why })`,
+    'reported-gap-end':   (c) => `End of the gap collector ${ c } reported`,
+  },
+  cause: {
+    'collector-restart':    'the collector restarted; the downtime is not read afterwards',
+    'collector-state-lost': 'the collector lost where it was reading',
+    'file-removed':         'a rotated file was deleted before it was read',
+    'file-replaced':        'the file was replaced before it was read',
   },
   progress: {
     index:     'Building the page index (first start after an upgrade); pages are slower until it is done',
@@ -334,7 +352,7 @@ export function noteText(T, code, text) {
 export function eventReason(T, e) {
   const f = e.reasonCode && T.evReason[e.reasonCode];
 
-  return f ? f(e.collector || '') : (e.reason || '');
+  return f ? f(e.collector || '', (e.cause && T.cause[e.cause]) || e.cause || '') : (e.reason || '');
 }
 
 // A ServiceAccount as namespace/name; anything else as it is.

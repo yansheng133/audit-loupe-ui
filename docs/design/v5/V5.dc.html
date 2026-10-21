@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>稽核狀態 v5</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6fd3b2}a:hover{color:#9be6cd}
+.t-dark{--bg:#17181c;--chrome:#0f1013;--surface:#1f2026;--surface2:#282a32;--border:#363844;--fg:#eceef3;--muted:#a9adba;--accent:#6fd3b2;--accent-fg:#0d2a21;--accent-soft:rgba(111,211,178,.14);--high:#ff7a7a;--high-bg:rgba(255,122,122,.16);--med:#f5b048;--med-bg:rgba(245,176,72,.16);--low:#b5b8c4;--low-bg:rgba(181,184,196,.12);--add:#59cf94;--mod:#f2c75c;--del:#ff7a7a;--off:rgba(255,255,255,.035);--warn-bg:rgba(245,176,72,.12)}
+.t-light{--bg:#f3f4f7;--chrome:#ffffff;--surface:#ffffff;--surface2:#eef0f4;--border:#d6d9e1;--fg:#15161b;--muted:#565a68;--accent:#0b7356;--accent-fg:#ffffff;--accent-soft:rgba(11,115,86,.10);--high:#b3261e;--high-bg:rgba(179,38,30,.09);--med:#8a4b00;--med-bg:rgba(245,166,35,.20);--low:#565a68;--low-bg:rgba(86,90,104,.10);--add:#1f7a4d;--mod:#8a6200;--del:#b3261e;--off:rgba(0,0,0,.035);--warn-bg:rgba(245,166,35,.16)}
+.app{font-family:"Noto Sans TC",system-ui,sans-serif;color:var(--fg);background:var(--bg);font-size:15px;line-height:1.55}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.app button{font:inherit;color:inherit;cursor:pointer}
+.app select{font:inherit;font-size:14px;color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 8px;width:auto;max-width:190px}
+.app .fsel{font-size:13.5px;height:32px;padding:0 6px;max-width:150px;box-sizing:border-box}
+.iconbtn.framed{border-color:var(--border)}
+.iconbtn.framed.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.btn{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 12px;min-height:34px;display:inline-flex;align-items:center;gap:6px;font-size:14px}
+.btn:hover{border-color:var(--accent)}
+.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.iconbtn{background:transparent;border:1px solid transparent;border-radius:6px;width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted)}
+.iconbtn:hover{border-color:var(--border);color:var(--fg)}
+.navitem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;color:var(--fg);background:transparent;border:0;text-align:left;width:100%;font-size:15px}
+.navitem.on{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;min-height:0;min-width:0}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.pbody{overflow:auto;padding:12px 14px;min-height:0;flex:1 1 auto}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:13px;line-height:1.3;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+.sev-high{background:var(--high-bg);border-color:var(--high);color:var(--high);font-weight:700}
+.sev-medium{background:var(--med-bg);border-color:var(--med);color:var(--med);font-weight:700}
+.sev-low{background:var(--low-bg);color:var(--low)}
+.sev-none{background:transparent}
+.ch-added{color:var(--add);border-color:var(--add)}
+.ch-modified{color:var(--mod);border-color:var(--mod)}
+.ch-deleted{color:var(--del);border-color:var(--del)}
+.tab{background:transparent;border:0;border-bottom:2px solid transparent;padding:8px 4px;font-size:15px;color:var(--muted)}
+.tab.on{color:var(--fg);border-bottom-color:var(--accent);font-weight:700}
+.card{width:100%;text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.card:hover{border-color:var(--accent)}
+.card.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.row{width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--border);padding:9px 4px;display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:start}
+.row:hover{background:var(--accent-soft)}
+.row.on{background:var(--accent-soft)}
+.sec{font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin:0 0 8px}
+.hop{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;min-width:0}
+.hop small{font-size:12.5px;color:var(--muted)}
+.obj{width:100%;text-align:left;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;align-items:center;gap:10px}
+.obj:hover{border-color:var(--accent)}
+.obj.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.kind{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px;color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:1px 6px;min-width:60px;text-align:center}
+.dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border:0;padding:0;background:transparent;display:flex;align-items:center;justify-content:center}
+.dot i{display:block;width:10px;height:10px;border-radius:50%;background:var(--fg)}
+.dot.read i{border-radius:2px;transform:rotate(45deg);width:9px;height:9px;background:var(--muted)}
+.dot.del i{background:transparent;border:2px solid var(--del)}
+.dot.risk::after{content:"";position:absolute;inset:-3px;border:2px solid var(--high);border-radius:50%}
+.dot.on::before{content:"";position:absolute;inset:-7px;border:2px solid var(--accent);border-radius:50%}
+.cgrid{display:grid;grid-template-columns:400px minmax(0,1fr);gap:12px;flex:1 1 auto;min-height:0}
+.colB{display:none}
+@media (min-width:1700px){.cgrid{grid-template-columns:400px minmax(0,1fr) minmax(0,1.15fr)}.colB{display:flex}.tab-obj{display:none}}
+.warnchip{display:inline-flex;align-items:center;gap:6px;background:var(--warn-bg);border:1px solid var(--med);color:var(--med);border-radius:6px;padding:4px 10px;font-size:13.5px}
+.cfgtag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--med);border:1px solid var(--med);border-radius:4px;padding:0 6px;margin-bottom:2px}
+.stat{display:flex;flex-direction:column;padding:2px 14px 2px 0;border-right:1px solid var(--border)}
+.stat b{font-size:22px;line-height:1.2}
+.stat span{font-size:13px;color:var(--muted)}
+.hint{background:transparent;border-color:var(--border);color:var(--muted);font-weight:400;opacity:.85}
+.tbd{color:var(--med);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.92em}
+.idc{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;line-height:1.3;padding:1px 8px;border-radius:4px;border:1px solid var(--border);color:var(--fg);background:var(--surface2);white-space:nowrap}
+.idc i{display:block;width:8px;height:8px;border-radius:2px}
+.after{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:2px 9px;border-radius:4px;border:1px dashed var(--med);color:var(--med);background:transparent;white-space:nowrap}
+.gapband{background:repeating-linear-gradient(135deg,transparent 0 6px,var(--warn-bg) 6px 12px);border-left:1px dashed var(--med);border-right:1px dashed var(--med)}
+.sum3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sumc{border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:3px;min-width:0;background:var(--surface)}
+.sumc .k{font-size:13px;font-weight:700;letter-spacing:.04em;color:var(--muted)}
+.sumc .v{font-size:19px;font-weight:700;line-height:1.35}
+.sumc .s{font-size:13.5px;color:var(--muted)}
+.sumc.warn{border-color:var(--med);background:var(--warn-bg)}
+.prog{display:flex;align-items:center;gap:10px;font-size:14px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:7px 12px}
+.prog .bar{flex:0 0 160px;height:6px;border-radius:3px;background:var(--surface2);overflow:hidden}
+.prog .bar b{display:block;height:100%;width:40%;background:var(--accent)}
+.meta{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);border:1px solid var(--border);border-radius:6px;padding:0 9px;height:32px;box-sizing:border-box;background:var(--surface);white-space:nowrap}
+.meta b{color:var(--fg);font-weight:500}
+.basis{display:grid;grid-template-columns:120px minmax(0,1fr);gap:4px 10px;font-size:14px}
+.basis dt{color:var(--muted)}
+.basis dd{margin:0}
+.raw{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:13px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;white-space:pre-wrap;color:var(--muted)}
+.foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;border-top:1px solid var(--border);padding:10px 14px}
+.empty{border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:4px;background:var(--surface2)}
+.noise{width:100%;text-align:left;border:1px dashed var(--border);border-radius:6px;background:transparent;padding:8px 10px;font-size:13.5px;color:var(--muted)}
+.rng{position:absolute;top:50%;height:12px;transform:translateY(-50%);border-radius:6px;background:var(--fg);opacity:.8;border:0;padding:0}
+.rng.on{box-shadow:0 0 0 2px var(--accent)}
+.rnglab{position:absolute;top:50%;transform:translateY(-50%);font-size:12.5px;color:var(--muted);white-space:nowrap;padding-left:6px}
+.ph{color:var(--med);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.9em;border-bottom:1px dashed var(--med)}
+.search{flex:0 1 460px;display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--muted);font-size:15px;box-sizing:border-box;cursor:text;position:relative}
+.search.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);color:var(--fg)}
+.dd{position:absolute;top:44px;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.35);padding:6px;z-index:5;display:flex;flex-direction:column;gap:2px}
+.ddi{display:flex;flex-direction:column;gap:2px;padding:9px 10px;border-radius:6px;text-align:left;background:transparent;border:0}
+.ddi:hover,.ddi.on{background:var(--accent-soft)}
+.verdict{display:flex;align-items:center;gap:14px}
+.verdict b{font-size:30px;line-height:1.2}
+.tri{width:30px;height:30px;flex:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:16px}
+.ccard{text-align:left;background:var(--surface);border:1px solid var(--border);border-left-width:6px;border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;min-height:150px}
+.ccard:hover{box-shadow:0 0 0 1px var(--accent)}
+.ccard.warn{border-color:var(--med)}
+.ccard.high{border-color:var(--high)}
+.ccard.ok{border-color:var(--add)}
+.ccard.tbd{border-color:var(--border);border-left-style:dashed}
+.ccard .nm{font-size:15px;color:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace}
+.ccard .st{font-size:26px;font-weight:700;line-height:1.2}
+.ccard .ln{display:flex;justify-content:space-between;gap:10px;font-size:15px}
+.ccard .ln span:first-child{color:var(--muted)}
+.plist{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden}
+.prow{display:grid;grid-template-columns:28px 130px minmax(0,1fr) 20px;align-items:center;gap:12px;padding:16px 18px;border:0;border-bottom:1px solid var(--border);background:transparent;text-align:left;font-size:17px}
+.prow:last-child{border-bottom:0}
+.prow:hover,.prow.on{background:var(--accent-soft)}
+.prow .ty{font-weight:700;color:var(--med)}
+.prow .ty.high{color:var(--high)}
+.quiet{font-size:14.5px;color:var(--muted)}
+.drawer{position:absolute;top:0;right:0;bottom:0;width:470px;background:var(--surface);border-left:1px solid var(--border);box-shadow:-12px 0 32px rgba(0,0,0,.3);display:flex;flex-direction:column;z-index:4}
+.drawer .dh{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.drawer .db{padding:16px 18px;display:flex;flex-direction:column;gap:16px;overflow:auto;flex:1 1 auto;font-size:15px}
+.kv{display:grid;grid-template-columns:90px minmax(0,1fr);gap:6px 12px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0}
+.crumb{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--muted)}
+.crumb button{background:transparent;border:0;padding:0;color:var(--accent);font-size:15px}
+.t-dark{--ok:#59cf94;--ok-bg:rgba(89,207,148,.12);--bad:#ff7a7a;--bad-bg:rgba(255,122,122,.14);--dim:#f5b048;--dim-bg:rgba(245,176,72,.14);--und:#6c7080}
+.t-light{--ok:#1f7a4d;--ok-bg:rgba(31,122,77,.10);--bad:#b3261e;--bad-bg:rgba(179,38,30,.09);--dim:#8a4b00;--dim-bg:rgba(245,166,35,.18);--und:#9a9eaa}
+.stp{display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;letter-spacing:.03em;border:1px solid;border-radius:999px;padding:1px 9px;min-width:64px;white-space:nowrap;box-sizing:border-box}
+.stp.ok{color:var(--ok);border-color:var(--ok);background:transparent}
+.stp.bad{color:var(--bad);border-color:var(--bad);background:var(--bad-bg)}
+.stp.dim{color:var(--dim);border-color:var(--dim);background:var(--dim-bg)}
+.stp.blind{color:var(--muted);border-color:var(--und);border-style:dashed;background:repeating-linear-gradient(135deg,transparent 0 4px,var(--off) 4px 8px)}
+.subtabs{display:flex;align-items:center;gap:22px;padding:0 18px;height:44px;border-bottom:1px solid var(--border);background:var(--surface);flex:none}
+.stab{display:inline-flex;align-items:center;gap:7px;height:44px;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--muted);font-size:15px;padding:0 2px}
+.stab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.fchip{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--muted);white-space:nowrap}
+.fchip b{color:var(--accent);font-weight:500}
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{position:sticky;top:0;background:var(--bg);text-align:left;font-size:13px;font-weight:700;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+.tbl tr.rw{cursor:pointer}
+.tbl tr.rw:hover td{background:var(--accent-soft)}
+.tbl tr.rw.on td{background:var(--accent-soft)}
+.tbl tr.rw.on td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.lnk{text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:3px}
+.spk{position:relative;width:120px;height:18px;border-bottom:1px solid var(--border)}
+.spk i{position:absolute;bottom:0;width:2px;height:12px;border-radius:1px;background:var(--muted)}
+.spk i.bad{background:var(--bad);height:16px}
+.tbar{flex:none;border-top:1px solid var(--border);background:var(--surface);padding:8px 18px 10px;display:flex;flex-direction:column;gap:6px}
+.tctl{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.tctl .btn{min-height:28px;padding:2px 10px;font-size:13px}
+.lane{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.track{position:relative;height:16px}
+.sline{position:absolute;top:6px;height:4px;border-radius:2px}
+.flag{position:absolute;top:0;width:3px;height:16px;border-radius:1px;transform:translateX(-1px)}
+.phd{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg)}
+.side{flex:none;width:400px;border-left:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;min-height:0}
+.side .sh{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
+.side .sb{padding:14px 16px;display:flex;flex-direction:column;gap:14px;overflow:auto;flex:1 1 auto;min-height:0}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--muted);text-align:left}
+.tile b{display:block;color:var(--accent);font-weight:500;font-size:14px;text-decoration:underline;text-underline-offset:3px}
+.oprow{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px;font-size:14px;padding:5px 0;border-bottom:1px solid var(--border)}
+.oprow:last-child{border-bottom:0}
+.ev{display:grid;grid-template-columns:30px minmax(0,1fr) auto 90px;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.ev .arrow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.node{font-size:12.5px}
+.tg{font-size:14.5px;min-width:0}
+.tg .th,.tg .tr{display:grid;grid-template-columns:92px minmax(150px,1.3fr) minmax(120px,1fr) 136px 44px 76px minmax(96px,.9fr) minmax(96px,.8fr);align-items:center;gap:8px;padding:0 8px;border-bottom:1px solid var(--border)}
+.tg .th{position:sticky;top:0;background:var(--bg);font-size:13px;font-weight:700;color:var(--muted);height:36px;z-index:1}
+.tg .tr{min-height:42px;cursor:pointer}
+.tg .tr>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tg .tr:hover,.tg .tr.on{background:var(--accent-soft)}
+.tg .tr.on{box-shadow:inset 3px 0 0 var(--accent)}
+</style>
+</helmet>
+<div class="app {{themeClass}}" style="height: {{frameH}}px; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden">
+
+<header style="flex: none; height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 12px; background: var(--chrome); border-bottom: 1px solid var(--border)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+<span style="font-weight: 700">Audit Loupe</span>
+<span style="color: var(--muted); font-size: 13px">Rancher 2.15</span>
+<span style="flex: 1"></span>
+<span style="width: 28px; height: 28px; border-radius: 6px; background: var(--accent-soft); border: 1px solid var(--accent)" aria-hidden="true"></span>
+</header>
+
+<div style="flex: 1 1 auto; display: flex; min-height: 0">
+<nav aria-label="Rancher" style="flex: none; width: 56px; background: var(--chrome); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 10px; color: var(--muted)">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="margin: 8px"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" style="margin: 8px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+<span style="margin: 4px; padding: 8px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: flex"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg></span>
+</nav>
+
+<div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 0">
+
+<div class="subtabs">
+<button class="stab {{tabO}}" type="button" onClick="{{showO}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>總覽</button>
+<button class="stab {{tabT}}" type="button" onClick="{{showT}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="6" height="6" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="9" y="15" width="6" height="6" rx="1"/><path d="M6 9v3h12V9M12 12v3"/></svg>關係</button>
+<button class="stab {{tabE}}" type="button" onClick="{{showE}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16M4 12h10M4 19h13"/></svg>事件</button>
+<span style="flex: 1"></span>
+<span class="fchip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg>叢集：<b>全部</b></span>
+<span class="fchip">Namespace：<b>全部</b></span>
+<span class="fchip">稽核狀態：<b>全部</b></span>
+<span class="fchip" style="border-left: 1px solid var(--border); padding-left: 14px">時區 Asia/Taipei</span>
+</div>
+
+<div style="flex: 1 1 auto; display: flex; min-height: 0">
+<div style="flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; min-height: 0">
+
+<sc-if value="{{isO}}" hint-placeholder-val="{{ true }}">
+<div style="flex: none; display: flex; align-items: baseline; gap: 14px; padding: 12px 18px 6px; flex-wrap: wrap">
+<span style="font-size: 15px"><b style="font-size: 18px">41</b> 個物件有變更 ・ <b style="font-size: 18px">131</b> 筆操作（不含系統元件）</span>
+<span style="display: inline-flex; gap: 8px; flex-wrap: wrap"><span class="stp bad">要看 ≥ 5</span><span class="stp dim">看不清 ‹待確認›</span><span class="stp blind">看不到 ≥ 1 段</span><span class="stp ok">清楚 ‹待確認›</span></span>
+</div>
+<div style="flex: 1 1 auto; overflow: auto; min-height: 0; padding: 0 18px">
+<div class="tg">
+<div class="th"><span>稽核狀態</span><span>物件</span><span>叢集 / Namespace</span><span>當天操作（00–24）</span><span>次數</span><span>最後一次</span><span>誰</span><span>管道</span></div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<div class="tr {{r.on}}" onClick="{{r.pick}}">
+<span><span class="stp {{r.stCls}}">{{r.st}}</span></span>
+<span style="overflow: hidden; text-overflow: ellipsis"><span class="kind" style="margin-right: 8px">{{r.kind}}</span><span class="lnk mono" style="font-size: 14px">{{r.name}}</span></span>
+<span style="color: var(--muted)">{{r.where}}</span>
+<span><sc-if value="{{r.hasT}}" hint-placeholder-val="{{ true }}"><span class="spk" style="display: inline-block"><sc-for list="{{r.ticks}}" as="k" hint-placeholder-count="2"><i class="{{k.cls}}" style="left: {{k.left}}"></i></sc-for></span></sc-if><sc-if value="{{r.noT}}" hint-placeholder-val="{{ false }}"><span class="ph" style="font-size: 12.5px">時間待確認</span></sc-if></span>
+<span>{{r.n}}</span>
+<span class="mono" style="font-size: 13.5px">{{r.last}}</span>
+<span>{{r.who}}</span>
+<span style="color: var(--muted)">{{r.via}}</span>
+</div>
+</sc-for>
+<div style="padding: 10px; color: var(--muted); font-size: 13.5px">另有 33 個物件 <span class="ph">‹待確認›</span> ・ 系統元件 1 列已隱藏（rke2-cloud-controller-manager 整批刪除 DaemonSet，17:38）・ <a href="#">顯示</a></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isT}}" hint-placeholder-val="{{ false }}">
+<div style="flex: 1 1 auto; overflow: auto; min-height: 0; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; gap: 16px; font-size: 13px; color: var(--muted)"><span>身分</span><span style="margin-left: 120px">管道</span><span style="margin-left: 130px">叢集</span><span style="margin-left: 110px">物件（顏色＝稽核狀態，線越粗操作越多）</span></div>
+<svg viewBox="0 0 900 440" width="100%" style="max-height: 560px" role="img" aria-label="身分、管道、叢集到物件的關係圖">
+<g fill="none" stroke-linecap="round">
+<path d="M170 80 C 230 80, 230 80, 250 80" stroke="var(--bad)" stroke-width="3"/>
+<path d="M370 80 C 420 80, 420 220, 450 220" stroke="var(--bad)" stroke-width="3"/>
+<path d="M170 200 C 230 200, 230 200, 250 200" stroke="var(--bad)" stroke-width="2.5" stroke-dasharray="6 4"/>
+<path d="M370 200 C 420 200, 420 220, 450 220" stroke="var(--bad)" stroke-width="2.5" stroke-dasharray="6 4"/>
+<path d="M170 330 C 230 330, 230 330, 250 330" stroke="var(--und)" stroke-width="6"/>
+<path d="M370 330 C 420 330, 420 220, 450 220" stroke="var(--und)" stroke-width="6"/>
+<path d="M530 220 C 590 220, 590 40, 630 40" stroke="var(--bad)" stroke-width="3.5"/>
+<path d="M530 220 C 590 220, 590 95, 630 95" stroke="var(--und)" stroke-width="2.5"/>
+<path d="M530 220 C 590 220, 590 150, 630 150" stroke="var(--und)" stroke-width="1.5"/>
+<path d="M530 220 C 590 220, 590 200, 630 200" stroke="var(--und)" stroke-width="1.5"/>
+<path d="M530 220 C 590 220, 590 250, 630 250" stroke="var(--und)" stroke-width="1.5"/>
+<path d="M530 220 C 590 220, 590 300, 630 300" stroke="var(--und)" stroke-width="1.5"/>
+<path d="M530 220 C 590 220, 590 350, 630 350" stroke="var(--und)" stroke-width="2"/>
+<path d="M530 220 C 590 220, 590 400, 630 400" stroke="var(--und)" stroke-width="6"/>
+</g>
+<g font-family="Noto Sans TC, sans-serif" font-size="13">
+<rect x="20" y="62" width="150" height="36" rx="6" fill="var(--surface)" stroke="var(--border)"/><text x="34" y="85" fill="var(--fg)">Default Admin</text>
+<rect x="20" y="182" width="150" height="36" rx="6" fill="var(--surface)" stroke="var(--border)"/><text x="34" y="205" fill="var(--fg)">system:admin</text>
+<rect x="20" y="312" width="150" height="36" rx="6" fill="var(--surface)" stroke="var(--border)"/><text x="34" y="335" fill="var(--fg)">u-d67owytc34</text>
+<text x="20" y="116" fill="var(--muted)" font-size="11.5">本機帳號，可能多人共用</text>
+<text x="20" y="236" fill="var(--muted)" font-size="11.5">憑證身分，對不到個人</text>
+<text x="20" y="366" fill="var(--muted)" font-size="11.5">Rancher 內部（待查證）</text>
+<rect x="250" y="62" width="120" height="36" rx="18" fill="var(--surface2)" stroke="var(--border)"/><text x="268" y="85" fill="var(--fg)">Rancher kubectl</text>
+<rect x="250" y="182" width="120" height="36" rx="18" fill="var(--bad-bg)" stroke="var(--bad)"/><text x="262" y="205" fill="var(--bad)" font-weight="700">直連 apiserver</text>
+<text x="252" y="236" fill="var(--bad)" font-size="11.5">繞過 Rancher</text>
+<rect x="250" y="312" width="120" height="36" rx="18" fill="var(--surface2)" stroke="var(--border)"/><text x="290" y="335" fill="var(--fg)">Rancher</text>
+<rect x="450" y="190" width="80" height="60" rx="8" fill="var(--surface)" stroke="var(--fg)"/><text x="472" y="216" fill="var(--fg)" font-weight="700">rke2</text><text x="458" y="236" fill="var(--muted)" font-size="10.5">看不到 09:23–17:37</text>
+<rect x="630" y="24" width="250" height="32" rx="6" fill="var(--bad-bg)" stroke="var(--bad)" stroke-width="2"/><text x="642" y="45" fill="var(--fg)">POD sh ・ al-rules-b</text><text x="822" y="45" fill="var(--bad)" font-size="11.5" font-weight="700">要看・高</text>
+<rect x="630" y="79" width="250" height="32" rx="6" fill="var(--surface)" stroke="var(--ok)"/><text x="642" y="100" fill="var(--fg)">POD sh ・ al-rules-a</text><text x="840" y="100" fill="var(--ok)" font-size="11.5" font-weight="700">清楚</text>
+<rect x="630" y="134" width="250" height="32" rx="6" fill="var(--bad-bg)" stroke="var(--bad)"/><text x="642" y="155" fill="var(--fg)">NS al-rules-b</text><text x="822" y="155" fill="var(--bad)" font-size="11.5" font-weight="700">要看・中</text>
+<rect x="630" y="184" width="250" height="32" rx="6" fill="var(--bad-bg)" stroke="var(--bad)"/><text x="642" y="205" fill="var(--fg)">NS al-rules-a</text><text x="822" y="205" fill="var(--bad)" font-size="11.5" font-weight="700">要看・中</text>
+<rect x="630" y="234" width="250" height="32" rx="6" fill="var(--bad-bg)" stroke="var(--bad)"/><text x="642" y="255" fill="var(--fg)">DS audit-loupe-file</text><text x="822" y="255" fill="var(--bad)" font-size="11.5" font-weight="700">要看・中</text>
+<rect x="630" y="284" width="250" height="32" rx="6" fill="var(--bad-bg)" stroke="var(--bad)"/><text x="642" y="305" fill="var(--fg)">DEPLOY audit-loupe-watch</text><text x="822" y="305" fill="var(--bad)" font-size="11.5" font-weight="700">要看・中</text>
+<rect x="630" y="334" width="250" height="32" rx="6" fill="var(--surface)" stroke="var(--ok)"/><text x="642" y="355" fill="var(--fg)">SECRET（整批讀取）</text><text x="840" y="355" fill="var(--ok)" font-size="11.5" font-weight="700">清楚</text>
+<rect x="630" y="384" width="250" height="32" rx="6" fill="var(--surface)" stroke="var(--ok)"/><text x="642" y="405" fill="var(--fg)">NODE rke2.home.lab</text><text x="840" y="405" fill="var(--ok)" font-size="11.5" font-weight="700">清楚</text>
+</g>
+</svg>
+<div class="quiet" style="font-size: 13px">選取的物件（POD sh ・ al-rules-b）的路徑以紅色實線標出；system:admin 這條虛線表示經過的管道繞過 Rancher。local 叢集的關係 <span class="ph">‹待確認›</span>。</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isE}}" hint-placeholder-val="{{ false }}">
+<div style="flex: 1 1 auto; overflow: auto; min-height: 0; padding: 12px 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 15px; padding-bottom: 2px">只列<b>稽核狀態的轉變</b>，不列每一筆操作</div>
+<sc-for list="{{events}}" as="e" hint-placeholder-count="4">
+<div class="ev">
+<span style="color: {{e.color}}; display: flex"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg></span>
+<span style="display: flex; flex-direction: column; min-width: 0"><b style="font-size: 15px">{{e.title}}</b><span style="font-size: 13.5px; color: var(--muted)">{{e.sub}}</span></span>
+<span class="arrow"><sc-if value="{{e.hasFrom}}" hint-placeholder-val="{{ true }}"><span class="stp {{e.fromCls}}">{{e.from}}</span>→</sc-if><span class="stp {{e.toCls}}">{{e.to}}</span></span>
+<span class="mono" style="font-size: 13px; text-align: right; color: var(--muted)">{{e.t}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+</div>
+
+<aside class="side" aria-label="物件細節">
+<div class="sh">
+<span style="display: flex; align-items: center; gap: 8px"><span class="kind">{{d.kind}}</span><b class="mono" style="font-size: 17px">{{d.name}}</b></span>
+<span style="font-size: 13.5px; color: var(--muted)">{{d.where}}</span>
+<span style="display: flex; align-items: center; gap: 8px"><span class="stp {{d.stCls}}">{{d.st}}</span><span style="font-size: 13.5px">{{d.why}}</span></span>
+</div>
+<div class="sb">
+<div>
+<div class="sec" style="margin-bottom: 4px">稽核狀態（當天）</div>
+<div class="track" style="background: transparent">
+<span class="sline" style="left: 0; right: 0; background: var(--und); opacity: .5"></span>
+<sc-for list="{{d.flags}}" as="f" hint-placeholder-count="2"><span class="flag" style="left: {{f.left}}; background: {{f.color}}"></span></sc-for>
+</div>
+<div class="mono" style="display: flex; justify-content: space-between; font-size: 11px; color: var(--muted)"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+</div>
+<div class="tiles">
+<button class="tile" type="button">看<b>最後一次變更</b></button>
+<button class="tile" type="button">看<b>目前狀態</b></button>
+<button class="tile" type="button">看<b>設定差異</b></button>
+</div>
+<div>
+<div class="sec" style="margin-bottom: 4px">誰動了它</div>
+<sc-for list="{{d.ops}}" as="o" hint-placeholder-count="3">
+<div class="oprow"><span class="mono" style="color: var(--muted); font-size: 13px">{{o.t}}</span><span><b>{{o.who}}</b> {{o.what}}<span style="display: block; font-size: 12.5px; color: var(--muted)">{{o.via}}</span></span></div>
+</sc-for>
+</div>
+<sc-if value="{{d.hasNote}}" hint-placeholder-val="{{ false }}">
+<div><span class="cfgtag">取決於設定：{{d.cfg}}</span><div style="font-size: 14px">{{d.note}}</div></div>
+</sc-if>
+</div>
+<div class="foot"><button class="btn" type="button">匯出</button><button class="btn" type="button">複製連結</button><span style="flex: 1"></span><span class="pill">雜湊鏈：<span class="ph">‹待確認›</span></span></div>
+</aside>
+</div>
+
+<div class="tbar">
+<div class="tctl">
+<button class="btn" type="button">◀</button><select class="fsel" aria-label="日期"><option>2026-10-18（日）</option></select><button class="btn" type="button">▶</button>
+<span style="color: var(--muted); margin-left: 8px">播放頭 <b class="mono" style="color: var(--fg)">24:00</b>（當天結束）</span>
+<span style="flex: 1"></span>
+<span style="display: inline-flex; gap: 14px; color: var(--muted); font-size: 12.5px"><span><span style="display: inline-block; width: 16px; height: 4px; background: var(--bad); vertical-align: middle; margin-right: 5px"></span>有要看的物件</span><span><span class="gapband" style="display: inline-block; width: 16px; height: 10px; vertical-align: middle; margin-right: 5px"></span>看不到（沒有收集）</span><span><span style="display: inline-block; width: 16px; height: 4px; background: var(--und); opacity: .5; vertical-align: middle; margin-right: 5px"></span>未定（有操作時間待確認）</span><span><span style="display: inline-block; width: 3px; height: 12px; background: var(--muted); vertical-align: middle; margin-right: 5px"></span>操作</span></span>
+</div>
+<div class="lane"><span>rke2 稽核狀態</span>
+<div class="track">
+<span class="sline" style="left: 0; width: {{gapL}}; background: var(--und); opacity: .5"></span>
+<span class="gapband" style="position: absolute; top: 0; bottom: 0; left: {{gapL}}; width: {{gapW}}"></span>
+<span class="sline" style="left: {{afterGap}}; width: {{preRedW}}; background: var(--und); opacity: .5"></span>
+<span class="sline" style="left: {{redL}}; right: 0; background: var(--bad)"></span>
+<span class="flag" style="left: {{t1746}}; background: var(--muted)"></span>
+<span class="flag" style="left: {{t1832}}; background: var(--bad)"></span>
+<span class="flag" style="left: {{t1834}}; background: var(--bad)"></span>
+<span class="phd" style="left: calc(100% - 1px)"></span>
+</div></div>
+<div class="lane"><span>local 稽核狀態</span><div class="track"><span style="position: absolute; inset: 0; display: flex; align-items: center; font-size: 12px"><span class="ph">‹待確認›</span></span></div></div>
+<div class="lane"><span></span><div class="mono" style="display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted)"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div></div>
+</div>
+
+</div>
+</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;dark&quot;, &quot;light&quot;], &quot;default&quot;: &quot;dark&quot;}, &quot;tab&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;o&quot;, &quot;t&quot;, &quot;e&quot;], &quot;default&quot;: &quot;o&quot;}, &quot;frameH&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 900, &quot;min&quot;: 600, &quot;max&quot;: 2000}, &quot;$preview&quot;: {&quot;width&quot;: 1440, &quot;height&quot;: 900}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: props.tab ?? 'o', sel: 'podb' };
+  }
+  renderVals() {
+    const st = this.state;
+    const T = '‹待確認›';
+    const p = (hm) => { const [h, m] = hm.split(':').map(Number); return (h * 60 + m) / 1440 * 100; };
+    const P = (hm) => p(hm).toFixed(2) + '%';
+    const ST = { bad: 'bad', dim: 'dim', ok: 'ok', blind: 'blind' };
+    // Only facts from the 10/18 lab screenshots and report-rules.md (same source as the first boards).
+    const R = [
+      { id: 'podb', st: '要看・高', c: 'bad', kind: 'POD', name: 'sh', where: 'rke2 / al-rules-b', ticks: [['18:32', 'bad'], ['18:34', 'bad']], n: '3', last: '18:34', who: 'Default Admin', via: 'Rancher kubectl',
+        why: '有人進入容器', flags: [['18:32', 'var(--bad)'], ['18:34', 'var(--bad)']],
+        ops: [['18:34', 'Default Admin', '進入容器', 'Rancher kubectl ・ 本機帳號 user-kgw7z，可能多人共用'], ['18:32', 'Default Admin', '進入容器', 'Rancher kubectl ・ 寫入時判為中，規則重新計算後改為高'], [T, 'system:admin', '新增', '直連 apiserver（繞過 Rancher）・ 憑證身分，對不到個人']],
+        cfg: '是否啟用 SUSE Security 收集', note: '容器裡輸入的指令不在 audit log。有啟用時，這裡會列出 SUSE Security 判定違規的程序。' },
+      { id: 'nsa', st: '要看・中', c: 'bad', kind: 'NS', name: 'al-rules-a', where: 'rke2', ticks: [], n: '1', last: T, who: 'system:admin', via: '直連 apiserver', why: '繞過 Rancher、非上班時間', flags: [], ops: [[T, 'system:admin', '新增', '直連 apiserver（繞過 Rancher）']] },
+      { id: 'nsb', st: '要看・中', c: 'bad', kind: 'NS', name: 'al-rules-b', where: 'rke2', ticks: [], n: '1', last: T, who: 'system:admin', via: '直連 apiserver', why: '繞過 Rancher、非上班時間', flags: [], ops: [[T, 'system:admin', '新增', '直連 apiserver（繞過 Rancher）']] },
+      { id: 'ds', st: '要看・中', c: 'bad', kind: 'DS', name: 'audit-loupe-file', where: 'rke2 / audit-loupe-system', ticks: [], n: '1', last: T, who: 'system:admin', via: '直連 apiserver', why: '繞過 Rancher、非上班時間', flags: [], ops: [[T, 'system:admin', '修改', '直連 apiserver（繞過 Rancher）']] },
+      { id: 'dep', st: '要看・中', c: 'bad', kind: 'DEPLOY', name: 'audit-loupe-watch', where: 'rke2 / audit-loupe-system', ticks: [], n: '1', last: T, who: 'system:admin', via: '直連 apiserver', why: '繞過 Rancher、非上班時間', flags: [], ops: [[T, 'system:admin', '修改', '直連 apiserver（繞過 Rancher）']] },
+      { id: 'poda', st: '清楚', c: 'ok', kind: 'POD', name: 'sh', where: 'rke2 / al-rules-a', ticks: [['18:32', ''], ['18:34', '']], n: '2', last: '18:34', who: 'Default Admin', via: 'Rancher kubectl', why: '進入容器，但這個 namespace 設了例外', flags: [['18:32', 'var(--muted)'], ['18:34', 'var(--muted)']],
+        ops: [['18:34', 'Default Admin', '進入容器', '例外：al-rules-a（rules lab step 3 exception）'], ['18:32', 'Default Admin', '進入容器', '例外：al-rules-a']] },
+      { id: 'sec', st: '清楚', c: 'ok', kind: 'SECRET', name: '（整批讀取）', where: 'rke2 / audit-loupe-system', ticks: [['17:46', '']], n: '2', last: '17:46', who: 'system:admin', via: '直連 apiserver', why: '讀取 Secret 規則在 lab 中已停用', flags: [['17:46', 'var(--muted)']],
+        ops: [['17:46', 'system:admin', '整批讀取 2 次', '直連 apiserver ・ Secret 內容不會被記錄']] },
+      { id: 'node', st: '清楚', c: 'ok', kind: 'NODE', name: 'rke2.home.lab', where: 'rke2 / 叢集範圍', ticks: null, n: '29', last: T, who: 'u-d67owytc34', via: 'Rancher', why: '低風險提示：非上班時間（10/18 週日）', flags: [],
+        ops: [[T, 'u-d67owytc34', '修改 29 次', 'Rancher ・ 這個帳號沒有名稱，身分待查證']] },
+    ];
+    const pick = (id) => () => this.setState({ sel: id });
+    const rows = R.map((r) => ({ st: r.st, stCls: r.c, kind: r.kind, name: r.name, where: r.where, n: r.n, last: r.last, who: r.who, via: r.via,
+      hasT: !!(r.ticks && r.ticks.length), noT: !(r.ticks && r.ticks.length),
+      ticks: (r.ticks || []).map(([t, cls]) => ({ left: P(t), cls })), on: r.id === st.sel ? 'on' : '', pick: pick(r.id) }));
+    const s = R.find((r) => r.id === st.sel) || R[0];
+    const events = [
+      { title: 'POD sh（al-rules-b）', sub: '規則重新計算：進入容器的嚴重度改為高', from: '要看・中', fromCls: 'bad', to: '要看・高', toCls: 'bad', hasFrom: true, t: T, color: 'var(--bad)' },
+      { title: 'POD sh（al-rules-b）', sub: 'Default Admin 經 Rancher kubectl 進入容器', from: '', fromCls: '', to: '要看・中', toCls: 'bad', hasFrom: false, t: '18:32', color: 'var(--bad)' },
+      { title: 'rke2 收集', sub: '收集元件恢復回報', from: '看不到', fromCls: 'blind', to: '正常', toCls: 'ok', hasFrom: true, t: '17:37', color: 'var(--ok)' },
+      { title: 'rke2 收集', sub: '收集元件沒有回報：這段時間發生的事看不到，事後也不補', from: '正常', fromCls: 'ok', to: '看不到', toCls: 'blind', hasFrom: true, t: '09:23', color: 'var(--muted)' },
+      { title: 'NS al-rules-a、al-rules-b、DS audit-loupe-file、DEPLOY audit-loupe-watch', sub: 'system:admin 直連 apiserver 新增或修改（繞過 Rancher）', from: '', fromCls: '', to: '要看・中', toCls: 'bad', hasFrom: false, t: '時間' + T, color: 'var(--bad)' },
+    ];
+    const tab = st.tab;
+    return {
+      themeClass: (this.props.theme ?? 'dark') === 'light' ? 't-light' : 't-dark',
+      frameH: this.props.frameH ?? 900,
+      tabO: tab === 'o' ? 'on' : '', tabT: tab === 't' ? 'on' : '', tabE: tab === 'e' ? 'on' : '',
+      isO: tab === 'o', isT: tab === 't', isE: tab === 'e',
+      showO: () => this.setState({ tab: 'o' }), showT: () => this.setState({ tab: 't' }), showE: () => this.setState({ tab: 'e' }),
+      rows, events,
+      d: { kind: s.kind, name: s.name, where: s.where, st: s.st, stCls: s.c, why: s.why,
+        flags: s.flags.map(([t, color]) => ({ left: P(t), color })),
+        ops: s.ops.map(([t, who, what, via]) => ({ t, who, what, via })),
+        hasNote: !!s.cfg, cfg: s.cfg || '', note: s.note || '' },
+      gapL: P('09:23'), gapW: (p('17:37') - p('09:23')).toFixed(2) + '%', afterGap: P('17:37'),
+      preRedW: (p('18:32') - p('17:37')).toFixed(2) + '%', redL: P('18:32'),
+      t1746: P('17:46'), t1832: P('18:32'), t1834: P('18:34'),
+    };
+  }
+}
+</script>
+</body>
+</html>

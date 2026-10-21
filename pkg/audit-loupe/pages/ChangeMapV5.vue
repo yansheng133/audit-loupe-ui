@@ -85,6 +85,9 @@ export default {
 
       return [...set].sort();
     },
+    notes() {
+      return this.noteLines(this.data && this.data.meta);
+    },
     detail() {
       return this.detailOpen ? this.data?.detail || null : null;
     },
@@ -212,8 +215,23 @@ export default {
       }
     },
 
-    noteText(meta) {
-      return `${ meta.dataNote } ・ ${ this.T.dataUntil } ${ meta.dataUntilMs ? `${ this.isoDay(meta.dataUntilMs) } ${ fmtTime(meta.dataUntilMs, this.tz) }` : '—' }`;
+    // The note row: the data note (prototype servers) and work in progress (API v0.2).
+    noteLines(meta) {
+      if (!meta) {
+        return [];
+      }
+      const lines = [];
+
+      if (meta.dataNote) {
+        lines.push(`${ meta.dataNote } ・ ${ this.T.dataUntil } ${ meta.dataUntilMs ? `${ this.isoDay(meta.dataUntilMs) } ${ fmtTime(meta.dataUntilMs, this.tz) }` : '—' }`);
+      }
+      for (const p of meta.progress || []) {
+        const what = p.what === 'recompute' ? this.T.progress.recompute(p.done ?? '—', p.total ?? '—') : (this.T.progress[p.what] || p.what);
+
+        lines.push(`${ what }${ p.startedMs ? `（${ this.T.progress.since(fmtTime(p.startedMs, this.tz)) }）` : '' }`);
+      }
+
+      return lines;
     },
 
     isoDay(ms) {
@@ -405,11 +423,15 @@ export default {
     </div>
     <div
       class="al5-note"
-      :role="data && data.meta ? 'note' : null"
+      :class="{on: notes.length}"
+      :role="notes.length ? 'note' : null"
     >
-      <template v-if="data && data.meta">
-        {{ noteText(data.meta) }}
-      </template>
+      <div
+        v-for="(l, i) in notes"
+        :key="i"
+      >
+        {{ l }}
+      </div>
     </div>
     <div
       class="al5-progress"

@@ -1,7 +1,7 @@
 <script>
 import AlStateTag from './StateTag.vue';
 import { KIND_TAG, kindOf } from '../../lib/model';
-import { STATES, fmtTime, parseKey } from '../../lib/v5';
+import { STATES, fmtTime, parseKey, eventReason } from '../../lib/v5';
 
 // Audit state transitions only. Collection events keep their two sources apart: what the
 // collector reported, and what Audit Loupe concluded from missing heartbeats (spec §5).
@@ -24,6 +24,7 @@ export default {
     },
   },
   methods: {
+    eventReason,
     fmt(ms) {
       return fmtTime(ms, this.tz);
     },
@@ -103,7 +104,7 @@ export default {
             >{{ T.evSource[e.source] || e.source }}</span>
           </div>
           <div class="muted small">
-            {{ e.reason }}<template v-if="e.held">
+            {{ eventReason(T, e) }}<template v-if="e.held">
               ・ <a
                 :href="e.heldHref || undefined"
                 class="link"

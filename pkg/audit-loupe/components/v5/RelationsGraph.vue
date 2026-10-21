@@ -1,4 +1,6 @@
 <script>
+import { shortWho } from '../../lib/v5';
+
 // Identity → via → cluster → object, four columns of an SVG. Line width = count, bypassing
 // Rancher = red dashes. Clicking a node narrows the drawing to what it touched.
 const COLS = ['identity', 'via', 'cluster', 'object'];
@@ -145,7 +147,17 @@ export default {
       }
     },
     label(n) {
-      const l = n.type === 'via' ? (this.T.via[n.label] || n.label) : n.label;
+      let l = n.label;
+
+      if (n.type === 'via') {
+        l = this.T.via[n.label] || n.label;
+      } else if (n.type === 'identity' && n.noActor) {
+        l = this.T.noActor;
+      } else if (n.type === 'identity' && n.group) {
+        l = this.T.groupOf(this.T.category[n.category] || n.category);
+      } else if (n.type === 'identity') {
+        l = shortWho(n.label);
+      }
 
       return l.length > 30 ? `${ l.slice(0, 29) }…` : l;
     },

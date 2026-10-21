@@ -1,5 +1,5 @@
 <script>
-import { fmtTime, shiftDay } from '../../lib/v5';
+import { fmtTime, shiftDay, eventReason } from '../../lib/v5';
 
 // Bottom timeline, on every tab. One merged line by default; one line per selected cluster
 // (per-minute slots when one is selected, as sent by the backend). Dragging picks a range.
@@ -92,7 +92,7 @@ export default {
       return fmtTime(ms, this.tz);
     },
     gapTitle(g) {
-      return `${ this.fmt(g.fromMs) }–${ this.fmt(g.toMs) } ${ g.reason || '' }`;
+      return `${ this.fmt(g.fromMs) }–${ this.fmt(g.toMs) } ${ eventReason(this.T, g) }`;
     },
     shiftDay,
   },

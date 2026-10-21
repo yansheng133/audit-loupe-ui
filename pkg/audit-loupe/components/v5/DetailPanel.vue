@@ -2,7 +2,7 @@
 import AlStateTag from './StateTag.vue';
 import { KIND_TAG, kindOf } from '../../lib/model';
 import {
-  fmtTime, getHistory, parseKey, splitDepends, BATCH
+  fmtTime, getHistory, parseKey, splitDepends, BATCH, reasonText, noteText, shortWho
 } from '../../lib/v5';
 
 // Plain JSON line diff, enough to show what changed between two stored versions.
@@ -108,6 +108,9 @@ export default {
     },
   },
   methods: {
+    reasonText,
+    noteText,
+    shortWho,
     pos(t) {
       return `${ Math.min(100, Math.max(0, ((t - this.d0) / 864e5) * 100)) }%`;
     },
@@ -201,9 +204,9 @@ export default {
             :T="T"
             :value="detail.state"
             :severity="detail.severity"
-            :reason="detail.stateReason"
+            :reason="reasonText(T, detail.stateReasonCode, detail.stateReason)"
           />
-          <span>{{ detail.stateReason }}</span>
+          <span>{{ reasonText(T, detail.stateReasonCode, detail.stateReason) }}</span>
         </div>
       </div>
 
@@ -307,15 +310,18 @@ export default {
             <span class="num t">{{ fmt(o.t) }}</span>
             <div>
               <div>
-                <b>{{ o.who || T.category.unknown }}</b> {{ o.verb }}
+                <b :title="o.who">{{ o.who ? shortWho(o.who) : T.noActor }}</b> {{ o.verb }}
                 <small
-                  v-if="o.category"
+                  v-if="o.who && o.category"
                   class="cat"
                 >{{ T.category[o.category] || o.category }}</small>
               </div>
-              <div class="muted small">
-                {{ T.via[o.via] || o.via }}<template v-if="o.note">
-                  ・ {{ o.note }}
+              <div
+                v-if="o.who"
+                class="muted small"
+              >
+                {{ T.via[o.via] || o.via }}<template v-if="noteText(T, o.noteCode, o.note)">
+                  ・ {{ noteText(T, o.noteCode, o.note) }}
                 </template>
               </div>
               <button
@@ -340,9 +346,9 @@ export default {
           :key="`d${i}`"
           class="depends"
         >
-          <span class="badge">{{ T.detail.dependsOn }}：{{ d.setting }}</span>
+          <span class="badge">{{ T.detail.dependsOn }}{{ T.colon }}{{ (T.depends[d.code] || d).setting }}</span>
           <div class="small">
-            {{ d.text }}
+            {{ (T.depends[d.code] || d).text }}
           </div>
         </div>
 
@@ -378,7 +384,7 @@ export default {
         <span
           class="chain"
           :class="detail.hashChain"
-        >{{ T.detail.hashChain }}：{{ T.detail.chain[detail.hashChain] || detail.hashChain || '—' }}</span>
+        >{{ T.detail.hashChain }}{{ T.colon }}{{ T.detail.chain[detail.hashChain] || detail.hashChain || '—' }}</span>
       </div>
     </template>
   </aside>

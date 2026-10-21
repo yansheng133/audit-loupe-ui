@@ -13,6 +13,8 @@ export default {
     T:         { type: Object, required: true },
     relations: { type: Object, default: null },
     sel:       { type: String, default: '' },
+    // The selected object's detail: its operations name the identities and vias on its path.
+    detail:    { type: Object, default: null },
     loading:   { type: Boolean, default: false },
   },
   emits: ['select'],
@@ -40,7 +42,8 @@ export default {
       const pos = {};
 
       byCol.forEach((list, ci) => {
-        const off = (h - list.length * ROW) / 2;
+        // Top-aligned: with many objects, centred identities would start below the fold.
+        const off = 10;
 
         list.forEach((n, i) => {
           pos[n.id] = {
@@ -58,12 +61,21 @@ export default {
     selId() {
       return this.sel ? `object:${ this.sel }` : '';
     },
+    // Edges are totals per pair, so walking back from the object would light every identity
+    // that reached the cluster. The detail's operations say which ones actually touched it.
     lit() {
       if (!this.selId || !this.nodes.some((n) => n.id === this.selId)) {
         return null;
       }
+      const ops = this.detail?.key === this.sel ? this.detail.ops || [] : [];
+      const ids = new Set([this.selId, `cluster:${ this.sel.split('/')[0] }`]);
 
-      return this.reach(this.selId, true);
+      ops.forEach((o) => {
+        ids.add(`identity:${ o.who }`);
+        ids.add(`via:${ o.via }`);
+      });
+
+      return ids;
     },
     drawn() {
       const { pos } = this.layout;

@@ -87,11 +87,13 @@ export default {
   watch: {
     '$route.query'(q) {
       const nv = viewFromQuery(q);
-      const same = JSON.stringify(apiParams(nv).toString()) === JSON.stringify(apiParams(this.v).toString());
+      const sig = (v, sel) => apiParams({ ...v, select: sel ? v.select : '' }).toString();
+      const same = sig(nv, true) === sig(this.v, true);
+      const onlySelect = !same && sig(nv) === sig(this.v);
 
       this.v = nv;
       if (!same) {
-        this.load();
+        this.load(null, onlySelect);
       }
     },
   },
@@ -108,7 +110,7 @@ export default {
       this.$router.replace({ query: queryFromView(v) }).catch(() => {});
     },
 
-    async load(cursor = null) {
+    async load(cursor = null, onlySelect = false) {
       const params = apiParams(this.v, cursor);
       const my = ++this.seq;
 
@@ -121,10 +123,15 @@ export default {
         if (my !== this.seq) {
           return;
         }
-        // Each tab only returns its own blocks; keep what the other tabs already have.
+        // Each tab only returns its own blocks; keep what the other tabs already have. Picking
+        // another object keeps the rows already loaded, so later pages stay.
+        const keepRows = !cursor && onlySelect && this.rows.length;
+
         this.data = { ...(this.data || {}), ...res };
-        this.rows = cursor ? [...this.rows, ...(res.rows || [])] : (res.rows || this.rows);
-        this.next = res.next ?? null;
+        if (!keepRows && res.rows) {
+          this.rows = cursor ? [...this.rows, ...res.rows] : res.rows;
+          this.next = res.next ?? null;
+        }
         this.detailOpen = true;
       } catch (e) {
         if (my !== this.seq) {
@@ -147,12 +154,16 @@ export default {
       this.set({ state: this.v.state === s ? '' : s, select: '' });
     },
 
-    setCluster(e) {
-      const val = e.target.value;
-
+    setClusters(list) {
       this.set({
-        cluster: val ? [val] : [], namespace: '', select: '', from: null, to: null
+        cluster: list, namespace: '', select: '', from: null, to: null
       });
+    },
+
+    toggleCluster(c) {
+      const cur = this.v.cluster;
+
+      this.setClusters(cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c].sort());
     },
 
     select(key) {
@@ -194,19 +205,27 @@ export default {
         </button>
       </nav>
       <div class="filters">
-        <label>{{ T.cluster }}
-          <select
-            :value="v.cluster[0] || ''"
-            @change="setCluster"
-          >
-            <option value="">{{ T.all }}</option>
-            <option
+        <details class="multi">
+          <summary>{{ T.cluster }} <b>{{ v.cluster.length ? v.cluster.join('、') : T.all }}</b></summary>
+          <div class="multi-pop">
+            <label
               v-for="c in clusterOptions"
               :key="c"
-              :value="c"
-            >{{ c }}</option>
-          </select>
-        </label>
+            ><input
+              type="checkbox"
+              :checked="v.cluster.includes(c)"
+              @change="toggleCluster(c)"
+            > {{ c }}</label>
+            <button
+              v-if="v.cluster.length"
+              type="button"
+              class="link"
+              @click="setClusters([])"
+            >
+              {{ T.clear }}
+            </button>
+          </div>
+        </details>
         <label>{{ T.namespace }}
           <select
             :value="v.namespace"
@@ -240,10 +259,11 @@ export default {
       </div>
     </div>
     <div
-      v-if="loading"
       class="al5-progress"
+      :class="{on: loading}"
       role="progressbar"
       :aria-label="T.busy"
+      :aria-hidden="String(!loading)"
     />
 
     <div
@@ -293,6 +313,7 @@ export default {
           :T="T"
           :relations="data && data.relations"
           :sel="selKey"
+          :detail="data && data.detail"
           :loading="loading"
           @select="select"
         />

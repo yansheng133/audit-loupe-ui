@@ -55,7 +55,7 @@ const ZH = {
     pick: '選一個物件看細節', versions: '版本', from: '從', to: '到', noDiff: '兩個版本內容相同。', loading: '讀取中…',
   },
   tl: {
-    prev: '前一天', next: '後一天', merged: '全部叢集', state: '稽核狀態', range: '時間範圍', rangeAll: '整天（拖曳時間列可選範圍）', clearRange: '清除範圍',
+    prev: '前一天', next: '後一天', date: '日期', merged: '全部叢集', state: '稽核狀態', range: '時間範圍', rangeAll: '整天（拖曳時間列可選範圍）', clearRange: '清除範圍',
     legend: { look: '有要看的物件', blind: '看不到（沒有收集）', unknown: '狀態還無法判斷', op: '操作' },
     slot: (m) => `每 ${ m } 分鐘一格`,
   },
@@ -112,7 +112,7 @@ const EN = {
     pick: 'Pick an object to see details', versions: 'Versions', from: 'From', to: 'To', noDiff: 'The two versions are identical.', loading: 'Loading…',
   },
   tl: {
-    prev: 'Previous day', next: 'Next day', merged: 'All clusters', state: 'audit state', range: 'Range', rangeAll: 'Whole day (drag the timeline to pick a range)', clearRange: 'Clear range',
+    prev: 'Previous day', next: 'Next day', date: 'Date', merged: 'All clusters', state: 'audit state', range: 'Range', rangeAll: 'Whole day (drag the timeline to pick a range)', clearRange: 'Clear range',
     legend: { look: 'Objects to look at', blind: 'Blind (not collected)', unknown: 'Not decidable yet', op: 'Operation' },
     slot: (m) => `${ m }-minute slots`,
   },

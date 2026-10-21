@@ -17,7 +17,7 @@
   height: calc(100vh - var(--header-height, 55px) - 40px);
   min-height: 560px;
   display: grid;
-  grid-template-rows: 44px auto minmax(0, 1fr) auto;
+  grid-template-rows: 44px 3px minmax(0, 1fr) auto;
   color: var(--al-fg);
   font-size: 13.5px;
   line-height: 1.45;
@@ -56,10 +56,16 @@
   .tabs button.on { border-bottom-color: var(--al-primary); color: var(--al-primary); font-weight: 700; }
   .filters { margin-left: auto; display: flex; align-items: center; gap: 12px; white-space: nowrap; overflow: hidden; }
   .filters label { display: flex; align-items: center; gap: 4px; color: var(--al-muted); margin: 0; }
-  .filters select { width: auto; max-width: 160px; padding: 2px 4px; height: 28px; color: var(--al-primary); background: var(--al-surface); border: 1px solid var(--al-border); }
+  .filters select { font-size: 13px; line-height: 1.2; width: auto; max-width: 160px; padding: 2px 4px; height: 28px; color: var(--al-primary); background: var(--al-surface); border: 1px solid var(--al-border); }
+  .multi { position: relative; color: var(--al-muted); }
+  .multi summary { cursor: pointer; list-style: none; }
+  .multi summary b { color: var(--al-primary); font-weight: 400; }
+  .multi-pop { position: fixed; z-index: 20; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; background: var(--al-surface); border: 1px solid var(--al-border); border-radius: 4px; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); color: var(--al-fg); }
+  .multi-pop label { display: flex; gap: 6px; align-items: center; margin: 0; color: var(--al-fg); font-size: 13px; }
   .tz { color: var(--al-muted); padding-left: 12px; border-left: 1px solid var(--al-border); cursor: help; }
 
-  .al5-progress { height: 3px; background: linear-gradient(90deg, transparent, var(--al-primary), transparent); background-size: 50% 100%; background-repeat: no-repeat; animation: al5-move 1.2s linear infinite; }
+  .al5-progress { visibility: hidden; }
+  .al5-progress.on { visibility: visible; height: 3px; background: linear-gradient(90deg, transparent, var(--al-primary), transparent); background-size: 50% 100%; background-repeat: no-repeat; animation: al5-move 1.2s linear infinite; }
 
   // ---------- main + detail ----------
   .al5-main { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
@@ -168,7 +174,7 @@
   // ---------- timeline ----------
   .tl { border-top: 1px solid var(--al-border); padding: 8px 12px 6px; background: var(--al-surface); }
   .tl-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .tl-top input[type=date] { width: auto; height: 28px; padding: 2px 6px; }
+  .tl-top input[type=date] { font-size: 13px; width: auto; height: 28px; padding: 2px 6px; }
   .tl .legend { margin-left: auto; display: flex; gap: 12px; font-size: 12px; color: var(--al-muted); flex-wrap: wrap; }
   .lg { display: inline-block; width: 16px; height: 4px; margin-right: 4px; vertical-align: middle; background: var(--und); }
   .lg.look { background: var(--bad); }
@@ -183,7 +189,7 @@
   .seg.none { background: color-mix(in srgb, var(--und) 30%, transparent); }
   .seg.look { background: var(--bad); }
   .seg.unclear { background: var(--dim); }
-  .seg.clear { background: var(--ok); }
+  .seg.clear { background: color-mix(in srgb, var(--und) 60%, transparent); }
   .seg.unknown { background: var(--und); }
   .seg.blind, .gap { top: 3px; height: 12px; background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--und) 70%, transparent) 4px 6px); }
   .gap { border-left: 1px dashed var(--dim); border-right: 1px dashed var(--dim); }

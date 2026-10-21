@@ -112,7 +112,7 @@ export default {
       <input
         type="date"
         :value="day"
-        :aria-label="T.tl.state"
+        :aria-label="T.tl.date"
         @change="$event.target.value && $emit('day', $event.target.value)"
       >
       <button

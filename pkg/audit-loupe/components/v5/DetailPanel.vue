@@ -1,6 +1,6 @@
 <script>
 import AlStateTag from './StateTag.vue';
-import { KIND_TAG } from '../../lib/model';
+import { KIND_TAG, kindOf } from '../../lib/model';
 import { fmtTime, getHistory, parseKey } from '../../lib/v5';
 
 // Plain JSON line diff, enough to show what changed between two stored versions.
@@ -63,7 +63,9 @@ export default {
       return parseKey(this.key);
     },
     kindTag() {
-      return KIND_TAG[this.row?.kind] || String(this.row?.kind || this.k.resource || '').toUpperCase();
+      const kind = this.row?.kind || kindOf(this.k.resource);
+
+      return KIND_TAG[kind] || String(kind || '').toUpperCase();
     },
     name() {
       return this.row?.name || this.k.name;
@@ -111,7 +113,8 @@ export default {
       }
       try {
         const key = this.key;
-        const v = await getHistory(key);
+        // /api/history answers newest first; oldest first reads naturally here.
+        const v = [...await getHistory(key)].sort((x, y) => Date.parse(x.observed) - Date.parse(y.observed));
 
         if (key === this.key) {
           this.versions = v;
@@ -123,7 +126,7 @@ export default {
       }
     },
     verLabel(v, i) {
-      return `#${ i + 1 } ${ v.observed } ${ v.change }`;
+      return `#${ i + 1 } ${ v.observed.slice(0, 10) } ${ fmtTime(Date.parse(v.observed), this.tz) } ${ v.change }`;
     },
     exportJson() {
       const blob = new Blob([JSON.stringify({ detail: this.detail, row: this.row }, null, 2)], { type: 'application/json' });
@@ -287,7 +290,7 @@ export default {
             <span class="num t">{{ fmt(o.t) }}</span>
             <div>
               <div>
-                <b>{{ o.who }}</b> {{ o.verb }}
+                <b>{{ o.who || T.category.unknown }}</b> {{ o.verb }}
                 <small
                   v-if="o.category"
                   class="cat"

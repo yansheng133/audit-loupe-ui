@@ -311,6 +311,10 @@ export default {
             <div>
               <div>
                 <b :title="o.who">{{ o.who ? shortWho(o.who) : T.noActor }}</b> {{ o.verb }}
+                <span
+                  v-if="o.cascade"
+                  class="muted"
+                >{{ o.cascade }}{{ T.colon }}{{ T.cascade }}</span>
                 <small
                   v-if="o.who && o.category"
                   class="cat"

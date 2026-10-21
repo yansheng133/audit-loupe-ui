@@ -85,10 +85,10 @@
   table.ov { width: 100%; border-collapse: collapse; table-layout: fixed; }
   .ov th { position: sticky; top: 0; z-index: 1; background: var(--al-surface); text-align: left; font-weight: 600; color: var(--al-muted); font-size: 12px; padding: 4px 6px; border-bottom: 1px solid var(--al-border); }
   .ov th:nth-child(1) { width: 118px; }
-  .ov th:nth-child(2) { width: 21%; }
-  .ov th:nth-child(3) { width: 14%; }
+  .ov th:nth-child(2) { width: 20%; }
+  .ov th:nth-child(3) { width: 13%; }
   .ov th:nth-child(4) { width: 12%; }
-  .ov th:nth-child(8) { width: 16%; }
+  .ov th:nth-child(8) { width: 13%; }
   .ov th:nth-child(5) { width: 52px; }
   .ov th:nth-child(6) { width: 64px; }
   .ov td { height: 34px; padding: 0 6px; border-bottom: 1px solid var(--al-border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

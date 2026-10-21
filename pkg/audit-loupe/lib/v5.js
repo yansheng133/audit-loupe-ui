@@ -20,6 +20,7 @@ const ZH = {
   tzServer:  '後端設定',
   colon:     '：',
   noActor:   '找不到執行者',
+  cascade:   '刪除 namespace 時一併清空',
   groupOf:   (cat) => `${ cat }（群組）`,
   // Reason codes from the backend (API contract v0.2); an unknown code falls back to its text.
   reason:    {
@@ -170,6 +171,7 @@ const EN = {
   tzServer:  'backend setting',
   colon:     ': ',
   noActor:   'No author found',
+  cascade:   'emptied when the namespace was deleted',
   groupOf:   (cat) => `${ cat } (group)`,
   reason:    {
     'alert-high':         'High-risk alert this day',

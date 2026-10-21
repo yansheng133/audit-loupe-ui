@@ -11,6 +11,22 @@ import {
 
 // v5 change map (docs/design/v5/spec.md). One /api/changemap request per user action; the
 // URL holds the whole view so a copied link reopens the same screen.
+
+// The detail panel's width once dragged, remembered in this browser (a convenience; it may be
+// unavailable). Until then it follows the page width (PANEL_AUTO).
+const PANEL_KEY = 'audit-loupe.v5.panel-width';
+const PANEL_AUTO = 'clamp(320px, 30%, 480px)';
+const PANEL_MIN = 320;
+
+function savedPanelWidth() {
+  try {
+    const w = parseInt(window.localStorage.getItem(PANEL_KEY), 10);
+
+    return w >= PANEL_MIN ? w : null;
+  } catch (e) {
+    return null;
+  }
+}
 export default {
   name:       'AuditLoupeChangeMapV5',
   components: {
@@ -37,6 +53,8 @@ export default {
       missing:    false,
       detailOpen: true,
       seq:        0,
+      full:       false,
+      panelW:     savedPanelWidth(),
     };
   },
 
@@ -104,6 +122,14 @@ export default {
 
   created() {
     this.load();
+  },
+
+  mounted() {
+    window.addEventListener('keydown', this.onKey);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('keydown', this.onKey);
   },
 
   methods: {
@@ -200,6 +226,64 @@ export default {
       }
     },
 
+    onKey(e) {
+      if (e.key === 'Escape' && this.full) {
+        this.full = false;
+      }
+    },
+
+    setPanel(w) {
+      const main = this.$el.querySelector('.al5-main');
+      const max = Math.max(PANEL_MIN, Math.round((main?.clientWidth || 1200) * 0.7));
+
+      this.panelW = Math.min(Math.max(Math.round(w), PANEL_MIN), max);
+    },
+
+    savePanel() {
+      try {
+        if (this.panelW) {
+          window.localStorage.setItem(PANEL_KEY, String(this.panelW));
+        } else {
+          window.localStorage.removeItem(PANEL_KEY);
+        }
+      } catch (e) {}
+    },
+
+    // Drag the line between the list and the detail panel.
+    startResize(e) {
+      const main = this.$el.querySelector('.al5-main');
+      const right = main.getBoundingClientRect().right;
+
+      if (!this.panelW) {
+        this.panelW = Math.round(main.lastElementChild.getBoundingClientRect().width);
+      }
+      const move = (ev) => this.setPanel(right - ev.clientX);
+      const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        this.savePanel();
+      };
+
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+      e.preventDefault();
+    },
+
+    resizeKey(e) {
+      const step = { ArrowLeft: 40, ArrowRight: -40 }[e.key];
+
+      if (step) {
+        this.setPanel((this.panelW || this.$el.querySelector('.al5-main').lastElementChild.getBoundingClientRect().width) + step);
+        this.savePanel();
+        e.preventDefault();
+      }
+    },
+
+    resetPanel() {
+      this.panelW = null;
+      this.savePanel();
+    },
+
     toggleState(s) {
       this.set({ state: this.v.state === s ? '' : s, select: '' });
     },
@@ -226,13 +310,15 @@ export default {
     },
   },
   STATES,
+  PANEL_AUTO,
 };
 </script>
 
 <template>
   <div
     class="al5"
-    :class="{'has-detail': !!detail}"
+    :class="{'has-detail': !!detail, full}"
+    :style="{'--al-panel': panelW ? `${ panelW }px` : $options.PANEL_AUTO}"
   >
     <div
       class="al5-bar"
@@ -306,6 +392,15 @@ export default {
           class="tz"
           :title="T.tzHint(tz, data ? T.tzServer : 'browser')"
         >{{ T.tz }} {{ tz }}</span>
+        <button
+          type="button"
+          class="btn-al full-btn"
+          :aria-pressed="String(full)"
+          :title="full ? T.exitFull : T.full"
+          @click="full = !full"
+        >
+          {{ full ? '⤡' : '⤢' }} {{ full ? T.exitFull : T.full }}
+        </button>
       </div>
     </div>
     <div
@@ -343,7 +438,7 @@ export default {
               v-for="s in $options.STATES"
               :key="s"
               :T="T"
-              :state="s"
+              :value="s"
               :count="counts ? counts[s] : '—'"
               :active="v.state === s"
               clickable
@@ -385,6 +480,18 @@ export default {
           @select="select"
         />
       </section>
+      <div
+        v-if="detail"
+        class="al5-resize"
+        role="separator"
+        aria-orientation="vertical"
+        :aria-valuenow="panelW || undefined"
+        :title="T.resize"
+        tabindex="0"
+        @pointerdown="startResize"
+        @dblclick="resetPanel"
+        @keydown="resizeKey"
+      />
       <AlDetailPanel
         v-if="detail"
         :T="T"

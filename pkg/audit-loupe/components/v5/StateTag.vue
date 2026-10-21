@@ -2,11 +2,13 @@
 import { stateLabel } from '../../lib/v5';
 
 // One audit state label (look / unclear / blind / clear). The tooltip says why (spec §2).
+// The state is passed as `value`: Rancher's shell gives every component a `state` of its own
+// (the fetch state), which a prop of that name loses to; the label then showed that object.
 export default {
   name:  'AlStateTag',
   props: {
     T:         { type: Object, required: true },
-    state:     { type: String, default: '' },
+    value:     { type: String, default: '' },
     severity:  { type: String, default: '' },
     reason:    { type: String, default: '' },
     // Overrides the state's own name, e.g. "normal" for a collector.
@@ -18,12 +20,12 @@ export default {
   emits:    ['click'],
   computed: {
     text() {
-      const l = this.label || stateLabel(this.T, this.state, this.severity);
+      const l = this.label || stateLabel(this.T, this.value, this.severity);
 
       return this.count === null ? l : `${ l } ${ this.count }`;
     },
     title() {
-      return [this.T.stateHint[this.state], this.reason].filter(Boolean).join('：');
+      return [this.T.stateHint[this.value], this.reason].filter(Boolean).join('：');
     },
   },
 };
@@ -34,7 +36,7 @@ export default {
     :is="clickable ? 'button' : 'span'"
     :type="clickable ? 'button' : undefined"
     class="stp"
-    :class="[state, { active }]"
+    :class="[value, { active }]"
     :title="title"
     :aria-pressed="clickable ? String(active) : undefined"
     @click="clickable && $emit('click')"

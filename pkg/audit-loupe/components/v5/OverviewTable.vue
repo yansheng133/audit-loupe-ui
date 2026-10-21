@@ -119,7 +119,7 @@ export default {
           <td>
             <AlStateTag
               :T="T"
-              :state="r.state"
+              :value="r.state"
               :severity="r.severity"
               :reason="r.stateReason"
             />

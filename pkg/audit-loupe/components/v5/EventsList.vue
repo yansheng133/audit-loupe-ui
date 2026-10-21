@@ -49,15 +49,15 @@ export default {
       const [state, severity] = String(s).split(':');
 
       if (this.isObj(e)) {
-        return STATES.includes(state) ? { state, severity } : null;
+        return STATES.includes(state) ? { value: state, severity } : null;
       }
 
-      return { state: state === 'ok' ? 'clear' : 'blind', label: this.T.collect[state] || state };
+      return { value: state === 'ok' ? 'clear' : 'blind', label: this.T.collect[state] || state };
     },
     icon(e) {
       const to = this.stateOf(e, e.to);
 
-      return to ? to.state : 'clear';
+      return to ? to.value : 'clear';
     },
     pick(e) {
       if (this.isObj(e)) {

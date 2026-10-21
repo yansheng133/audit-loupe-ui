@@ -13,6 +13,9 @@ const ZH = {
   state:     '稽核狀態',
   all:       '全部',
   tz:        '時區',
+  full:      '全螢幕',
+  exitFull:  '離開全螢幕（Esc）',
+  resize:    '拖曳調整細節欄寬度；雙擊恢復預設',
   tzHint:    (tz, src) => `時區 ${ tz }（來源：${ src }）`,
   tzServer:  '後端設定',
   states:    {
@@ -113,6 +116,9 @@ const EN = {
   state:     'Audit state',
   all:       'All',
   tz:        'Time zone',
+  full:      'Full screen',
+  exitFull:  'Exit full screen (Esc)',
+  resize:    'Drag to resize the detail panel; double-click to reset',
   tzHint:    (tz, src) => `Time zone ${ tz } (source: ${ src })`,
   tzServer:  'backend setting',
   states:    {

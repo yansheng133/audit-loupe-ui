@@ -69,7 +69,13 @@
 
   // ---------- main + detail ----------
   .al5-main { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
-  &.has-detail .al5-main { grid-template-columns: minmax(0, 1fr) 400px; }
+  &.has-detail .al5-main { grid-template-columns: minmax(0, 1fr) 6px var(--al-panel, 400px); }
+  // The line between the list and the detail panel; drag it to make either side wider.
+  .al5-resize { cursor: col-resize; background: var(--al-border); opacity: .5; touch-action: none; }
+  .al5-resize:hover, .al5-resize:focus-visible { background: var(--al-primary); opacity: 1; }
+  // Full screen: the page covers Rancher's menus and header (Esc or the button leaves).
+  &.full { position: fixed; inset: 0; z-index: 1000; height: 100vh; min-height: 0; border: 0; border-radius: 0; }
+  .full-btn { white-space: nowrap; }
   .al5-content { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 10px 12px 0; overflow: hidden; }
 
   // ---------- overview ----------
@@ -78,7 +84,7 @@
   .ov-scroll { flex: 1; min-height: 0; overflow: auto; }
   table.ov { width: 100%; border-collapse: collapse; table-layout: fixed; }
   .ov th { position: sticky; top: 0; z-index: 1; background: var(--al-surface); text-align: left; font-weight: 600; color: var(--al-muted); font-size: 12px; padding: 4px 6px; border-bottom: 1px solid var(--al-border); }
-  .ov th:nth-child(1) { width: 92px; }
+  .ov th:nth-child(1) { width: 118px; }
   .ov th:nth-child(2) { width: 22%; }
   .ov th:nth-child(3) { width: 16%; }
   .ov th:nth-child(4) { width: 15%; }
@@ -144,7 +150,8 @@
   .dt-head { padding: 10px 14px; border-bottom: 1px solid var(--al-border); }
   .dt-title { display: flex; align-items: center; gap: 4px; font-size: 15px; }
   .dt-title .x { margin-left: auto; border: 0; background: none; font-size: 18px; cursor: pointer; color: var(--al-muted); }
-  .dt-state { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+  .dt-state { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 6px; }
+  .dt-state > span:not(.stp) { flex: 1 1 180px; min-width: 0; }
   .dt-body { flex: 1; overflow: auto; padding: 0 14px 12px; }
   .strip-axis { display: flex; justify-content: space-between; font-size: 11px; }
   .acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
@@ -217,7 +224,8 @@
 // Narrow: the detail panel becomes a drawer over the main area (spec §1).
 @media (max-width: 1100px) {
   .al5.has-detail .al5-main { grid-template-columns: minmax(0, 1fr); }
-  .al5 .dt { position: absolute; top: 0; right: 0; bottom: 0; width: min(400px, 92%); z-index: 5; box-shadow: -8px 0 24px rgba(0, 0, 0, .25); }
+  .al5 .dt { position: absolute; top: 0; right: 0; bottom: 0; width: min(var(--al-panel, 400px), 92%); z-index: 5; box-shadow: -8px 0 24px rgba(0, 0, 0, .25); }
+  .al5 .al5-resize { display: none; }
   .al5 .filters label { font-size: 0; gap: 0; }
 }
 

@@ -199,7 +199,7 @@ export default {
         <div class="dt-state">
           <AlStateTag
             :T="T"
-            :state="detail.state"
+            :value="detail.state"
             :severity="detail.severity"
             :reason="detail.stateReason"
           />

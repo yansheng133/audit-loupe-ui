@@ -169,6 +169,12 @@ export default {
     >
       {{ T.detail.pick }}
     </div>
+    <div
+      v-else-if="detail.none"
+      class="dt-empty muted"
+    >
+      <b class="mono">{{ name }}</b> {{ T.detail.none }}
+    </div>
     <template v-else>
       <div class="dt-head">
         <div class="dt-title">

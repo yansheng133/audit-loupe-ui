@@ -1,6 +1,6 @@
 // v5 change map: texts, the one /api/changemap request per user action, and URL <-> view state.
 // The backend computes every audit state; this file only formats what it returns.
-import { getJson } from './api';
+import { getJson, baseUrl } from './api';
 import { pad } from './model';
 
 // ---------- text ----------
@@ -81,6 +81,7 @@ const ZH = {
       ok: '驗證通過', broken: '斷開', pending: '尚未驗證'
     },
     pick:     '選一個物件看細節',
+    none:     '這個物件在這一天沒有紀錄。',
     versions: '版本',
     from:     '從',
     to:       '到',
@@ -180,6 +181,7 @@ const EN = {
       ok: 'verified', broken: 'broken', pending: 'not verified yet'
     },
     pick:     'Pick an object to see details',
+    none:     'This object has no records on this day.',
     versions: 'Versions',
     from:     'From',
     to:       'To',
@@ -345,7 +347,10 @@ export function fetchChangemap(params) {
 }
 
 // The right-hand detail of one object (API v0.1): a click on a row asks only for this.
-export function fetchDetail(v, key) {
+// A 404 whose body says {"error":"no-records"} means the object has no records that day; it
+// comes back as { key, none: true }. Any other 404 (an older backend without this call) is
+// thrown with its status, and the page falls back to asking for the whole page.
+export async function fetchDetail(v, key) {
   const p = new URLSearchParams();
 
   p.set('day', v.day);
@@ -353,8 +358,26 @@ export function fetchDetail(v, key) {
   if (v.system) {
     p.set('system', '1');
   }
+  const res = await fetch(`${ baseUrl() }/api/changemap/detail?${ p }`, {
+    credentials: 'same-origin',
+    headers:     { Accept: 'application/json' },
+  });
 
-  return getJson('/api/changemap/detail', p);
+  if (res.status === 404) {
+    const body = await res.json().catch(() => null);
+
+    if (body?.error === 'no-records') {
+      return { key, none: true };
+    }
+  }
+  if (!res.ok) {
+    const err = new Error(`HTTP ${ res.status }`);
+
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json();
 }
 
 // Rows without a name (API v0.1): "*" stands for a deletecollection or a server-named create.

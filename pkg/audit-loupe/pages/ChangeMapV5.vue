@@ -154,8 +154,9 @@ export default {
       }
     },
 
-    // A click on a row asks only for that object's detail (API v0.1). A backend without the
-    // detail call (older v0) answers 404; then the whole page is asked for, as before.
+    // A click on a row asks only for that object's detail (API v0.1). "No records that day"
+    // comes back as { none: true } and is shown in the panel. A backend without the detail
+    // call (older v0) answers a bare 404; then the whole page is asked for, as before.
     async loadDetail(key) {
       const my = ++this.seq;
 
@@ -308,11 +309,12 @@ export default {
       </div>
     </div>
     <div
-      v-if="data && data.meta"
       class="al5-note"
-      role="note"
+      :role="data && data.meta ? 'note' : null"
     >
-      {{ noteText(data.meta) }}
+      <template v-if="data && data.meta">
+        {{ noteText(data.meta) }}
+      </template>
     </div>
     <div
       class="al5-progress"

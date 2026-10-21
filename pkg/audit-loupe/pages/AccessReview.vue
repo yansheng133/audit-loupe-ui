@@ -37,7 +37,9 @@ export default {
 
       return (this.snap?.users || [])
         .filter((u) => !q || u.display_name.toLowerCase().includes(q) || u.user_id.includes(q))
-        .map((u) => ({ ...u, admin: u.grants.some((g) => g.admin_like), viaGroup: u.grants.filter((g) => g.via_group).length }));
+        .map((u) => ({
+          ...u, admin: u.grants.some((g) => g.admin_like), viaGroup: u.grants.filter((g) => g.via_group).length
+        }));
     },
     user() {
       return this.users.find((u) => u.user_id === this.sel) || null;

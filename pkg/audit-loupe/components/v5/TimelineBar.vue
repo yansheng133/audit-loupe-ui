@@ -47,7 +47,9 @@ export default {
         if (last && last.state === s.state && last.end === s.t) {
           last.end = s.t + this.slotMs;
         } else {
-          out.push({ state: s.state, start: s.t, end: s.t + this.slotMs });
+          out.push({
+            state: s.state, start: s.t, end: s.t + this.slotMs
+          });
         }
       });
 

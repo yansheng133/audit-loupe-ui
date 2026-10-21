@@ -27,16 +27,16 @@ export default {
     const v = viewFromQuery(this.$route.query);
 
     return {
-      T:         textsV5(this.$store),
+      T:          textsV5(this.$store),
       v,
-      data:      null,
-      rows:      [],
-      next:      null,
-      loading:   false,
-      error:     '',
-      missing:   false,
+      data:       null,
+      rows:       [],
+      next:       null,
+      loading:    false,
+      error:      '',
+      missing:    false,
       detailOpen: true,
-      seq:       0,
+      seq:        0,
     };
   },
 

@@ -6,10 +6,10 @@ import Rules from './pages/Rules.vue';
 import { PRODUCT, BLANK_CLUSTER, routeName } from './product';
 
 const page = (name, component) => ({
-  name:      routeName(name),
-  path:      `/${ PRODUCT }/c/:cluster/${ name }`,
+  name: routeName(name),
+  path: `/${ PRODUCT }/c/:cluster/${ name }`,
   component,
-  meta:      {
+  meta: {
     product: PRODUCT, cluster: BLANK_CLUSTER, pkg: PRODUCT
   },
 });

@@ -5,14 +5,14 @@ import { stateLabel } from '../../lib/v5';
 export default {
   name:  'AlStateTag',
   props: {
-    T:        { type: Object, required: true },
-    state:    { type: String, default: '' },
-    severity: { type: String, default: '' },
-    reason:   { type: String, default: '' },
+    T:         { type: Object, required: true },
+    state:     { type: String, default: '' },
+    severity:  { type: String, default: '' },
+    reason:    { type: String, default: '' },
     // Overrides the state's own name, e.g. "normal" for a collector.
-    label:    { type: String, default: '' },
-    count:    { type: [Number, String], default: null },
-    active:   { type: Boolean, default: false },
+    label:     { type: String, default: '' },
+    count:     { type: [Number, String], default: null },
+    active:    { type: Boolean, default: false },
     clickable: { type: Boolean, default: false },
   },
   emits:    ['click'],
@@ -38,5 +38,7 @@ export default {
     :title="title"
     :aria-pressed="clickable ? String(active) : undefined"
     @click="clickable && $emit('click')"
-  >{{ text }}</component>
+  >
+    {{ text }}
+  </component>
 </template>

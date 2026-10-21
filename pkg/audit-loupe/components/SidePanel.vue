@@ -1,7 +1,5 @@
 <script>
-import {
-  sevOf, worst, isRisky, fmtDate
-} from '../lib/model';
+import { sevOf, worst, isRisky, fmtDate } from '../lib/model';
 
 // Left column: totals, what needs attention (stories grouped by the server), who did what.
 export default {

@@ -96,7 +96,7 @@ export default {
           dim:   ev.t < this.a || ev.t > this.b,
           sel:   ev.id === this.selEvent,
           color: this.ACTORS[ev.actor].color,
-          label: `${ ev.hhmm }　${ this.ACTORS[ev.actor].label } ${ ev.verb }・${ o.kind } ${ o.name }・${ this.T.via[ev.via] || ev.via }`,
+          label: `${ ev.hhmm }\u3000${ this.ACTORS[ev.actor].label } ${ ev.verb }・${ o.kind } ${ o.name }・${ this.T.via[ev.via] || ev.via }`,
         };
       });
     },
@@ -166,7 +166,9 @@ export default {
       }
     },
     showTip(d) {
-      this.tip = { text: d.label, left: Math.max(4, d.cx - 120), top: d.y - 34 };
+      this.tip = {
+        text: d.label, left: Math.max(4, d.cx - 120), top: d.y - 34
+      };
     },
   },
 };

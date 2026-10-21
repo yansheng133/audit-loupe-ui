@@ -52,7 +52,9 @@ export default {
         });
       });
 
-      return { h, pos, byCol };
+      return {
+        h, pos, byCol
+      };
     },
     maxCount() {
       return Math.max(1, ...this.edges.map((e) => e.count || 1));

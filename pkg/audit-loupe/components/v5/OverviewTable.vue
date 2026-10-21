@@ -126,6 +126,11 @@ export default {
           </td>
           <td class="obj">
             <span class="kind">{{ tag(r.kind) }}</span><span
+              v-if="r.batch || r.name === '*'"
+              class="name batch"
+              :title="T.batchHint(r.key.split('/')[2] || r.kind)"
+            >{{ T.batch }}</span><span
+              v-else
               class="name mono"
               :title="r.key"
             >{{ r.name }}</span>

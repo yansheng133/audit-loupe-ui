@@ -56,9 +56,12 @@ const ZH = {
   evSource:   {
     state: '物件狀態', heartbeat: 'Audit Loupe 沒收到心跳', reported: '收集元件回報'
   },
-  evEmpty:  '這一天沒有稽核狀態的轉變。',
-  heldRows: (n) => `被擱置 ${ n } 行`,
-  detail:   {
+  evEmpty:   '這一天沒有稽核狀態的轉變。',
+  heldRows:  (n) => `被擱置 ${ n } 行`,
+  batch:     '整批',
+  batchHint: (res) => `沒有名稱的寫入（整批刪除 deletecollection，或名稱由系統產生的 create）・ ${ res }`,
+  dataUntil: '資料最後一筆',
+  detail:    {
     close:      '關閉',
     strip:      '稽核狀態（當天）',
     lastChange: '最後一次變更',
@@ -68,6 +71,7 @@ const ZH = {
     noVersions: '這類資源沒有收物件版本',
     who:        '誰動了它',
     dependsOn:  '取決於設定',
+    related:    '相關物件',
     raw:        '原始紀錄',
     export:     '匯出',
     copy:       '複製連結',
@@ -151,9 +155,12 @@ const EN = {
   evSource:   {
     state: 'object state', heartbeat: 'no heartbeat to Audit Loupe', reported: 'reported by collector'
   },
-  evEmpty:  'No audit state changed on this day.',
-  heldRows: (n) => `${ n } lines held`,
-  detail:   {
+  evEmpty:   'No audit state changed on this day.',
+  heldRows:  (n) => `${ n } lines held`,
+  batch:     'Batch',
+  batchHint: (res) => `Writes without a name (deletecollection, or a create whose name the server generated) ・ ${ res }`,
+  dataUntil: 'Newest record',
+  detail:    {
     close:      'Close',
     strip:      'Audit state (this day)',
     lastChange: 'Last change',
@@ -163,6 +170,7 @@ const EN = {
     noVersions: 'Object versions are not collected for this kind',
     who:        'Who touched it',
     dependsOn:  'Depends on settings',
+    related:    'Related objects',
     raw:        'Raw record',
     export:     'Export',
     copy:       'Copy link',
@@ -334,6 +342,33 @@ let early = null;
 
 export function fetchChangemap(params) {
   return getJson('/api/changemap', params);
+}
+
+// The right-hand detail of one object (API v0.1): a click on a row asks only for this.
+export function fetchDetail(v, key) {
+  const p = new URLSearchParams();
+
+  p.set('day', v.day);
+  p.set('key', key);
+  if (v.system) {
+    p.set('system', '1');
+  }
+
+  return getJson('/api/changemap/detail', p);
+}
+
+// Rows without a name (API v0.1): "*" stands for a deletecollection or a server-named create.
+export const BATCH = '*';
+
+// Settings and related objects (API v0.1). An older backend sent related objects as plain
+// strings in dependsOn; those are shown as related objects, never as settings.
+export function splitDepends(detail) {
+  const dep = detail?.dependsOn || [];
+
+  return {
+    settings: dep.filter((d) => d && typeof d === 'object'),
+    related:  [...(detail?.related || []).map((r) => `${ r.rel }: ${ r.kind } ${ r.namespace ? `${ r.namespace }/` : '' }${ r.name }`), ...dep.filter((d) => typeof d === 'string')],
+  };
 }
 
 export function prefetch(query) {

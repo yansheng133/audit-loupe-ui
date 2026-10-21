@@ -1,7 +1,9 @@
 <script>
 import AlStateTag from './StateTag.vue';
 import { KIND_TAG, kindOf } from '../../lib/model';
-import { fmtTime, getHistory, parseKey } from '../../lib/v5';
+import {
+  fmtTime, getHistory, parseKey, splitDepends, BATCH
+} from '../../lib/v5';
 
 // Plain JSON line diff, enough to show what changed between two stored versions.
 function lines(body) {
@@ -67,8 +69,14 @@ export default {
 
       return KIND_TAG[kind] || String(kind || '').toUpperCase();
     },
+    batch() {
+      return !!this.detail?.batch || this.k.name === BATCH;
+    },
     name() {
-      return this.row?.name || this.k.name;
+      return this.batch ? this.T.batch : this.row?.name || this.k.name;
+    },
+    deps() {
+      return splitDepends(this.detail);
     },
     where() {
       return `${ this.k.cluster } / ${ this.k.namespace || this.T.clusterScope }`;
@@ -165,7 +173,10 @@ export default {
       <div class="dt-head">
         <div class="dt-title">
           <span class="kind">{{ kindTag }}</span>
-          <b class="mono">{{ name }}</b>
+          <b
+            :class="{mono: !batch}"
+            :title="batch ? T.batchHint(k.resource) : ''"
+          >{{ name }}</b>
           <button
             type="button"
             class="x"
@@ -319,12 +330,28 @@ export default {
         </ul>
 
         <div
-          v-for="(d, i) in detail.dependsOn || []"
+          v-for="(d, i) in deps.settings"
           :key="`d${i}`"
           class="depends"
         >
-          <span class="badge">{{ T.detail.dependsOn }}</span> {{ d }}
+          <span class="badge">{{ T.detail.dependsOn }}：{{ d.setting }}</span>
+          <div class="small">
+            {{ d.text }}
+          </div>
         </div>
+
+        <template v-if="deps.related.length">
+          <h3>{{ T.detail.related }}</h3>
+          <ul class="related">
+            <li
+              v-for="(r, i) in deps.related"
+              :key="`r${i}`"
+              class="mono small"
+            >
+              {{ r }}
+            </li>
+          </ul>
+        </template>
       </div>
 
       <div class="dt-foot">

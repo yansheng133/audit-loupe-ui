@@ -6,7 +6,7 @@ import AlEventsList from '../components/v5/EventsList.vue';
 import AlRelationsGraph from '../components/v5/RelationsGraph.vue';
 import AlTimelineBar from '../components/v5/TimelineBar.vue';
 import {
-  STATES, textsV5, viewFromQuery, queryFromView, apiParams, fetchChangemap, takePrefetched, dayStartMs, prefetch
+  STATES, textsV5, viewFromQuery, queryFromView, apiParams, fetchChangemap, fetchDetail, takePrefetched, dayStartMs, prefetch, fmtTime
 } from '../lib/v5';
 
 // v5 change map (docs/design/v5/spec.md). One /api/changemap request per user action; the
@@ -93,7 +93,11 @@ export default {
 
       this.v = nv;
       if (!same) {
-        this.load(null, onlySelect);
+        if (onlySelect && nv.select) {
+          this.loadDetail(nv.select);
+        } else {
+          this.load(null, onlySelect);
+        }
       }
     },
   },
@@ -147,6 +151,51 @@ export default {
         if (my === this.seq) {
           this.loading = false;
         }
+      }
+    },
+
+    // A click on a row asks only for that object's detail (API v0.1). A backend without the
+    // detail call (older v0) answers 404; then the whole page is asked for, as before.
+    async loadDetail(key) {
+      const my = ++this.seq;
+
+      this.loading = true;
+      try {
+        const d = await fetchDetail(this.v, key);
+
+        if (my === this.seq) {
+          this.data = { ...(this.data || {}), detail: d };
+          this.detailOpen = true;
+        }
+      } catch (e) {
+        if (my !== this.seq) {
+          return;
+        }
+        if (e.status === 404) {
+          this.load(null, true);
+
+          return;
+        }
+        console.error('audit-loupe: detail failed', e); // eslint-disable-line no-console
+        this.error = `${ this.T.loadFailed }: ${ e.message }`;
+      } finally {
+        if (my === this.seq) {
+          this.loading = false;
+        }
+      }
+    },
+
+    noteText(meta) {
+      return `${ meta.dataNote } ・ ${ this.T.dataUntil } ${ meta.dataUntilMs ? `${ this.isoDay(meta.dataUntilMs) } ${ fmtTime(meta.dataUntilMs, this.tz) }` : '—' }`;
+    },
+
+    isoDay(ms) {
+      try {
+        return new Intl.DateTimeFormat('en-CA', {
+          timeZone: this.tz, year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date(ms));
+      } catch (e) {
+        return '';
       }
     },
 
@@ -257,6 +306,13 @@ export default {
           :title="T.tzHint(tz, data ? T.tzServer : 'browser')"
         >{{ T.tz }} {{ tz }}</span>
       </div>
+    </div>
+    <div
+      v-if="data && data.meta"
+      class="al5-note"
+      role="note"
+    >
+      {{ noteText(data.meta) }}
     </div>
     <div
       class="al5-progress"

@@ -11,6 +11,22 @@ import {
 
 // v5 change map (docs/design/v5/spec.md). One /api/changemap request per user action; the
 // URL holds the whole view so a copied link reopens the same screen.
+
+// The detail panel's width once dragged, remembered in this browser (a convenience; it may be
+// unavailable). Until then it follows the page width (PANEL_AUTO).
+const PANEL_KEY = 'audit-loupe.v5.panel-width';
+const PANEL_AUTO = 'clamp(320px, 30%, 480px)';
+const PANEL_MIN = 320;
+
+function savedPanelWidth() {
+  try {
+    const w = parseInt(window.localStorage.getItem(PANEL_KEY), 10);
+
+    return w >= PANEL_MIN ? w : null;
+  } catch (e) {
+    return null;
+  }
+}
 export default {
   name:       'AuditLoupeChangeMapV5',
   components: {
@@ -37,6 +53,11 @@ export default {
       missing:    false,
       detailOpen: true,
       seq:        0,
+      full:       false,
+      panelW:     savedPanelWidth(),
+      shownMs:    null,
+      shownWhat:  '',
+      openedAt:   (typeof performance !== 'undefined' ? performance.now() : 0),
     };
   },
 
@@ -66,6 +87,9 @@ export default {
       }
 
       return [...set].sort();
+    },
+    notes() {
+      return this.noteLines(this.data && this.data.meta);
     },
     detail() {
       return this.detailOpen ? this.data?.detail || null : null;
@@ -106,6 +130,14 @@ export default {
     this.load();
   },
 
+  mounted() {
+    window.addEventListener('keydown', this.onKey);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('keydown', this.onKey);
+  },
+
   methods: {
     // Change the view: update the URL; the route watcher sends the request when needed.
     set(patch) {
@@ -117,6 +149,8 @@ export default {
     async load(cursor = null, onlySelect = false) {
       const params = apiParams(this.v, cursor);
       const my = ++this.seq;
+      // The first view counts from opening the page; later ones from the click that asked.
+      const t0 = this.shownMs === null ? this.openedAt : performance.now();
 
       this.loading = true;
       this.error = '';
@@ -137,6 +171,7 @@ export default {
           this.next = res.next ?? null;
         }
         this.detailOpen = true;
+        this.timed(t0, cursor ? 'more' : 'view', my);
       } catch (e) {
         if (my !== this.seq) {
           return;
@@ -159,6 +194,7 @@ export default {
     // call (older v0) answers a bare 404; then the whole page is asked for, as before.
     async loadDetail(key) {
       const my = ++this.seq;
+      const t0 = performance.now();
 
       this.loading = true;
       try {
@@ -167,6 +203,7 @@ export default {
         if (my === this.seq) {
           this.data = { ...(this.data || {}), detail: d };
           this.detailOpen = true;
+          this.timed(t0, 'detail', my);
         }
       } catch (e) {
         if (my !== this.seq) {
@@ -186,8 +223,48 @@ export default {
       }
     },
 
-    noteText(meta) {
-      return `${ meta.dataNote } ・ ${ this.T.dataUntil } ${ meta.dataUntilMs ? `${ this.isoDay(meta.dataUntilMs) } ${ fmtTime(meta.dataUntilMs, this.tz) }` : '—' }`;
+    // How long the screen took to show, measured in the browser after the rows are painted
+    // (requirements: the whole page within 5 seconds). Kept in window.__auditLoupeTimings for
+    // the lab measurement procedure.
+    timed(t0, what, my) {
+      // A tab in the background draws nothing, so there it counts until the rows are in place.
+      const after = (f) => (document.visibilityState === 'hidden' ? setTimeout(f, 0) : requestAnimationFrame(f));
+
+      this.$nextTick(() => after(() => {
+        if (my !== this.seq) {
+          return;
+        }
+        const ms = Math.round(performance.now() - t0);
+        const log = (window.__auditLoupeTimings = window.__auditLoupeTimings || []);
+
+        this.shownMs = ms;
+        this.shownWhat = what;
+        log.push({
+          what, ms, at: Date.now(), view: { ...this.v }
+        });
+        if (log.length > 200) {
+          log.shift();
+        }
+      }));
+    },
+
+    // The note row: the data note (prototype servers) and work in progress (API v0.2).
+    noteLines(meta) {
+      if (!meta) {
+        return [];
+      }
+      const lines = [];
+
+      if (meta.dataNote) {
+        lines.push(`${ meta.dataNote } ・ ${ this.T.dataUntil } ${ meta.dataUntilMs ? `${ this.isoDay(meta.dataUntilMs) } ${ fmtTime(meta.dataUntilMs, this.tz) }` : '—' }`);
+      }
+      for (const p of meta.progress || []) {
+        const what = p.what === 'recompute' ? this.T.progress.recompute(p.done ?? '—', p.total ?? '—') : (this.T.progress[p.what] || p.what);
+
+        lines.push(`${ what }${ p.startedMs ? `（${ this.T.progress.since(fmtTime(p.startedMs, this.tz)) }）` : '' }`);
+      }
+
+      return lines;
     },
 
     isoDay(ms) {
@@ -198,6 +275,64 @@ export default {
       } catch (e) {
         return '';
       }
+    },
+
+    onKey(e) {
+      if (e.key === 'Escape' && this.full) {
+        this.full = false;
+      }
+    },
+
+    setPanel(w) {
+      const main = this.$el.querySelector('.al5-main');
+      const max = Math.max(PANEL_MIN, Math.round((main?.clientWidth || 1200) * 0.7));
+
+      this.panelW = Math.min(Math.max(Math.round(w), PANEL_MIN), max);
+    },
+
+    savePanel() {
+      try {
+        if (this.panelW) {
+          window.localStorage.setItem(PANEL_KEY, String(this.panelW));
+        } else {
+          window.localStorage.removeItem(PANEL_KEY);
+        }
+      } catch (e) {}
+    },
+
+    // Drag the line between the list and the detail panel.
+    startResize(e) {
+      const main = this.$el.querySelector('.al5-main');
+      const right = main.getBoundingClientRect().right;
+
+      if (!this.panelW) {
+        this.panelW = Math.round(main.lastElementChild.getBoundingClientRect().width);
+      }
+      const move = (ev) => this.setPanel(right - ev.clientX);
+      const up = () => {
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        this.savePanel();
+      };
+
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+      e.preventDefault();
+    },
+
+    resizeKey(e) {
+      const step = { ArrowLeft: 40, ArrowRight: -40 }[e.key];
+
+      if (step) {
+        this.setPanel((this.panelW || this.$el.querySelector('.al5-main').lastElementChild.getBoundingClientRect().width) + step);
+        this.savePanel();
+        e.preventDefault();
+      }
+    },
+
+    resetPanel() {
+      this.panelW = null;
+      this.savePanel();
     },
 
     toggleState(s) {
@@ -226,13 +361,15 @@ export default {
     },
   },
   STATES,
+  PANEL_AUTO,
 };
 </script>
 
 <template>
   <div
     class="al5"
-    :class="{'has-detail': !!detail}"
+    :class="{'has-detail': !!detail, full}"
+    :style="{'--al-panel': panelW ? `${ panelW }px` : $options.PANEL_AUTO}"
   >
     <div
       class="al5-bar"
@@ -306,15 +443,34 @@ export default {
           class="tz"
           :title="T.tzHint(tz, data ? T.tzServer : 'browser')"
         >{{ T.tz }} {{ tz }}</span>
+        <span
+          v-if="shownMs !== null"
+          class="tz shown"
+          :class="{slow: shownMs > 5000}"
+          :title="T.shownHint"
+        >{{ T.shown(shownMs) }}</span>
+        <button
+          type="button"
+          class="btn-al full-btn"
+          :aria-pressed="String(full)"
+          :title="full ? T.exitFull : T.full"
+          @click="full = !full"
+        >
+          {{ full ? '⤡' : '⤢' }} {{ full ? T.exitFull : T.full }}
+        </button>
       </div>
     </div>
     <div
       class="al5-note"
-      :role="data && data.meta ? 'note' : null"
+      :class="{on: notes.length}"
+      :role="notes.length ? 'note' : null"
     >
-      <template v-if="data && data.meta">
-        {{ noteText(data.meta) }}
-      </template>
+      <div
+        v-for="(l, i) in notes"
+        :key="i"
+      >
+        {{ l }}
+      </div>
     </div>
     <div
       class="al5-progress"
@@ -343,7 +499,7 @@ export default {
               v-for="s in $options.STATES"
               :key="s"
               :T="T"
-              :state="s"
+              :value="s"
               :count="counts ? counts[s] : '—'"
               :active="v.state === s"
               clickable
@@ -385,6 +541,18 @@ export default {
           @select="select"
         />
       </section>
+      <div
+        v-if="detail"
+        class="al5-resize"
+        role="separator"
+        aria-orientation="vertical"
+        :aria-valuenow="panelW || undefined"
+        :title="T.resize"
+        tabindex="0"
+        @pointerdown="startResize"
+        @dblclick="resetPanel"
+        @keydown="resizeKey"
+      />
       <AlDetailPanel
         v-if="detail"
         :T="T"

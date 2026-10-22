@@ -13,9 +13,69 @@ const ZH = {
   state:     '稽核狀態',
   all:       '全部',
   tz:        '時區',
+  shown:     (ms) => (ms < 1000 ? `畫面 ${ ms } 毫秒` : `畫面 ${ (ms / 1000).toFixed(1) } 秒`),
+  shownHint: '上一次畫面更新花的時間：從進入這一頁（Rancher 本身載入完之後）或點選，到畫面顯示完成，在瀏覽器量，含網路與繪製。目標是 5 秒內。',
+  full:      '全螢幕',
+  exitFull:  '離開全螢幕（Esc）',
+  resize:    '拖曳調整細節欄寬度；雙擊恢復預設',
   tzHint:    (tz, src) => `時區 ${ tz }（來源：${ src }）`,
   tzServer:  '後端設定',
-  states:    {
+  colon:     '：',
+  noActor:   '找不到執行者',
+  cascade:   '刪除 namespace 時一併清空',
+  groupOf:   (cat) => `${ cat }（群組）`,
+  // Reason codes from the backend (API contract v0.2); an unknown code falls back to its text.
+  reason:    {
+    'alert-high':         '當天有高風險警示',
+    'alert-medium':       '當天有中風險警示',
+    'no-apiserver-audit': '這座叢集沒有收 apiserver audit log：看得到物件變了，看不到是誰改的',
+    'found-on-reconnect': '收集中斷後重新連線比對版本才發現的變更，找不到對應的 audit 紀錄',
+    'near-gap':           '有紀錄落在收集中斷前後 10 分鐘內，可能不完整',
+  },
+  note: {
+    'sa-rancher':              'Rancher 安裝的元件所用的 ServiceAccount',
+    'sa-kube-system':          '叢集內建元件',
+    'sa-workload':             '工作負載的 ServiceAccount',
+    'admin-cert':              '節點上的管理者憑證，看不出是哪個人',
+    'rancher-unauthenticated': 'Rancher 未通過驗證的請求，看不出是誰',
+    'no-actor':                '找不到執行者',
+    'system-component':        '叢集內建元件',
+    'rancher-provisioning':    'Rancher 內部帳號（叢集佈建）',
+    'rancher-local-user':      'Rancher 本機帳號，可能多人共用',
+    unclassified:              '看不出是人或程式',
+  },
+  depends: {
+    'suse-security': {
+      setting: '是否啟用 SUSE Security 收集',
+      text:    '容器裡輸入的指令不在 audit log。有啟用時，這裡會列出 SUSE Security 判定違規的程序。',
+    },
+    'no-apiserver-audit': {
+      setting: '這座叢集是否收 apiserver audit log',
+      text:    '沒有收的時候，只能從物件版本知道它變了，看不到是誰改的。',
+    },
+  },
+  evReason: {
+    'first-alert':        () => '當天第一次出現中、高風險警示',
+    'first-unattributed': () => '當天第一次出現找不到執行者的變更',
+    'collector-stopped':  (c) => `收集元件 ${ c } 停止回報`,
+    'collector-resumed':  (c) => `收集元件 ${ c } 恢復回報`,
+    'collector-silent':   (c) => `收集元件 ${ c } 沒有回報`,
+    'collector-reported': (c, why) => `收集元件 ${ c } 回報這段沒有收集（${ why }）`,
+    'reported-gap-start': (c, why) => `收集元件 ${ c } 回報從這裡開始沒有收集（${ why }）`,
+    'reported-gap-end':   (c) => `收集元件 ${ c } 回報的缺口到這裡為止`,
+  },
+  cause: {
+    'collector-restart':    '收集元件重新啟動，停機期間不補讀',
+    'collector-state-lost': '收集元件的讀取位置遺失',
+    'file-removed':         '輪替出去的檔案在讀完前被刪除',
+    'file-replaced':        '檔案在讀完前被換掉',
+  },
+  progress: {
+    index:     '正在建立開頁用的索引（升級後第一次啟動），這段期間開頁會比較慢',
+    recompute: (d, t) => `正在依新的設定重新判斷：${ d }／${ t } 筆`,
+    since:     (t) => `開始於 ${ t }`,
+  },
+  states: {
     look: '要看', unclear: '看不清', blind: '看不到', clear: '清楚',
   },
   sev:       { high: '高', medium: '中' },
@@ -95,10 +155,12 @@ const ZH = {
     merged:     '全部叢集',
     state:      '稽核狀態',
     range:      '時間範圍',
-    rangeAll:   '整天（拖曳時間列可選範圍）',
+    rangeAll:   '整天',
+    hint:       '點一格或拖曳時間列選範圍，整頁只算範圍內的紀錄',
+    ops:        (n, a) => `${ n } 筆操作${ a ? `（${ a } 筆警示）` : '' }`,
     clearRange: '清除範圍',
     legend:     {
-      look: '有要看的物件', blind: '看不到（沒有收集）', unknown: '狀態還無法判斷', op: '操作'
+      look: '有要看的物件', blind: '看不到（沒有收集）', unknown: '狀態還無法判斷', op: '長條高度＝操作量'
     },
     slot: (m) => `每 ${ m } 分鐘一格`,
   },
@@ -113,9 +175,68 @@ const EN = {
   state:     'Audit state',
   all:       'All',
   tz:        'Time zone',
+  shown:     (ms) => (ms < 1000 ? `Shown in ${ ms } ms` : `Shown in ${ (ms / 1000).toFixed(1) } s`),
+  shownHint: 'How long the last update took: from entering this page (after Rancher itself has loaded) or clicking, to the screen being drawn, measured in the browser with network and drawing. The goal is within 5 seconds.',
+  full:      'Full screen',
+  exitFull:  'Exit full screen (Esc)',
+  resize:    'Drag to resize the detail panel; double-click to reset',
   tzHint:    (tz, src) => `Time zone ${ tz } (source: ${ src })`,
   tzServer:  'backend setting',
-  states:    {
+  colon:     ': ',
+  noActor:   'No author found',
+  cascade:   'emptied when the namespace was deleted',
+  groupOf:   (cat) => `${ cat } (group)`,
+  reason:    {
+    'alert-high':         'High-risk alert this day',
+    'alert-medium':       'Medium-risk alert this day',
+    'no-apiserver-audit': 'This cluster does not collect the apiserver audit log: the change is seen, not who made it',
+    'found-on-reconnect': 'Found by comparing versions after collection reconnected; no audit record matches',
+    'near-gap':           'Has records within 10 minutes of a collection gap; may be incomplete',
+  },
+  note: {
+    'sa-rancher':              'ServiceAccount of a component Rancher installed',
+    'sa-kube-system':          'Built-in cluster component',
+    'sa-workload':             'ServiceAccount of a workload',
+    'admin-cert':              'Admin certificate on a node; the person cannot be told',
+    'rancher-unauthenticated': 'Request Rancher could not authenticate; unknown who',
+    'no-actor':                'No author found',
+    'system-component':        'Built-in cluster component',
+    'rancher-provisioning':    'Rancher internal account (cluster provisioning)',
+    'rancher-local-user':      'Rancher local account, possibly shared',
+    unclassified:              'Cannot tell person from program',
+  },
+  depends: {
+    'suse-security': {
+      setting: 'Whether SUSE Security collection is on',
+      text:    'Commands typed inside a container are not in the audit log. When it is on, processes SUSE Security flagged are listed here.',
+    },
+    'no-apiserver-audit': {
+      setting: 'Whether this cluster collects the apiserver audit log',
+      text:    'Without it, object versions show that something changed, not who changed it.',
+    },
+  },
+  evReason: {
+    'first-alert':        () => 'First medium or high-risk alert this day',
+    'first-unattributed': () => 'First change with no author found this day',
+    'collector-stopped':  (c) => `Collector ${ c } stopped reporting`,
+    'collector-resumed':  (c) => `Collector ${ c } resumed reporting`,
+    'collector-silent':   (c) => `Collector ${ c } did not report`,
+    'collector-reported': (c, why) => `Collector ${ c } reported nothing was collected here (${ why })`,
+    'reported-gap-start': (c, why) => `Collector ${ c } reported that collection stopped here (${ why })`,
+    'reported-gap-end':   (c) => `End of the gap collector ${ c } reported`,
+  },
+  cause: {
+    'collector-restart':    'the collector restarted; the downtime is not read afterwards',
+    'collector-state-lost': 'the collector lost where it was reading',
+    'file-removed':         'a rotated file was deleted before it was read',
+    'file-replaced':        'the file was replaced before it was read',
+  },
+  progress: {
+    index:     'Building the page index (first start after an upgrade); pages are slower until it is done',
+    recompute: (d, t) => `Judging records again under the new settings: ${ d } / ${ t }`,
+    since:     (t) => `started ${ t }`,
+  },
+  states: {
     look: 'Look', unclear: 'Unclear', blind: 'Blind', clear: 'Clear',
   },
   sev:       { high: 'high', medium: 'medium' },
@@ -195,10 +316,12 @@ const EN = {
     merged:     'All clusters',
     state:      'audit state',
     range:      'Range',
-    rangeAll:   'Whole day (drag the timeline to pick a range)',
+    rangeAll:   'Whole day',
+    hint:       'Click a slot or drag the timeline to pick a range; the page then counts only that range',
+    ops:        (n, a) => `${ n } operation${ n === 1 ? '' : 's' }${ a ? ` (${ a } alert${ a === 1 ? '' : 's' })` : '' }`,
     clearRange: 'Clear range',
     legend:     {
-      look: 'Objects to look at', blind: 'Blind (not collected)', unknown: 'Not decidable yet', op: 'Operation'
+      look: 'Objects to look at', blind: 'Blind (not collected)', unknown: 'Not decidable yet', op: 'Bar height = operations'
     },
     slot: (m) => `${ m }-minute slots`,
   },
@@ -216,6 +339,28 @@ export function textsV5(store) {
 
 // ---------- states ----------
 export const STATES = ['look', 'unclear', 'blind', 'clear'];
+
+// What the backend says, in the page's language: its code when known, else its own text.
+export function reasonText(T, code, text) {
+  return (code && T.reason[code]) || text || '';
+}
+
+export function noteText(T, code, text) {
+  return (code && T.note[code]) || text || '';
+}
+
+export function eventReason(T, e) {
+  const f = e.reasonCode && T.evReason[e.reasonCode];
+
+  return f ? f(e.collector || '', (e.cause && T.cause[e.cause]) || e.cause || '') : (e.reason || '');
+}
+
+// A ServiceAccount as namespace/name; anything else as it is.
+export function shortWho(name) {
+  const m = /^system:serviceaccount:([^:]+):(.+)$/.exec(name || '');
+
+  return m ? `${ m[1] }/${ m[2] }` : (name || '');
+}
 
 export function stateLabel(T, state, severity) {
   const base = T.states[state] || state || '—';
@@ -330,6 +475,10 @@ export function apiParams(v, cursor) {
   if (v.select) {
     p.set('select', v.select);
   }
+  if (v.from !== null && v.from !== undefined && v.to !== null && v.to !== undefined) {
+    p.set('from', String(v.from));
+    p.set('to', String(v.to));
+  }
   if (cursor) {
     p.set('cursor', cursor);
   }
@@ -388,9 +537,17 @@ export const BATCH = '*';
 export function splitDepends(detail) {
   const dep = detail?.dependsOn || [];
 
+  const settings = dep.filter((d) => d && typeof d === 'object');
+
+  // "Unclear because this cluster does not collect the apiserver audit log" depends on that
+  // setting; say so like any other setting (requirements: config-dependent subheading).
+  if (detail?.stateReasonCode === 'no-apiserver-audit' && !settings.some((d) => d.code === 'no-apiserver-audit')) {
+    settings.push({ code: 'no-apiserver-audit' });
+  }
+
   return {
-    settings: dep.filter((d) => d && typeof d === 'object'),
-    related:  [...(detail?.related || []).map((r) => `${ r.rel }: ${ r.kind } ${ r.namespace ? `${ r.namespace }/` : '' }${ r.name }`), ...dep.filter((d) => typeof d === 'string')],
+    settings,
+    related: [...(detail?.related || []).map((r) => `${ r.rel }: ${ r.kind } ${ r.namespace ? `${ r.namespace }/` : '' }${ r.name }`), ...dep.filter((d) => typeof d === 'string')],
   };
 }
 

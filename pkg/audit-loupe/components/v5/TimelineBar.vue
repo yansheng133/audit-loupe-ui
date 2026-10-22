@@ -1,8 +1,13 @@
 <script>
-import { fmtTime, shiftDay } from '../../lib/v5';
+import { fmtTime, shiftDay, eventReason } from '../../lib/v5';
+import {
+  dayLength, minuteAt, pickRange, barHeights, pctOf
+} from '../../lib/timeline';
 
 // Bottom timeline, on every tab. One merged line by default; one line per selected cluster
-// (per-minute slots when one is selected, as sent by the backend). Dragging picks a range.
+// (per-minute slots when one is selected, as sent by the backend). Each slot is a bar: height =
+// operations, colour = audit state. Clicking a slot picks it; dragging picks a range. The
+// whole page then counts only that range (API v0.2); the timeline stays the whole day.
 export default {
   name:  'AlTimelineBar',
   props: {
@@ -24,18 +29,21 @@ export default {
     slotMs() {
       return (this.timeline?.slotMinutes || 10) * 60000;
     },
+    dayMs() {
+      return dayLength(this.timeline);
+    },
     gaps() {
       return this.timeline?.gaps || [];
     },
     sel() {
       const r = this.drag ? [Math.min(this.drag.a, this.drag.b), Math.max(this.drag.a, this.drag.b)] : this.range;
 
-      return r ? { left: this.pct(r[0]), width: `${ Math.max(0.2, ((r[1] - r[0]) / 864e5) * 100) }%` } : null;
+      return r ? { left: this.pct(r[0]), width: `${ Math.max(0.5, ((r[1] - r[0]) / this.dayMs) * 100) }%` } : null;
     },
   },
   methods: {
     pct(t) {
-      return `${ Math.min(100, Math.max(0, ((t - this.d0) / 864e5) * 100)) }%`;
+      return `${ pctOf(t, this.d0, this.dayMs) }%`;
     },
     // Runs of equal state merged, so a day of 1440 slots draws a handful of segments.
     segments(line) {
@@ -55,17 +63,21 @@ export default {
 
       return out;
     },
-    marks(line) {
-      return (line.slots || []).filter((s) => s.ops > 0);
+    bars(line) {
+      return barHeights(line.slots);
+    },
+    barTitle(s) {
+      const state = this.T.states[s.state] || this.T.tl.legend[s.state] || '';
+
+      return `${ this.fmt(s.t) }–${ this.fmt(s.t + this.slotMs) } ・ ${ state } ・ ${ this.T.tl.ops(s.ops, s.alerts) }`;
     },
     lineGaps(line) {
       return this.gaps.filter((g) => line.cluster === null || g.cluster === line.cluster);
     },
     at(e) {
       const r = this.$refs.track.getBoundingClientRect();
-      const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
 
-      return this.d0 + Math.round((f * 1440)) * 60000;
+      return minuteAt((e.clientX - r.left) / r.width, this.d0, this.dayMs);
     },
     down(e) {
       const t = this.at(e);
@@ -84,15 +96,16 @@ export default {
       const d = this.drag;
 
       this.drag = null;
-      if (d && Math.abs(d.b - d.a) >= 5 * 60000) {
-        this.$emit('range', [Math.min(d.a, d.b), Math.max(d.a, d.b)]);
+      if (!d) {
+        return;
       }
+      this.$emit('range', pickRange(d.a, d.b, this.d0, this.slotMs, this.dayMs));
     },
     fmt(ms) {
       return fmtTime(ms, this.tz);
     },
     gapTitle(g) {
-      return `${ this.fmt(g.fromMs) }–${ this.fmt(g.toMs) } ${ g.reason || '' }`;
+      return `${ this.fmt(g.fromMs) }–${ this.fmt(g.toMs) } ${ eventReason(this.T, g) }`;
     },
     shiftDay,
   },
@@ -130,7 +143,7 @@ export default {
       <b
         v-if="range"
         class="num"
-      >{{ fmt(range[0]) }}–{{ fmt(range[1]) }}</b>
+      >{{ fmt(range[0]) }}–{{ range[1] >= d0 + dayMs ? '24:00' : fmt(range[1]) }}</b>
       <span
         v-else
         class="muted"
@@ -144,6 +157,7 @@ export default {
         {{ T.tl.clearRange }}
       </button>
       <span class="muted small">{{ timeline ? T.tl.slot(timeline.slotMinutes) : '' }}</span>
+      <span class="muted small">{{ T.tl.hint }}</span>
       <div class="legend">
         <span><i class="lg look" />{{ T.tl.legend.look }}</span>
         <span><i class="lg blind" />{{ T.tl.legend.blind }}</span>
@@ -176,21 +190,23 @@ export default {
             :key="`s${j}`"
             class="seg"
             :class="s.state"
-            :style="{left: pct(s.start), width: `${((s.end - s.start) / 864e5) * 100}%`}"
+            :style="{left: pct(s.start), width: `${((s.end - s.start) / dayMs) * 100}%`}"
           />
           <i
             v-for="(g, j) in lineGaps(l)"
             :key="`g${j}`"
             class="gap"
             :class="g.kind"
-            :style="{left: pct(g.fromMs), width: `${((Math.min(g.toMs, d0 + 864e5) - Math.max(g.fromMs, d0)) / 864e5) * 100}%`}"
+            :style="{left: pct(g.fromMs), width: `${((Math.min(g.toMs, d0 + dayMs) - Math.max(g.fromMs, d0)) / dayMs) * 100}%`}"
             :title="gapTitle(g)"
           />
           <i
-            v-for="(s, j) in marks(l)"
+            v-for="(s, j) in bars(l)"
             :key="`m${j}`"
-            class="op"
-            :style="{left: pct(s.t)}"
+            class="bar"
+            :class="s.state"
+            :style="{left: pct(s.t), width: `${(slotMs / dayMs) * 100}%`, height: `${s.h}%`}"
+            :title="barTitle(s)"
           />
         </div>
         <div

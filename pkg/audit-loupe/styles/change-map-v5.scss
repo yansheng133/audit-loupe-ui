@@ -63,13 +63,20 @@
   .multi-pop { position: fixed; z-index: 20; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; background: var(--al-surface); border: 1px solid var(--al-border); border-radius: 4px; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); color: var(--al-fg); }
   .multi-pop label { display: flex; gap: 6px; align-items: center; margin: 0; color: var(--al-fg); font-size: 13px; }
   .tz { color: var(--al-muted); padding-left: 12px; border-left: 1px solid var(--al-border); cursor: help; }
+  .tz.slow { color: var(--dim); font-weight: 600; }
 
   .al5-progress { visibility: hidden; }
   .al5-progress.on { visibility: visible; height: 3px; background: linear-gradient(90deg, transparent, var(--al-primary), transparent); background-size: 50% 100%; background-repeat: no-repeat; animation: al5-move 1.2s linear infinite; }
 
   // ---------- main + detail ----------
   .al5-main { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); min-height: 0; }
-  &.has-detail .al5-main { grid-template-columns: minmax(0, 1fr) 400px; }
+  &.has-detail .al5-main { grid-template-columns: minmax(0, 1fr) 6px var(--al-panel, 400px); }
+  // The line between the list and the detail panel; drag it to make either side wider.
+  .al5-resize { cursor: col-resize; background: var(--al-border); opacity: .5; touch-action: none; }
+  .al5-resize:hover, .al5-resize:focus-visible { background: var(--al-primary); opacity: 1; }
+  // Full screen: the page covers Rancher's menus and header (Esc or the button leaves).
+  &.full { position: fixed; inset: 0; z-index: 1000; height: 100vh; min-height: 0; border: 0; border-radius: 0; }
+  .full-btn { white-space: nowrap; }
   .al5-content { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 10px 12px 0; overflow: hidden; }
 
   // ---------- overview ----------
@@ -78,10 +85,11 @@
   .ov-scroll { flex: 1; min-height: 0; overflow: auto; }
   table.ov { width: 100%; border-collapse: collapse; table-layout: fixed; }
   .ov th { position: sticky; top: 0; z-index: 1; background: var(--al-surface); text-align: left; font-weight: 600; color: var(--al-muted); font-size: 12px; padding: 4px 6px; border-bottom: 1px solid var(--al-border); }
-  .ov th:nth-child(1) { width: 92px; }
-  .ov th:nth-child(2) { width: 22%; }
-  .ov th:nth-child(3) { width: 16%; }
-  .ov th:nth-child(4) { width: 15%; }
+  .ov th:nth-child(1) { width: 118px; }
+  .ov th:nth-child(2) { width: 20%; }
+  .ov th:nth-child(3) { width: 13%; }
+  .ov th:nth-child(4) { width: 12%; }
+  .ov th:nth-child(8) { width: 13%; }
   .ov th:nth-child(5) { width: 52px; }
   .ov th:nth-child(6) { width: 64px; }
   .ov td { height: 34px; padding: 0 6px; border-bottom: 1px solid var(--al-border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -144,7 +152,8 @@
   .dt-head { padding: 10px 14px; border-bottom: 1px solid var(--al-border); }
   .dt-title { display: flex; align-items: center; gap: 4px; font-size: 15px; }
   .dt-title .x { margin-left: auto; border: 0; background: none; font-size: 18px; cursor: pointer; color: var(--al-muted); }
-  .dt-state { display: flex; gap: 8px; align-items: center; margin-top: 4px; }
+  .dt-state { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 6px; }
+  .dt-state > span:not(.stp) { flex: 1 1 180px; min-width: 0; }
   .dt-body { flex: 1; overflow: auto; padding: 0 14px 12px; }
   .strip-axis { display: flex; justify-content: space-between; font-size: 11px; }
   .acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
@@ -169,9 +178,9 @@
   .depends .small { margin-top: 4px; }
   .related { margin: 4px 0 0; padding-left: 18px; }
   .name.batch { font-weight: 700; }
-  // Always in the grid (its own auto row); takes no space while empty.
-  .al5-note { padding: 4px 14px; font-size: 12.5px; color: var(--al-muted); border-bottom: 1px solid var(--al-border); }
-  .al5-note:empty { padding: 0; border-bottom: 0; }
+  // Always in the grid (its own auto row); takes no space while there is nothing to say.
+  .al5-note { font-size: 12.5px; color: var(--al-muted); }
+  .al5-note.on { padding: 4px 14px; border-bottom: 1px solid var(--al-border); }
   .dt-foot { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-top: 1px solid var(--al-border); }
   .chain { margin-left: auto; font-size: 12px; color: var(--al-muted); }
   .chain.ok { color: var(--ok); }
@@ -185,23 +194,31 @@
   .lg { display: inline-block; width: 16px; height: 4px; margin-right: 4px; vertical-align: middle; background: var(--und); }
   .lg.look { background: var(--bad); }
   .lg.blind { height: 8px; background: repeating-linear-gradient(135deg, transparent 0 2px, var(--und) 2px 4px); }
-  .lg.op { width: 2px; height: 10px; background: var(--al-fg); }
+  .lg.op { width: 6px; height: 10px; background: color-mix(in srgb, var(--und) 75%, transparent); }
   .tl-rows { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 8px; margin-top: 6px; }
   .tl-label { height: 18px; font-size: 12px; color: var(--al-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tl-track { position: relative; cursor: crosshair; user-select: none; touch-action: none; }
-  .tl-line { position: relative; height: 18px; }
+  .tl-track { position: relative; overflow: hidden; cursor: crosshair; user-select: none; touch-action: none; }
+  .tl-line { position: relative; height: 34px; }
   .tl-line i { position: absolute; }
-  .seg { top: 8px; height: 3px; background: color-mix(in srgb, var(--und) 50%, transparent); }
+  .seg { bottom: 0; height: 3px; background: color-mix(in srgb, var(--und) 50%, transparent); }
+  // One bar per slot with operations: height = how many, colour = the slot's audit state.
+  .bar { bottom: 3px; min-width: 1px; background: color-mix(in srgb, var(--und) 75%, transparent); border-radius: 1px 1px 0 0; }
+  .bar.look { background: var(--bad); }
+  .bar.unclear { background: var(--dim); }
+  .bar.blind { background: repeating-linear-gradient(135deg, transparent 0 2px, var(--und) 2px 4px); }
+  .bar.clear { background: color-mix(in srgb, var(--ok) 70%, transparent); }
+  .tl-track:hover .bar { opacity: .9; }
   .seg.none { background: color-mix(in srgb, var(--und) 30%, transparent); }
   .seg.look { background: var(--bad); }
   .seg.unclear { background: var(--dim); }
   .seg.clear { background: color-mix(in srgb, var(--und) 60%, transparent); }
   .seg.unknown { background: var(--und); }
-  .seg.blind, .gap { top: 3px; height: 12px; background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--und) 70%, transparent) 4px 6px); }
+  .seg.blind, .gap { top: 0; height: 31px; background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--und) 70%, transparent) 4px 6px); }
   .gap { border-left: 1px dashed var(--dim); border-right: 1px dashed var(--dim); }
   .gap.reported { border-color: var(--al-primary); }
   .op { top: 4px; width: 1px; height: 10px; background: var(--al-fg); opacity: .6; }
-  .tl-sel { position: absolute; top: 0; bottom: 16px; background: color-mix(in srgb, var(--al-primary) 18%, transparent); border: 1px solid var(--al-primary); pointer-events: none; }
+  // The picked range stays bright; the rest of the day is shaded, so the pick is plain at a glance.
+  .tl-sel { position: absolute; top: 0; bottom: 16px; border: 2px solid var(--al-primary); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--al-surface) 62%, transparent); clip-path: inset(0 -100vmax); }
   .tl-axis { display: flex; justify-content: space-between; font-size: 11px; font-family: var(--al-mono); }
 }
 
@@ -217,7 +234,8 @@
 // Narrow: the detail panel becomes a drawer over the main area (spec §1).
 @media (max-width: 1100px) {
   .al5.has-detail .al5-main { grid-template-columns: minmax(0, 1fr); }
-  .al5 .dt { position: absolute; top: 0; right: 0; bottom: 0; width: min(400px, 92%); z-index: 5; box-shadow: -8px 0 24px rgba(0, 0, 0, .25); }
+  .al5 .dt { position: absolute; top: 0; right: 0; bottom: 0; width: min(var(--al-panel, 400px), 92%); z-index: 5; box-shadow: -8px 0 24px rgba(0, 0, 0, .25); }
+  .al5 .al5-resize { display: none; }
   .al5 .filters label { font-size: 0; gap: 0; }
 }
 

@@ -1,7 +1,7 @@
 <script>
 import AlStateTag from './StateTag.vue';
 import { KIND_TAG } from '../../lib/model';
-import { fmtTime } from '../../lib/v5';
+import { fmtTime, reasonText, noteText, shortWho } from '../../lib/v5';
 
 const ROW_H = 34;
 const OVERSCAN = 8;
@@ -66,7 +66,16 @@ export default {
       return fmtTime(ms, this.tz);
     },
     viaLabel(v) {
-      return this.T.via[v] || v || '—';
+      return v === 'unknown' ? '—' : (this.T.via[v] || v || '—');
+    },
+    reasonText,
+    whoName(r) {
+      return r.who && r.who.name ? shortWho(r.who.name) : this.T.noActor;
+    },
+    whoTitle(r) {
+      const w = r.who || {};
+
+      return [w.name, noteText(this.T, w.noteCode, w.note)].filter(Boolean).join(' ・ ');
     },
     dimmed(r) {
       if (!this.range) {
@@ -119,9 +128,9 @@ export default {
           <td>
             <AlStateTag
               :T="T"
-              :state="r.state"
+              :value="r.state"
               :severity="r.severity"
-              :reason="r.stateReason"
+              :reason="reasonText(T, r.stateReasonCode, r.stateReason)"
             />
           </td>
           <td class="obj">
@@ -159,11 +168,11 @@ export default {
           </td>
           <td
             class="who"
-            :title="r.who && r.who.note"
+            :title="whoTitle(r)"
           >
-            <span>{{ (r.who && r.who.name) || '—' }}</span>
+            <span :class="{muted: !(r.who && r.who.name)}">{{ whoName(r) }}</span>
             <small
-              v-if="r.who && r.who.category"
+              v-if="r.who && r.who.name && r.who.category"
               class="cat"
             >{{ T.category[r.who.category] || r.who.category }}</small>
           </td>

@@ -1,5 +1,10 @@
 # 變更紀錄
 
+## 未發佈
+
+### 修正
+- **收集狀態頁**（lab 實際畫面看到的）：心跳中斷的缺口原因顯示代碼 `collector-silent`，改成一句話；收集元件回報裡以毫秒傳來的時間（`lastSentMs`）顯示成時間到秒；「實例」欄（Pod 名稱）不再擠成好幾行。
+
 ## 0.5.0（預覽版）
 
 **預覽版**：配 Audit Loupe server 0.5.0（[audit-loupe](https://github.com/yansheng133/audit-loupe)）。接 0.4.0 後端也能用。

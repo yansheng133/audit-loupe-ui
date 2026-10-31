@@ -65,6 +65,7 @@ const ZH = {
     'reported-gap-end':   (c) => `收集元件 ${ c } 回報的缺口到這裡為止`,
   },
   cause: {
+    'collector-silent':     '收集元件沒有回報（心跳中斷），這段期間可能沒有收集',
     'collector-restart':    '收集元件重新啟動，停機期間不補讀',
     'collector-state-lost': '收集元件的讀取位置遺失',
     'file-removed':         '輪替出去的檔案在讀完前被刪除',
@@ -228,6 +229,7 @@ const EN = {
     'reported-gap-end':   (c) => `End of the gap collector ${ c } reported`,
   },
   cause: {
+    'collector-silent':     'the collector stopped reporting (no heartbeat); this time may not have been collected',
     'collector-restart':    'the collector restarted; the downtime is not read afterwards',
     'collector-state-lost': 'the collector lost where it was reading',
     'file-removed':         'a rotated file was deleted before it was read',

@@ -200,7 +200,7 @@ export default {
           v-else-if="r.type === 'merged'"
           class="ln-l"
         >
-          <span class="n">{{ T.merged(T.groups[r.group]) }}</span>
+          <span class="n">{{ T.merged(T.groupShort[r.group]) }}</span>
           <span class="s">{{ T.inCluster(cl(r.cluster)) }} ・ {{ T.mergedHint }}</span>
           <span
             v-for="(s, i) in actorSub(r.actor, false).filter((x) => x.cfg)"

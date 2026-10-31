@@ -48,7 +48,8 @@ export default {
       return this.b.rules.map((r) => ({
         ...r,
         name: this.T.rules[r.rule] || r.rule,
-        what: this.T.ruleWhat[r.rule] || '',
+        // The rule's description, unless it only repeats the name.
+        what: (this.T.ruleWhat[r.rule] || '').toLowerCase() === String(this.T.rules[r.rule] || '').toLowerCase() ? '' : (this.T.ruleWhat[r.rule] || ''),
         sev:  (r.severity && this.T.sevWord[r.severity]) || this.T.tbc,
       }));
     },

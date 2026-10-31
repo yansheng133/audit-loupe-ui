@@ -103,7 +103,7 @@
   .pick .s { font-size: 11px; color: var(--al-muted); }
   .pick .lk { color: var(--bad); }
   .rcol { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-  .rhead { padding: 8px 14px; border-bottom: 1px solid var(--al-border); display: grid; gap: 2px; }
+  .rhead { padding: 8px 14px; border-bottom: 1px solid var(--al-border); display: grid; gap: 2px; justify-items: start; }
   .rhead h3 { margin: 0; }
   .rlanes { flex: 0 1 auto; max-height: 50%; overflow: auto; }
   .rlist { flex: 1; min-height: 0; overflow: auto; border-top: 1px solid var(--al-border); }
@@ -154,3 +154,6 @@
   .al6 .picker { max-height: 200px; border-right: 0; border-bottom: 1px solid var(--al-border); }
   .al6 .tabs button .q { display: none; }
 }
+
+.al6 .bd-tbl th, .al6 .bd-tbl td:first-child, .al6 .bd-tbl td.r { white-space: nowrap; }
+.al6 .bd-ops .bd-tbl td:nth-child(2) { white-space: nowrap; }

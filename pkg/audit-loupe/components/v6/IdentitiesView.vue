@@ -1,8 +1,9 @@
 <script>
 import AlLanes from './Lanes.vue';
 import AlBehaviourItem from './BehaviourItem.vue';
+import { fmtTime, clusterLabel } from '../../lib/v5';
 import {
-  identityGroups, identityRows, identityBehaviours, actorLabel, noteOf
+  identityGroups, identityRows, identityBehaviours, actorLabel, noteOf, overlapsOf, settingNote
 } from '../../lib/v6';
 
 // Identities: accounts on the left (by group); on the right, the picked account's lanes, one per
@@ -37,6 +38,28 @@ export default {
     },
     list() {
       return this.current ? identityBehaviours(this.behaviours, this.current.key) : [];
+    },
+    // Under the account's name: the setting a missing author depends on, and other accounts
+    // active in the same cells (a hint, never "the same person").
+    extra() {
+      const a = this.current;
+      const out = [];
+
+      if (!a) {
+        return out;
+      }
+      const s = settingNote(a);
+
+      if (s) {
+        out.push({ text: this.T.dependsAudit(clusterLabel(this.$store, s.cluster)), cfg: true });
+      }
+      if (a.group === 'people') {
+        for (const o of overlapsOf(this.overlaps, a.key)) {
+          out.push({ text: this.T.overlap(this.names[o.other] || o.other || this.T.tbc, fmtTime(o.fromMs, this.tz), fmtTime(o.toMs, this.tz), this.n(o.cells)) });
+        }
+      }
+
+      return out;
     },
   },
   methods: {
@@ -89,6 +112,12 @@ export default {
       <div class="rhead">
         <h3>{{ T.identityHead(actorLabel(T, current)) }}</h3>
         <span class="muted small">{{ current.name }}<template v-if="note(current)"> ・ {{ note(current) }}</template></span>
+        <span
+          v-for="(x, i) in extra"
+          :key="i"
+          class="small"
+          :class="x.cfg ? 'tg cfg' : 'muted'"
+        >{{ x.text }}</span>
       </div>
       <div class="rlanes">
         <AlLanes

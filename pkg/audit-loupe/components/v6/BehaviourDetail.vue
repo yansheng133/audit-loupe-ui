@@ -203,7 +203,7 @@ export default {
           v-for="(s, i) in b.segments"
           :key="i"
           class="tg num"
-        >{{ T.detail.segLine(fmt(s.fromMs), fmt(s.toMs), n(s.ops)) }}</span>
+        >{{ T.detail.segLine(fmt(s.firstMs ?? s.fromMs), fmt(s.lastMs ?? s.toMs), n(s.ops)) }}</span>
       </div>
       <h4>{{ T.detail.objects }}</h4>
       <p

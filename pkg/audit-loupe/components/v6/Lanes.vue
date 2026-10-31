@@ -160,7 +160,7 @@ export default {
           <b>{{ T.groups[r.group] }}</b>
         </span>
         <span class="ln-gsub">
-          {{ T.groupLine(r.actors, r.behaviours, n(r.ops)) }}
+          {{ T.groupLine(r.actors, r.behaviours, n(r.ops), r.group) }}
           <span class="muted">{{ T.groupHint[r.group] }}</span>
           <span class="ln-act">{{ r.open ? T.collapse : T.expand }}</span>
         </span>
@@ -204,7 +204,7 @@ export default {
             class="n"
             :title="T.merged(T.groupShort[r.group])"
           >{{ T.merged(T.groupShort[r.group]) }}</span>
-          <span class="s">{{ T.inCluster(cl(r.cluster)) }} ・ {{ T.mergedHint }}</span>
+          <span class="s">{{ T.inCluster(cl(r.cluster)) }} ・ {{ T.mergedHint(r.group) }}</span>
           <span
             v-for="(s, i) in actorSub(r.actor, false).filter((x) => x.cfg)"
             :key="i"

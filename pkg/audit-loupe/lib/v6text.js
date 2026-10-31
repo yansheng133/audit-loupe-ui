@@ -200,7 +200,7 @@ const EN = {
   listHead:     (n) => `${ n } behaviour${ n === 1 ? '' : 's' }, most serious first`,
   perActor:     'One line per account',
   inScope:      (a, s) => `${ a } in ${ s }`,
-  itemMeta:     (o, j, s) => `${ o } operations ・ ${ j } objects ・ ${ s } part${ s === 1 ? '' : 's' }`,
+  itemMeta:     (o, j, s) => `${ o } operation${ o === 1 ? '' : 's' } ・ ${ j } object${ j === 1 ? '' : 's' } ・ ${ s } part${ s === 1 ? '' : 's' }`,
   scopeMeta:    (a, b) => `${ a } account${ a === 1 ? '' : 's' } ・ ${ b } behaviour${ b === 1 ? '' : 's' }`,
   lookN:        (n) => `look ${ n }`,
   tags:         {

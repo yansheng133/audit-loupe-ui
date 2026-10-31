@@ -116,3 +116,10 @@ English 亮色只拍了活動總覽。其餘三格是同一份程式換主題，
 在 lab Rancher 實際點過後再修兩處：
 - 行為明細的「連續的小段」原本顯示格子邊界（08:00–08:30），與上方「時間 08:05–08:47」對不起來；改用 API 的 `firstMs`／`lastMs`（08:05–08:20・14 筆、08:47・1 筆）。
 - 「未記錄執行者」分組原本寫「2 個帳號」「展開成每個帳號一列」，實際是一座叢集一列；改成「2 座叢集」「展開成每座叢集一列」（英文同）。
+
+## 發版與安裝（2026-11-01 補記）
+
+- PR #14 合併（20a321d），release `audit-loupe-0.7.0`，Pages 的 Helm repository 已有 0.7.0。
+- lab 的 Rancher 已安裝 0.7.0（helm `cattle-ui-plugin-system/audit-loupe`），server 0.7.0。不靠開發載入、直接從 Rancher 開：變更地圖 10/30 顯示 70 段，與 API 相同；權限覆核、收集狀態、規則三頁可開。
+- 第一次升級用了 `--reuse-values`，下載位址仍指向 0.6.0 目錄，Rancher 回 404、擴充功能沒有載入；改用 `--reset-values` 後正常。README 的安裝段已補上。
+- `docs/design/v6/audit-loupe-views.html` 內嵌整份 lab 資料，仍未加入 repo，待 Sam 決定。

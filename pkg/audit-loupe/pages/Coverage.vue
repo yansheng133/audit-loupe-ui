@@ -39,7 +39,10 @@ export default {
       }
     },
     details(d) {
-      return Object.entries(d || {}).map(([k, v]) => `${ k }: ${ typeof v === 'object' ? JSON.stringify(v) : v }`).join('・');
+      // A time the collector sends in milliseconds (lastSentMs) is shown as a time, to the second.
+      const val = (k, v) => (/Ms$/.test(k) && typeof v === 'number' ? fmtDateSec(v) : (typeof v === 'object' ? JSON.stringify(v) : v));
+
+      return Object.entries(d || {}).map(([k, v]) => `${ k }: ${ val(k, v) }`).join('・');
     },
     chainOf(c) {
       return this.chain.find((x) => x.cluster === c);
@@ -114,7 +117,9 @@ export default {
               :key="c.collector + c.instance"
             >
               <td>{{ C.kinds[c.collector] || c.collector }}</td>
-              <td>{{ c.instance }}</td>
+              <td class="nowrap">
+                {{ c.instance }}
+              </td>
               <td class="num nowrap">
                 {{ fmtDateSec(c.lastMs) }}
               </td>

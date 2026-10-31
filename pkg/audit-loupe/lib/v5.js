@@ -1,7 +1,7 @@
 // v5 change map: texts, the one /api/changemap request per user action, and URL <-> view state.
 // The backend computes every audit state; this file only formats what it returns.
-import { getJson, baseUrl } from './api';
-import { pad } from './model';
+import { getJson, baseUrl } from './api.js';
+import { pad } from './model.js';
 
 // ---------- text ----------
 const ZH = {
@@ -505,7 +505,9 @@ export function fetchChangemap(params) {
 // A 404 whose body says {"error":"no-records"} means the object has no records that day; it
 // comes back as { key, none: true }. Any other 404 (an older backend without this call) is
 // thrown with its status, and the page falls back to asking for the whole page.
-export async function fetchDetail(v, key) {
+// The detail covers the same time range as the list, or a row could say "clear" for the range
+// while its detail counts the whole day.
+export function detailParams(v, key) {
   const p = new URLSearchParams();
 
   p.set('day', v.day);
@@ -513,6 +515,16 @@ export async function fetchDetail(v, key) {
   if (v.system) {
     p.set('system', '1');
   }
+  if (v.from !== null && v.from !== undefined && v.to !== null && v.to !== undefined) {
+    p.set('from', String(v.from));
+    p.set('to', String(v.to));
+  }
+
+  return p;
+}
+
+export async function fetchDetail(v, key) {
+  const p = detailParams(v, key);
   const res = await fetch(`${ baseUrl() }/api/changemap/detail?${ p }`, {
     credentials: 'same-origin',
     headers:     { Accept: 'application/json' },

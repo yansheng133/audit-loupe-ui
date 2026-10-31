@@ -31,6 +31,15 @@ export default {
     cause(g) {
       return g.reason ? (this.V.cause[g.reason] || g.reason) : '';
     },
+    // A collector silent for over a day is taken as removed (a node replaced, a collector
+    // turned off): grey, not red, since nothing is expected from it any more.
+    status(c) {
+      if (c.retired) {
+        return ['', this.C.retired];
+      }
+
+      return c.stale ? ['deleted', this.C.silent] : ['added', this.C.ok];
+    },
     clusterName(id) {
       try {
         return this.$store.getters['management/byId']('management.cattle.io.cluster', id)?.nameDisplay || id;
@@ -126,8 +135,8 @@ export default {
               <td class="nowrap">
                 <span
                   class="pill"
-                  :class="c.stale ? 'deleted' : 'added'"
-                >{{ c.stale ? C.silent : C.ok }}</span>
+                  :class="status(c)[0]"
+                >{{ status(c)[1] }}</span>
               </td>
               <td class="muted">
                 {{ details(c.details) }}

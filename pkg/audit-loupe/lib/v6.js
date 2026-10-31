@@ -49,7 +49,8 @@ export function normActor(a = {}, cluster = '') {
   const group = actorGroup(a);
 
   return {
-    id:        identityId(key, group, cluster || (a.clusters || [])[0]),
+    // The server's id (contract v0.1); built the same way when an older server sends none.
+    id:        a.id ?? identityId(key, group, cluster || (a.clusters || [])[0]),
     key,
     name:      a.name || '',
     category:  a.category || null,
@@ -443,13 +444,17 @@ export function noteOf(T, a) {
   return (a?.noteCode && T.note[a.noteCode]) || a?.note || '';
 }
 
-// Labels of a behaviour, from the server's tag codes ("direct", "via-rancher", "off-hours",
-// "bypassed-rancher"). "bypassed-rancher" says the same as "direct" and is folded into it.
+// Labels of a behaviour, from the server's tag codes. "direct" (a fact: an operation went
+// straight to the apiserver) is the one "direct to apiserver" label; "bypassed-rancher" is the
+// rule of the same name and is listed under the rules instead (contract v0.1 §4).
 export function tagTexts(T, b) {
   const out = [];
 
   for (const t of b.tags) {
-    const s = t === 'bypassed-rancher' ? T.tags.direct : (T.tags[t] || t);
+    if (t === 'bypassed-rancher') {
+      continue;
+    }
+    const s = T.tags[t] || t;
 
     if (!out.includes(s)) {
       out.push(s);
@@ -537,6 +542,8 @@ export function viewFromQuery(q = {}, today = '') {
     open:    q.open !== undefined ? csv(q.open).filter((g) => GROUPS.includes(g)) : ['people'],
     flip:    csv(q.flip).map((k) => (k === NOKEY ? '' : k)),
     show:    q.show !== undefined ? csv(q.show).filter((t) => TIERS.includes(t)) : FINDINGS_OPEN,
+    from:    q.from ? Number(q.from) : null,
+    to:      q.to ? Number(q.to) : null,
   };
 }
 
@@ -566,6 +573,10 @@ export function queryFromView(v) {
   }
   if (v.show.join(',') !== FINDINGS_OPEN.join(',')) {
     q.show = v.show.join(',');
+  }
+  if (v.from !== null && v.from !== undefined && v.to !== null && v.to !== undefined) {
+    q.from = String(v.from);
+    q.to = String(v.to);
   }
 
   return q;
@@ -601,4 +612,14 @@ export function settingNote(a) {
   return d && d.code === 'no-apiserver-audit' ? {
     code: d.code, cluster: d.cluster || '', collectors: d.collectors || []
   } : null;
+}
+
+// A time range picked on the strip: the server cuts whole days only (contract v0.1 §1), so the
+// page keeps the behaviours with any part overlapping [from, to) and changes no count.
+export function inRange(list, from, to) {
+  if (from === null || from === undefined || to === null || to === undefined) {
+    return list;
+  }
+
+  return list.filter((b) => b.segments.some((s) => s.fromMs < to && s.toMs > from));
 }

@@ -10,7 +10,7 @@ import { fmtTime, todayIso, clusterLabel, dayStartMs } from '../lib/v5';
 import { textsV6 } from '../lib/v6text';
 import {
   TABS, normalize, viewFromQuery, queryFromView, apiParams, listSig, fetchBehaviours, fetchBehaviourDetail, prefetch, takePrefetched,
-  activityRows, actorsOpen, flipActor, behaviourSpan, summaryChips, headline, defaultIdentity, defaultPlace, actorLabel
+  activityRows, actorsOpen, inRange, flipActor, behaviourSpan, summaryChips, headline, defaultIdentity, defaultPlace, actorLabel
 } from '../lib/v6';
 import { backendMessage } from '../lib/api';
 import { PRODUCT, BLANK_CLUSTER, routeName } from '../product';
@@ -79,8 +79,26 @@ export default {
 
       return s !== null && s !== undefined && e ? e - s : 864e5;
     },
-    list() {
+    all() {
       return this.data?.behaviours || [];
+    },
+    range() {
+      return this.v.from !== null && this.v.to !== null ? [this.v.from, this.v.to] : null;
+    },
+    // The behaviours shown: all of the day, or those overlapping the picked range.
+    list() {
+      return inRange(this.all, this.v.from, this.v.to);
+    },
+    // The server's account and namespace lists, kept to those still shown in the range.
+    actorsShown() {
+      const ids = new Set(this.list.map((b) => b.actor.id));
+
+      return (this.data?.actors || []).filter((a) => ids.has(a.id));
+    },
+    scopesShown() {
+      const keys = new Set(this.list.map((b) => `${ b.cluster }/${ b.scope }`));
+
+      return (this.data?.scopes || []).filter((s) => keys.has(`${ s.cluster }/${ s.scope }`));
     },
     building() {
       return (this.data?.meta?.progress || []).some((p) => p.what === 'behaviors');
@@ -89,7 +107,7 @@ export default {
       return this.v.select || this.data?.selected || '';
     },
     selB() {
-      return this.list.find((b) => b.id === this.selId) || null;
+      return this.all.find((b) => b.id === this.selId) || null;
     },
     selDetail() {
       return this.details[this.selId] || null;
@@ -106,10 +124,9 @@ export default {
 
       return m;
     },
+    // The behaviours to look at, as the summary lists them (id, title, fromMs, toMs).
     lookList() {
-      const ids = (this.data?.summary?.look || []).map((x) => String(x.id));
-
-      return ids.map((id) => this.list.find((b) => b.id === id)).filter(Boolean);
+      return (this.data?.summary?.look || []).map((x) => ({ ...x, id: String(x.id) }));
     },
     // "This day has N behaviours. X to look at: … The rest is ordinary or routine."
     lead() {
@@ -530,6 +547,12 @@ export default {
             </button>
           </div>
           <p
+            v-if="range"
+            class="sum-hidden small"
+          >
+            <b>{{ T.rangeLine(fmt(range[0]), range[1] >= d0 + dayMs ? '24:00' : fmt(range[1]), list.length) }}</b>
+          </p>
+          <p
             v-if="settingsLine"
             class="sum-hidden muted small"
           >
@@ -600,7 +623,7 @@ export default {
             class="pane"
             :T="T"
             :behaviours="list"
-            :actors="data.actors"
+            :actors="actorsShown"
             :overlaps="data.overlaps"
             :names="names"
             :who="who"
@@ -617,7 +640,7 @@ export default {
             class="pane"
             :T="T"
             :behaviours="list"
-            :scopes="data.scopes"
+            :scopes="scopesShown"
             :place="place"
             :gaps="data.gaps"
             :d0="d0"
@@ -660,11 +683,13 @@ export default {
       :gaps="(data && data.gaps) || []"
       :look="lookList"
       :mark="detailOpen ? mark : null"
+      :range="range"
       :day="v.day"
       :d0="d0"
       :day-ms="dayMs"
       :tz="tz"
-      @day="(d) => set({day: d, select: '', who: null, place: null})"
+      @range="(r) => set(r ? {from: r[0], to: r[1]} : {from: null, to: null})"
+      @day="(d) => set({day: d, select: '', who: null, place: null, from: null, to: null})"
     />
   </div>
 </template>

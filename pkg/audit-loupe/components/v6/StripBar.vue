@@ -1,10 +1,13 @@
 <script>
 import { fmtTime, shiftDay, clusterLabel } from '../../lib/v5';
 import { stripBars, mergedGaps, headline } from '../../lib/v6';
+import { minuteAt, pickRange } from '../../lib/timeline';
 
 // The bottom time bar of v6: the day picker as in v5, and the day's operations per cell (people
 // dark, everyone else light), collection gaps hatched, the behaviours to look at as red dots,
 // and the selected behaviour's span outlined. Cells come from the server (strip.cells).
+// Clicking a cell or dragging picks a range: the page then lists only the behaviours that
+// overlap it (the server cuts whole days; counts stay whole-day).
 export default {
   name:  'AlStripBar',
   props: {
@@ -17,8 +20,12 @@ export default {
     d0:    { type: Number, required: true },
     dayMs: { type: Number, required: true },
     tz:    { type: String, required: true },
+    range: { type: Array, default: null },
   },
-  emits:    ['day'],
+  emits: ['day', 'range'],
+  data() {
+    return { drag: null };
+  },
   computed: {
     cellMs() {
       return (this.strip?.cellMinutes || 10) * 60000;
@@ -36,6 +43,11 @@ export default {
 
       return m ? { left: `${ this.pct(m[0]) }%`, width: `${ Math.max(0.4, this.pct(m[1]) - this.pct(m[0])) }%` } : null;
     },
+    selStyle() {
+      const r = this.drag ? [Math.min(this.drag.a, this.drag.b), Math.max(this.drag.a, this.drag.b)] : this.range;
+
+      return r ? { left: `${ this.pct(r[0]) }%`, width: `${ Math.max(0.4, this.pct(r[1]) - this.pct(r[0])) }%` } : null;
+    },
     // With system components listed, the light bars include them too.
     withSystem() {
       return (this.strip?.cells || []).some((c) => c.system !== undefined);
@@ -50,6 +62,35 @@ export default {
     },
     fmt(ms) {
       return fmtTime(ms, this.tz);
+    },
+    at(e) {
+      const r = this.$refs.track.getBoundingClientRect();
+
+      return minuteAt((e.clientX - r.left) / r.width, this.d0, this.dayMs);
+    },
+    down(e) {
+      const t = this.at(e);
+
+      this.drag = { a: t, b: t };
+      window.addEventListener('pointermove', this.move);
+      window.addEventListener('pointerup', this.up, { once: true });
+    },
+    move(e) {
+      if (this.drag) {
+        this.drag.b = this.at(e);
+      }
+    },
+    up() {
+      window.removeEventListener('pointermove', this.move);
+      const d = this.drag;
+
+      this.drag = null;
+      if (d) {
+        this.$emit('range', pickRange(d.a, d.b, this.d0, this.cellMs, this.dayMs));
+      }
+    },
+    endText(t) {
+      return t >= this.d0 + this.dayMs ? '24:00' : this.fmt(t);
     },
     barTitle(c) {
       return this.T.strip.bar(this.fmt(c.t), this.fmt(c.t + this.cellMs), c.people, c.other);
@@ -97,6 +138,24 @@ export default {
         ▶
       </button>
       <b>{{ T.strip.title }}</b>
+      <span class="muted">{{ T.tl.range }}</span>
+      <b
+        v-if="range"
+        class="num"
+      >{{ fmt(range[0]) }}–{{ endText(range[1]) }}</b>
+      <span
+        v-else
+        class="muted"
+      >{{ T.tl.rangeAll }}</span>
+      <button
+        v-if="range"
+        type="button"
+        class="link"
+        @click="$emit('range', null)"
+      >
+        {{ T.tl.clearRange }}
+      </button>
+      <span class="muted small">{{ T.strip.rangeHint }}</span>
       <span
         v-if="strip"
         class="muted small"
@@ -109,7 +168,11 @@ export default {
         <span><i class="lg mark" />{{ T.strip.mark }}</span>
       </div>
     </div>
-    <div class="sb-track">
+    <div
+      ref="track"
+      class="sb-track"
+      @pointerdown.prevent="down"
+    >
       <i
         v-for="(g, j) in gapBands"
         :key="`g${j}`"
@@ -139,6 +202,11 @@ export default {
         class="sb-dot"
         :style="{left: `${pct(dotAt(b))}%`}"
         :title="dotTitle(b)"
+      />
+      <div
+        v-if="selStyle"
+        class="sb-sel"
+        :style="selStyle"
       />
       <div
         v-if="markStyle"

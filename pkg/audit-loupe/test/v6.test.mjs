@@ -9,7 +9,7 @@ import path from 'node:path';
 import {
   normalize, activityRows, actorsOpen, flipActor, findingsSections, trackMarks, behaviourSpan, titleText, headline, whatText,
   tagTexts, rangeText, viewFromQuery, queryFromView, listSig, apiParams, scopeActors, scopeGroups, identityGroups, identityRows,
-  mergedGaps, stripBars, settingNote, defaultIdentity, defaultPlace, actorLabel, overlapsOf, summaryChips, parsePlace, placeKey, NOKEY
+  mergedGaps, inRange, stripBars, settingNote, defaultIdentity, defaultPlace, actorLabel, overlapsOf, summaryChips, parsePlace, placeKey, NOKEY
 } from '../lib/v6.js';
 import { textsV6 } from '../lib/v6text.js';
 
@@ -308,4 +308,18 @@ test('the URL keeps the whole view; picking a behaviour alone does not reload th
 test('times are the first and last operation, in the server time zone', () => {
   assert.equal(rangeText(byId('b1'), 'Asia/Taipei'), '08:01–08:48');
   assert.equal(rangeText(byId('b3'), 'Asia/Taipei'), '09:01–09:08');
+});
+
+test('a picked range keeps the behaviours with a part overlapping it, uncut', () => {
+  assert.deepEqual(inRange(L, at(8, 31), at(8, 39)).map((b) => b.id), ['b5']);
+  assert.deepEqual(inRange(L, at(8, 40), at(8, 50)).map((b) => b.id).sort(), ['b1', 'b5']);
+  assert.equal(inRange(L, null, null), L);
+  assert.equal(inRange(L, at(8, 40), at(8, 50)).find((b) => b.id === 'b1').ops, 15, 'counts stay whole-day');
+});
+
+test('the server\'s actor id is used as is; "bypassed-rancher" alone is not a label', () => {
+  const b = normalize({ behaviors: [{ id: 'x', actor: { id: '~c9', key: '', group: 'unrecorded' }, tags: ['bypassed-rancher'], segments: [] }] }).behaviours[0];
+
+  assert.equal(b.actor.id, '~c9');
+  assert.deepEqual(tagTexts(zh, b), []);
 });

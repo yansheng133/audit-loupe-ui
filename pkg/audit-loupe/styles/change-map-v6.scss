@@ -138,7 +138,8 @@
   .lg.other { width: 12px; height: 8px; background: var(--routine); }
   .lg.lookdot { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
   .lg.mark { width: 12px; height: 10px; border: 1.5px solid var(--al-primary); background: transparent; box-sizing: border-box; }
-  .sb-track { position: relative; height: 40px; margin-top: 6px; }
+  .sb-track { position: relative; height: 40px; margin-top: 6px; cursor: crosshair; user-select: none; touch-action: none; overflow: hidden; }
+  .sb-sel { position: absolute; bottom: 0; height: 40px; border: 2px solid var(--al-primary); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--al-surface) 55%, transparent); clip-path: inset(0 -100vmax); }
   .sb-track i, .sb-mark { position: absolute; }
   .sb-gap { bottom: 0; height: 30px; background: repeating-linear-gradient(135deg, var(--hatch) 0 2px, transparent 2px 6px); }
   .sb-bar { bottom: 0; max-height: 30px; min-width: 1px; border-radius: 1px 1px 0 0; }

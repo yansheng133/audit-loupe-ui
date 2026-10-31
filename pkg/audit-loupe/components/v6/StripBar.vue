@@ -93,7 +93,10 @@ export default {
         ▶
       </button>
       <b>{{ T.strip.title }}</b>
-      <span class="muted small">{{ T.strip.cell((strip && strip.cellMinutes) || T.tbc) }}</span>
+      <span
+        v-if="strip"
+        class="muted small"
+      >{{ T.strip.cell(strip.cellMinutes ?? T.tbc) }}</span>
       <div class="legend">
         <span><i class="lg people" />{{ T.strip.people }}</span>
         <span><i class="lg other" />{{ T.strip.other }}</span>

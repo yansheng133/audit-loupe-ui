@@ -2,7 +2,7 @@
 
 ## 0.7.0（預覽版）
 
-配 Audit Loupe server 的 `/api/behaviors`（[audit-loupe](https://github.com/yansheng133/audit-loupe) `docs/api/behaviors-v0.md`）。舊的後端沒有這支 API，變更地圖會顯示找不到後端服務的訊息；v5 的頁面還在 `changes-v5`。
+配 Audit Loupe server 的 `/api/behaviors`（[audit-loupe](https://github.com/yansheng133/audit-loupe) `docs/api/behaviors-v0.md`）。後端還沒有這支 API 時，變更地圖會說明這一點並附上舊版（v5）頁面的連結；v5 的頁面還在 `changes-v5`。
 
 ### 新增：變更地圖 v6（以「行為」為單位）
 - 伺服器把一天的操作切成「行為」：同一叢集、同一執行者、同一個目標 namespace，每 10 分鐘一格，相鄰的格子是一個小段，相隔 60 分鐘以內用虛線接起來，超過 60 分鐘或遇到收集中斷就是另一段。介面只負責排版，不在瀏覽器裡切段。

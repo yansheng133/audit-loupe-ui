@@ -13,6 +13,7 @@ import {
   activityRows, actorsOpen, flipActor, behaviourSpan, summaryChips, headline, defaultIdentity, defaultPlace, actorLabel
 } from '../lib/v6';
 import { backendMessage } from '../lib/api';
+import { PRODUCT, BLANK_CLUSTER, routeName } from '../product';
 
 // v6 change map (docs/api/behaviors-v0.md, task book 1101 §4): four tabs over the behaviours
 // the server cut the day into. One /api/behaviors request opens the page; picking a behaviour
@@ -52,6 +53,7 @@ export default {
       loading:       false,
       error:         '',
       missing:       false,
+      old:           false,
       details:       {},
       detailLoading: false,
       detailError:   '',
@@ -233,6 +235,7 @@ export default {
       this.loading = true;
       this.error = '';
       this.missing = false;
+      this.old = false;
       try {
         const res = normalize(await (takePrefetched(params) || fetchBehaviours(params)));
 
@@ -251,7 +254,10 @@ export default {
           return;
         }
         console.error('audit-loupe: behaviors failed', e); // eslint-disable-line no-console
-        this.missing = backendMessage(this.T, e) || false;
+        // A 404 from the backend itself (not Kubernetes' "no such service") means an older
+        // backend without /api/behaviors.
+        this.old = e.status === 404 && e.body?.kind !== 'Status';
+        this.missing = this.old ? this.T.oldBackend : (backendMessage(this.T, e) || false);
         if (!this.missing) {
           this.error = `${ this.T.loadFailed }: ${ e.message }`;
         }
@@ -394,6 +400,9 @@ export default {
   },
   TABS,
   PANEL_AUTO,
+  PRODUCT,
+  BLANK_CLUSTER,
+  V5_ROUTE: routeName('changes-v5'),
 };
 </script>
 
@@ -477,6 +486,12 @@ export default {
       class="banner-al"
     >
       {{ missing || error }}
+      <router-link
+        v-if="old"
+        :to="{name: $options.V5_ROUTE, params: {product: $options.PRODUCT, cluster: $options.BLANK_CLUSTER}, query: {day: v.day}}"
+      >
+        {{ T.openV5 }}
+      </router-link>
     </div>
 
     <div

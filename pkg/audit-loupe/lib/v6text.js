@@ -10,11 +10,13 @@ const ZH = {
   tabSub: {
     activity: '全日變更時間軸', findings: '依風險分級的行為', identities: '單一帳號的操作軌跡', scopes: '單一 namespace 的變更來源'
   },
-  tbc:       '待確認',
-  tbcHint:   '伺服器沒有回傳這個值',
-  listSep:   '、',
-  moreKinds: (n) => ` 等 ${ n } 種`,
-  tiers:     {
+  tbc:        '待確認',
+  oldBackend: '這個 Audit Loupe 後端還沒有「行為」的 API（/api/behaviors）。請升級後端，或先看舊版的變更地圖。',
+  openV5:     '開啟舊版變更地圖',
+  tbcHint:    '伺服器沒有回傳這個值',
+  listSep:    '、',
+  moreKinds:  (n) => ` 等 ${ n } 種`,
+  tiers:      {
     look: '要看', notable: '值得知道', normal: '一般操作', unrecorded: '未記錄執行者', unauthenticated: 'Rancher 未驗證請求', routine: '例行', system: '系統元件'
   },
   tierHint: {
@@ -138,11 +140,13 @@ const EN = {
   tabSub: {
     activity: 'Changes across the day', findings: 'Behaviours by risk', identities: 'One account at a time', scopes: 'One namespace at a time'
   },
-  tbc:       'to be confirmed',
-  tbcHint:   'The server did not send this value',
-  listSep:   ', ',
-  moreKinds: (n) => ` and more (${ n } kinds)`,
-  tiers:     {
+  tbc:        'to be confirmed',
+  oldBackend: 'This Audit Loupe backend has no behaviours API yet (/api/behaviors). Upgrade the backend, or use the previous change map for now.',
+  openV5:     'Open the previous change map',
+  tbcHint:    'The server did not send this value',
+  listSep:    ', ',
+  moreKinds:  (n) => ` and more (${ n } kinds)`,
+  tiers:      {
     look: 'Look', notable: 'Worth knowing', normal: 'Ordinary', unrecorded: 'Author not recorded', unauthenticated: 'Unauthenticated Rancher request', routine: 'Routine', system: 'System component'
   },
   tierHint: {

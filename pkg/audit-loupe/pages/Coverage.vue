@@ -48,11 +48,37 @@ export default {
         return id;
       }
     },
+    // The collector's own report in words: the watch collector's per-type states become a count
+    // plus the types that are not being watched (with why); the file collector's fields get
+    // names. Anything else is shown as it comes.
     details(d) {
-      // A time the collector sends in milliseconds (lastSentMs) is shown as a time, to the second.
-      const val = (k, v) => (/Ms$/.test(k) && typeof v === 'number' ? fmtDateSec(v) : (typeof v === 'object' ? JSON.stringify(v) : v));
+      const entries = Object.entries(d || {});
+      const types = entries.filter(([k]) => k.includes('/'));
+      const out = [];
 
-      return Object.entries(d || {}).map(([k, v]) => `${ k }: ${ val(k, v) }`).join('・');
+      if (types.length) {
+        const ok = types.filter(([, v]) => v === 'watching').length;
+
+        out.push(this.C.watching(ok));
+        types.filter(([, v]) => v !== 'watching').forEach(([k, v]) => out.push(`${ k }: ${ this.C.watchState[v] || v }`));
+      }
+      entries.filter(([k]) => !k.includes('/')).forEach(([k, v]) => {
+        const name = this.C.field[k];
+
+        if (/Ms$/.test(k) && typeof v === 'number') {
+          out.push(`${ name || k }: ${ fmtDateSec(v) }`);
+        } else if (k === 'lagBytes') {
+          out.push(`${ name || k }: ${ v } bytes`);
+        } else {
+          out.push(`${ name || k }: ${ typeof v === 'object' ? JSON.stringify(v) : (this.C.value[v] || v) }`);
+        }
+      });
+
+      return out.join('・');
+    },
+    // The full list of watched types, for the tooltip.
+    detailsTitle(d) {
+      return Object.entries(d || {}).filter(([k]) => k.includes('/')).map(([k, v]) => `${ k }: ${ this.C.watchState[v] || v }`).join('\n') || null;
     },
     chainOf(c) {
       return this.chain.find((x) => x.cluster === c);
@@ -112,7 +138,6 @@ export default {
     >
       <div class="col-head">
         <h2>{{ clusterName(r.cluster) }}</h2>
-        <span class="muted">{{ r.cluster }}</span>
       </div>
       <div class="detail">
         <table class="tbl">
@@ -140,7 +165,10 @@ export default {
                   :title="c.retired ? C.retiredHint : null"
                 >{{ status(c)[1] }}</span>
               </td>
-              <td class="muted">
+              <td
+                class="muted"
+                :title="detailsTitle(c.details)"
+              >
                 {{ details(c.details) }}
               </td>
             </tr>

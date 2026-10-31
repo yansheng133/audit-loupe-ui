@@ -41,6 +41,13 @@ export default {
           ...u, admin: u.grants.some((g) => g.admin_like), viaGroup: u.grants.filter((g) => g.via_group).length
         }));
     },
+    // A finalizer delete is stored as two steps (deletion started, then gone) linked to the
+    // same request; people care that the role was deleted, so the first step is not listed.
+    roleChanges() {
+      const list = this.diff?.roleChanges || [];
+
+      return list.filter((r) => r.change !== 'deleting' || !list.some((x) => x.change === 'deleted' && x.kind === r.kind && x.name === r.name && x.at_ms >= r.at_ms));
+    },
     user() {
       return this.users.find((u) => u.user_id === this.sel) || null;
     },
@@ -90,6 +97,13 @@ export default {
 
       return g.granted_by_inferred ? `${ g.granted_by }（${ this.A.inferred }）` : g.granted_by;
     },
+    // Rancher names the per-cluster system account after the cluster ID; show the cluster name.
+    personName(u) {
+      const name = u.display_name || u.user_id;
+      const m = /^(System account for Cluster )(\S+)$/.exec(name);
+
+      return m ? `${ m[1] }${ this.clusterName(m[2]) }` : name;
+    },
     subject(g) {
       if (g.subject_kind === 'group') {
         return `${ this.A.group } ${ principalShort(g.subject) }`;
@@ -104,6 +118,10 @@ export default {
       this.loading = true;
       this.error = null;
       try {
+        // Rancher's cluster and project lists, so scopes show names instead of IDs. Forced: Rancher
+        // may hold only the current cluster's projects, and every cluster's are needed here.
+        await Promise.all(['management.cattle.io.cluster', 'management.cattle.io.project']
+          .map((type) => this.$store.dispatch('management/findAll', { type, opt: { force: true } }).catch(() => {})));
         const at = new Date(this.at).toISOString();
         const [snap, diff] = await Promise.all([
           getJson('/api/access', { at }),
@@ -183,14 +201,17 @@ export default {
               :class="{on: sel === u.user_id}"
               @click="sel = u.user_id"
             >
-              <span class="who">{{ u.display_name }}</span>
+              <span
+                class="who"
+                :title="personName(u)"
+              >{{ personName(u) }}</span>
               <span>
                 <span
                   v-if="u.admin"
                   class="tag warn"
                 >{{ A.adminLike }}</span>
               </span>
-              <span class="num muted">{{ u.grants.length }}</span>
+              <span class="num muted">{{ A.grants(u.grants.length) }}</span>
             </button>
           </div>
         </div>
@@ -198,7 +219,7 @@ export default {
 
       <section class="col">
         <div class="col-head">
-          <h2>{{ user ? user.display_name : A.pick }}</h2>
+          <h2>{{ user ? personName(user) : A.pick }}</h2>
           <span
             v-if="user"
             class="muted"
@@ -304,12 +325,17 @@ export default {
               v-if="diff.roleChanges.length"
               class="tbl"
             >
+              <thead>
+                <tr>
+                  <th>{{ A.roleName }}</th><th>{{ A.change }}</th><th>{{ A.by }}</th><th>{{ A.when }}</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr
-                  v-for="r in diff.roleChanges"
+                  v-for="r in roleChanges"
                   :key="`${r.kind}${r.name}${r.at_ms}`"
                 >
-                  <td>{{ r.name }}</td><td>{{ r.change }}</td><td>{{ reason(r) || r.by || A.unknown }}</td><td class="num">
+                  <td>{{ r.name }}</td><td>{{ A.changeKind[r.change] || r.change }}</td><td>{{ reason(r) || r.by || A.unknown }}</td><td class="num">
                     {{ fmtDate(r.at_ms) }}
                   </td>
                 </tr>
@@ -323,6 +349,9 @@ export default {
 </template>
 
 <style lang="scss">
+/* A person's name is shown whole (it may be long, e.g. a cluster's system account). */
+.al .people .person { grid-template-columns: minmax(0, 1fr) auto auto; }
+.al .people .person .who { white-space: normal; overflow-wrap: anywhere; }
 @import '../styles/change-map.scss';
 .al.al-page { height: auto; display: flex; flex-direction: column; }
 .al .work-2 { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 8px; min-height: 480px; }

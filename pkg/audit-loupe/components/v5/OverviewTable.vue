@@ -1,7 +1,9 @@
 <script>
 import AlStateTag from './StateTag.vue';
-import { KIND_TAG } from '../../lib/model';
-import { fmtTime, reasonText, noteText, shortWho } from '../../lib/v5';
+import { kindLabel } from '../../lib/model';
+import {
+  fmtTime, reasonText, noteText, shortWho, clusterLabel
+} from '../../lib/v5';
 
 const ROW_H = 34;
 const OVERSCAN = 8;
@@ -56,8 +58,11 @@ export default {
     onScroll(e) {
       this.top = e.target.scrollTop;
     },
+    clusterName(id) {
+      return clusterLabel(this.$store, id);
+    },
     tag(kind) {
-      return KIND_TAG[kind] || String(kind || '').toUpperCase();
+      return kindLabel(kind);
     },
     pos(t) {
       return `${ Math.min(100, Math.max(0, ((t - this.d0) / 864e5) * 100)) }%`;
@@ -146,9 +151,9 @@ export default {
           </td>
           <td
             class="where"
-            :title="`${r.cluster} / ${r.namespace || T.clusterScope}`"
+            :title="`${clusterName(r.cluster)} / ${r.namespace || T.clusterScope}`"
           >
-            {{ r.cluster }} / {{ r.namespace || T.clusterScope }}
+            {{ clusterName(r.cluster) }} / {{ r.namespace || T.clusterScope }}
           </td>
           <td>
             <div class="mini">

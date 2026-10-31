@@ -1,7 +1,9 @@
 <script>
 import AlStateTag from './StateTag.vue';
-import { KIND_TAG, kindOf } from '../../lib/model';
-import { STATES, fmtTime, parseKey, eventReason } from '../../lib/v5';
+import { kindLabel, kindOf } from '../../lib/model';
+import {
+  STATES, fmtTime, parseKey, eventReason, clusterLabel
+} from '../../lib/v5';
 
 // Audit state transitions only. Collection events keep their two sources apart: what the
 // collector reported, and what Audit Loupe concluded from missing heartbeats (spec §5).
@@ -34,12 +36,12 @@ export default {
     // Object events name the object key; collection events name the cluster.
     title(e) {
       if (!this.isObj(e)) {
-        return this.T.collectOf(e.subject);
+        return this.T.collectOf(clusterLabel(this.$store, e.subject));
       }
       const k = parseKey(e.subject);
       const kind = kindOf(k.resource);
 
-      return `${ KIND_TAG[kind] || kind } ${ k.name }${ k.namespace ? `（${ k.namespace }）` : '' }`;
+      return `${ kindLabel(kind) } ${ k.name }${ k.namespace ? `（${ k.namespace }）` : '' }`;
     },
     // from / to are audit states for objects ("look", "look:high"), collection states
     // ("ok" / "blind") for the collector.

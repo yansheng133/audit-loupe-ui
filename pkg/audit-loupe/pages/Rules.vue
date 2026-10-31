@@ -28,6 +28,14 @@ export default {
   },
 
   methods: {
+    // Settings are numbered in the order they came into force (1 = first), instead of showing
+    // the code the backend tells them apart by; the code stays in the tooltip.
+    versionOf(fp) {
+      const order = [...new Set([...(this.status?.history || [])].sort((a, b) => a.activeFromMs - b.activeFromMs).map((h) => h.fingerprint))];
+      const i = order.indexOf(fp);
+
+      return i < 0 ? '?' : i + 1;
+    },
     fmtDate,
     async load() {
       this.loading = true;
@@ -129,7 +137,7 @@ export default {
       <section class="col">
         <div class="col-head">
           <h2>{{ P.title }}</h2>
-          <span class="muted">{{ P.code }} {{ status.fingerprint }}・{{ P.since }} {{ fmtDate(status.sinceMs) }}</span>
+          <span class="muted">{{ P.version(versionOf(status.fingerprint)) }}・{{ P.since }} {{ fmtDate(status.sinceMs) }}</span>
         </div>
         <div class="detail">
           <p class="muted">
@@ -165,8 +173,8 @@ export default {
               >
                 <td>
                   <strong>{{ T.rules[r.id] || r.id }}</strong>
-                  <div class="muted mono">
-                    {{ r.id }}
+                  <div class="muted">
+                    {{ P.helmKey }} <code>{{ r.id }}</code>
                   </div>
                 </td>
                 <td>{{ P.what_[r.id] }}</td>
@@ -240,11 +248,11 @@ export default {
                 <td class="num">
                   {{ fmtDate(h.activeFromMs) }}
                 </td>
-                <td class="mono">
-                  {{ h.fingerprint }}<span
+                <td :title="h.fingerprint">
+                  {{ P.version(versionOf(h.fingerprint)) }}<span
                     v-if="h.fingerprint === status.fingerprint"
                     class="muted"
-                  >（{{ P.current }}）</span>
+                  >{{ P.current }}</span>
                 </td>
                 <td>{{ summary(h.settings) }}</td>
               </tr>
@@ -275,8 +283,8 @@ export default {
                 <td class="num">
                   {{ fmtDate(r.startedMs) }}
                 </td>
-                <td class="mono">
-                  {{ (status.history.find((h) => h.id === r.settingsId) || {}).fingerprint || r.settingsId }}
+                <td>
+                  {{ P.version(versionOf((status.history.find((h) => h.id === r.settingsId) || {}).fingerprint)) }}
                 </td>
                 <td class="num">
                   <template v-if="r.fromMs">

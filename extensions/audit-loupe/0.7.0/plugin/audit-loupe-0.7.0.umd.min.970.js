@@ -1,0 +1,2 @@
+(("undefined"!==typeof self?self:this)["webpackChunkaudit_loupe_0_7_0"]=("undefined"!==typeof self?self:this)["webpackChunkaudit_loupe_0_7_0"]||[]).push([[970],{5970:function(e){const u=[{product:{"audit-loupe":"Audit Loupe"},auditLoupe:{nav:{changes:"變更地圖",access:"權限覆核",coverage:"收集狀態",rules:"規則"}}}];e.exports=u.length<=1?u[0]:u}}]);
+//# sourceMappingURL=audit-loupe-0.7.0.umd.min.970.js.map

@@ -1,0 +1,11 @@
+plugin/audit-loupe-0.7.0.umd.min.37.js
+plugin/audit-loupe-0.7.0.umd.min.37.js.map
+plugin/audit-loupe-0.7.0.umd.min.671.js
+plugin/audit-loupe-0.7.0.umd.min.671.js.map
+plugin/audit-loupe-0.7.0.umd.min.687.js
+plugin/audit-loupe-0.7.0.umd.min.687.js.map
+plugin/audit-loupe-0.7.0.umd.min.970.js
+plugin/audit-loupe-0.7.0.umd.min.970.js.map
+plugin/audit-loupe-0.7.0.umd.min.js
+plugin/audit-loupe-0.7.0.umd.min.js.map
+plugin/package.json

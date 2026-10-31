@@ -7,7 +7,7 @@ import AlBehaviourDetail from '../components/v6/BehaviourDetail.vue';
 import AlStripBar from '../components/v6/StripBar.vue';
 import MultiPick from '../components/v5/MultiPick.vue';
 import { fmtTime, todayIso, clusterLabel, dayStartMs } from '../lib/v5';
-import { textsV6 } from '../lib/v6text';
+import { textsV6, savedLang, saveLang } from '../lib/v6text';
 import {
   TABS, normalize, viewFromQuery, queryFromView, apiParams, listSig, fetchBehaviours, fetchBehaviourDetail, prefetch, takePrefetched,
   activityRows, actorsOpen, inRange, flipActor, behaviourSpan, summaryChips, headline, defaultIdentity, defaultPlace, actorLabel
@@ -47,7 +47,7 @@ export default {
 
   data() {
     return {
-      T:             textsV6(this.$store),
+      lang:          savedLang(),
       v:             viewFromQuery(this.$route.query, todayIso()),
       data:          null,
       loading:       false,
@@ -67,6 +67,9 @@ export default {
   },
 
   computed: {
+    T() {
+      return textsV6(this.$store, this.lang);
+    },
     tz() {
       return this.data?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
     },
@@ -311,6 +314,11 @@ export default {
       }
     },
 
+    setLang(l) {
+      this.lang = l;
+      saveLang(l);
+    },
+
     select(id) {
       this.detailOpen = true;
       this.set({ select: id });
@@ -467,6 +475,16 @@ export default {
         >
           {{ v.system ? T.hideSystem : T.showSystem }}
         </button>
+        <label class="lang">{{ T.lang.label }}
+          <select
+            :value="lang"
+            @change="setLang($event.target.value)"
+          >
+            <option value="">{{ T.lang.auto }}</option>
+            <option value="zh-hant">{{ T.lang.zh }}</option>
+            <option value="en-us">{{ T.lang.en }}</option>
+          </select>
+        </label>
         <span class="tz">{{ T.tzLine(tz) }}</span>
         <button
           type="button"
@@ -553,16 +571,10 @@ export default {
             <b>{{ T.rangeLine(fmt(range[0]), range[1] >= d0 + dayMs ? '24:00' : fmt(range[1]), list.length) }}</b>
           </p>
           <p
-            v-if="settingsLine"
+            v-if="settingsLine || hidden"
             class="sum-hidden muted small"
           >
-            {{ settingsLine }}
-          </p>
-          <p
-            v-if="hidden"
-            class="sum-hidden muted small"
-          >
-            {{ hidden }}
+            {{ [settingsLine, hidden].filter(Boolean).join(T.zh ? '。' : '. ') }}
           </p>
         </div>
 

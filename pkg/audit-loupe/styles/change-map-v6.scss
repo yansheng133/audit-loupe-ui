@@ -16,7 +16,7 @@
   .banner-al { align-self: start; }
 
   // ---------- summary ----------
-  .sum { display: grid; gap: 6px; margin-bottom: 8px; }
+  .sum { display: grid; gap: 4px; margin-bottom: 6px; }
   .sum-lead { margin: 0; font-size: 14px; font-weight: 600; }
   .sum-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .sum-hidden { margin: 0; }
@@ -161,3 +161,17 @@
 
 .al6 .bd-tbl th, .al6 .bd-tbl td:first-child, .al6 .bd-tbl td.r { white-space: nowrap; }
 .al6 .bd-ops .bd-tbl td:nth-child(2) { white-space: nowrap; }
+
+// Rancher gives every button a 40px minimum height; these are blocks, rows and chips, not
+// form buttons.
+.al6 {
+  .ln-blk, .ln-name, .ln-group, .chip, .pick, .link, .x { min-height: 0; line-height: 1.4; }
+  .ln-blk { line-height: 0; }
+  .chip { line-height: 20px; }
+}
+
+// The strip's legend sits on its own line under the controls when the page is narrow.
+.al6 .sb .tl-top .legend { flex-basis: auto; }
+
+// Identities and scopes: the lanes share the width with the list on the left.
+.al6 .split .ln { --lab: 170px; min-width: 520px; }

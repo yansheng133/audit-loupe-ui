@@ -10,8 +10,11 @@ const ZH = {
   tabSub: {
     activity: '全日變更時間軸', findings: '依風險分級的行為', identities: '單一帳號的操作軌跡', scopes: '單一 namespace 的變更來源'
   },
-  tbc:        '待確認',
-  rangeLine:  (a, b, n) => `只列出和 ${ a }–${ b } 重疊的 ${ n } 段行為；上面的件數仍是整天。`,
+  tbc:       '待確認',
+  rangeLine: (a, b, n) => `只列出和 ${ a }–${ b } 重疊的 ${ n } 段行為；上面的件數仍是整天。`,
+  lang:      {
+    label: '語言', auto: '跟隨 Rancher', zh: '中文', en: 'English'
+  },
   oldBackend: '這個 Audit Loupe 後端還沒有「行為」的 API（/api/behaviors）。請升級後端，或先看舊版的變更地圖。',
   openV5:     '開啟舊版變更地圖',
   tbcHint:    '伺服器沒有回傳這個值',
@@ -92,7 +95,7 @@ const ZH = {
     people:    '人與管理帳號',
     other:     '其他（例行、未記錄執行者、Rancher 未驗證請求）',
     otherSys:  '其他（例行、未記錄執行者、Rancher 未驗證請求、系統元件）',
-    rangeHint: '點一格或拖曳選範圍：只列出和範圍重疊的行為，件數仍是整天',
+    rangeHint: '點一格或拖曳可選範圍',
     gap:       '沒有收集',
     look:      '要看的行為',
     mark:      '選中的行為',
@@ -143,8 +146,11 @@ const EN = {
   tabSub: {
     activity: 'Changes across the day', findings: 'Behaviours by risk', identities: 'One account at a time', scopes: 'One namespace at a time'
   },
-  tbc:        'to be confirmed',
-  rangeLine:  (a, b, n) => `Only the ${ n } behaviour${ n === 1 ? '' : 's' } overlapping ${ a }–${ b } are listed; the counts above are still whole-day.`,
+  tbc:       'to be confirmed',
+  rangeLine: (a, b, n) => `Only the ${ n } behaviour${ n === 1 ? '' : 's' } overlapping ${ a }–${ b } are listed; the counts above are still whole-day.`,
+  lang:      {
+    label: 'Language', auto: 'Same as Rancher', zh: '中文', en: 'English'
+  },
   oldBackend: 'This Audit Loupe backend has no behaviours API yet (/api/behaviors). Upgrade the backend, or use the previous change map for now.',
   openV5:     'Open the previous change map',
   tbcHint:    'The server did not send this value',
@@ -225,7 +231,7 @@ const EN = {
     people:    'People and admin accounts',
     other:     'Others (routine, author not recorded, unauthenticated)',
     otherSys:  'Others (routine, author not recorded, unauthenticated, system components)',
-    rangeHint: 'Click a cell or drag to pick a range: only behaviours overlapping it are listed; counts stay whole-day',
+    rangeHint: 'Click a cell or drag to pick a range',
     gap:       'Not collected',
     look:      'Behaviour to look at',
     mark:      'Selected behaviour',
@@ -279,7 +285,30 @@ const WATCH = {
   },
 };
 
-export function textsV6(store) {
+// The page's own language choice ('zh-hant', 'en-us'), kept in this browser; '' follows
+// Rancher's language. Changing it never touches the Rancher account's language setting.
+const LANG_KEY = 'audit-loupe.lang';
+
+export function savedLang() {
+  try {
+    return window.localStorage.getItem(LANG_KEY) || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+export function saveLang(lang) {
+  try {
+    if (lang) {
+      window.localStorage.setItem(LANG_KEY, lang);
+    } else {
+      window.localStorage.removeItem(LANG_KEY);
+    }
+  } catch (e) {}
+}
+
+export function textsV6(rancherStore, lang = '') {
+  const store = lang ? { getters: { 'i18n/current': () => lang } } : rancherStore;
   const v5 = textsV5(store);
   const m = modelTexts(store);
   const zh = v5 === textsV5({ getters: { 'i18n/current': () => 'zh-hant' } });

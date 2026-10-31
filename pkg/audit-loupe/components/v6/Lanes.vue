@@ -184,7 +184,7 @@ export default {
             <span aria-hidden="true">{{ r.open ? '▾' : '▸' }}</span>
             <b>{{ actorLabel(T, r.actor) }}</b>
             <span
-              v-if="r.multiCluster"
+              v-if="r.multiCluster || r.actor.group === 'unrecorded'"
               class="muted"
             >・ {{ cl(r.cluster) }}</span>
           </button>

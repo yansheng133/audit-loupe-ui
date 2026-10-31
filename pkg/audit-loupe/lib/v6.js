@@ -440,8 +440,12 @@ export function saNamespace(a) {
   return m ? m[1] : '';
 }
 
+// What an identity is, in the page's language: the identity codes, then the reason codes an
+// unrecorded actor carries (no-apiserver-audit, found-on-reconnect); the server's own text last.
 export function noteOf(T, a) {
-  return (a?.noteCode && T.note[a.noteCode]) || a?.note || '';
+  const c = a?.noteCode;
+
+  return (c && (T.note[c] || T.reason?.[c])) || a?.note || '';
 }
 
 // Labels of a behaviour, from the server's tag codes. "direct" (a fact: an operation went

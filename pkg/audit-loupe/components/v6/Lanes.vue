@@ -200,7 +200,10 @@ export default {
           v-else-if="r.type === 'merged'"
           class="ln-l"
         >
-          <span class="n">{{ T.merged(T.groupShort[r.group]) }}</span>
+          <span
+            class="n"
+            :title="T.merged(T.groupShort[r.group])"
+          >{{ T.merged(T.groupShort[r.group]) }}</span>
           <span class="s">{{ T.inCluster(cl(r.cluster)) }} ・ {{ T.mergedHint }}</span>
           <span
             v-for="(s, i) in actorSub(r.actor, false).filter((x) => x.cfg)"
@@ -227,7 +230,10 @@ export default {
           v-else
           class="ln-l"
         >
-          <span class="n">{{ scopeLabel(r.scope) }}</span>
+          <span
+            class="n"
+            :title="scopeLabel(r.scope)"
+          >{{ scopeLabel(r.scope) }}</span>
           <span class="s">{{ T.actorLine(r.behaviours.length, n(r.ops)) }}<template v-if="r.showCluster"> ・ {{ cl(r.cluster) }}</template></span>
         </div>
         <div class="ln-track">

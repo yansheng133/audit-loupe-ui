@@ -31,8 +31,9 @@ export default {
     cause(g) {
       return g.reason ? (this.V.cause[g.reason] || g.reason) : '';
     },
-    // A collector silent for over a day is taken as removed (a node replaced, a collector
-    // turned off): grey, not red, since nothing is expected from it any more.
+    // The server marks a collector retired when it is silent over a day while another node of
+    // the same cluster reports (a replaced node): grey, not red. With nothing else reporting it
+    // is never retired and stays red.
     status(c) {
       if (c.retired) {
         return ['', this.C.retired];
@@ -153,7 +154,9 @@ export default {
           :key="i"
           class="quiet"
         >
-          {{ C.kinds[g.collector] || g.collector }}（{{ g.instance }}）：{{ fmtDateSec(g.fromMs) }} → {{ g.toMs ? fmtDateSec(g.toMs) : (g.retired ? C.retired : C.stillSilent) }}<template v-if="cause(g)">
+          {{ C.kinds[g.collector] || g.collector }}（{{ g.instance }}）：{{ fmtDateSec(g.fromMs) }} → {{ g.toMs ? fmtDateSec(g.toMs) : C.stillSilent }}<template v-if="g.retired">
+            （{{ C.retired }}）
+          </template><template v-if="cause(g)">
             — {{ cause(g) }}
           </template>
         </div>

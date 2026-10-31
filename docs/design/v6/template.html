@@ -1,0 +1,433 @@
+<title>Audit Loupe 四種視角</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one screen — view tabs + calm summary on top; lanes (or lists) in the middle; behavior detail on the right; a 24h strip pinned at the bottom. */
+:root{
+  --bg:#f4f5f7; --surface:#ffffff; --sunken:#eceef2; --fg:#1c2230; --muted:#5f6779; --faint:#8a92a3; --border:#d9dde4;
+  --accent:#2f6fd6; --accent-soft:#e3ecfb;
+  --ink:#55607a; --ink-soft:#c3c9d6; --routine:#d5d9e1;
+  --look:#c8372d; --look-soft:#fbe6e4; --notable:#a8660a; --notable-soft:#fbf0dc;
+  --hatch:#c9ced8;
+  --f-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14181f; --surface:#1c212b; --sunken:#242a36; --fg:#e5e8ee; --muted:#9ba3b4; --faint:#717a8c; --border:#323a49;
+  --accent:#6aa0f2; --accent-soft:#1f2e48; --ink:#9aa6c0; --ink-soft:#465068; --routine:#333b4b;
+  --look:#f07167; --look-soft:#3a2224; --notable:#e8a54a; --notable-soft:#3a2e1a; --hatch:#3a4252; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14181f; --surface:#1c212b; --sunken:#242a36; --fg:#e5e8ee; --muted:#9ba3b4; --faint:#717a8c; --border:#323a49;
+  --accent:#6aa0f2; --accent-soft:#1f2e48; --ink:#9aa6c0; --ink-soft:#465068; --routine:#333b4b;
+  --look:#f07167; --look-soft:#3a2224; --notable:#e8a54a; --notable-soft:#3a2e1a; --hatch:#3a4252; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:13px/1.5 var(--f-ui)}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr auto;gap:10px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box;min-height:0}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header.top{display:grid;gap:8px}
+.bar1{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px}
+.brand small{font-weight:400;color:var(--muted);margin-left:8px}
+.tabs{display:flex;gap:2px;background:var(--sunken);padding:3px;border-radius:8px}
+.tabs button{font:inherit;border:0;background:transparent;color:var(--muted);padding:5px 14px;border-radius:6px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);font-weight:700;box-shadow:0 1px 2px rgb(0 0 0/.08)}
+.tabs button .q{display:block;font-size:11px;font-weight:400;color:var(--faint)}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mocknote{margin-left:auto;font-size:12px;color:var(--faint)}
+.summary{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:baseline;font-size:14px}
+.summary .lead{font-weight:500}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:1px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-family:inherit}
+.chip b{color:var(--fg);font-variant-numeric:tabular-nums}
+.chip.look{border-color:var(--look);color:var(--look)} .chip.look b{color:var(--look)}
+.chip.notable{border-color:var(--notable);color:var(--notable)} .chip.notable b{color:var(--notable)}
+.chip.gap{border-style:dashed}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:12px;min-height:0}
+.pane{background:var(--surface);border:1px solid var(--border);border-radius:8px;min-height:0;display:flex;flex-direction:column;min-width:0}
+.pane>.ph{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.pane>.ph h2{font-size:14px;margin:0;text-wrap:balance}
+.pane>.ph .sub{color:var(--muted);font-size:12px}
+.scroll{overflow:auto;min-height:0;flex:1}
+/* lanes */
+.lanes{--lab:210px;min-width:760px;position:relative}
+.axis{display:grid;grid-template-columns:var(--lab) 1fr;position:sticky;top:0;z-index:3;background:var(--surface);border-bottom:1px solid var(--border)}
+.axis .ticks{position:relative;height:24px}
+.axis .ticks span{position:absolute;top:5px;transform:translateX(-50%);font-size:11px;color:var(--faint);font-family:var(--f-mono)}
+.grp-h{display:grid;grid-template-columns:var(--lab) 1fr;align-items:center;background:var(--sunken);border-bottom:1px solid var(--border);cursor:pointer}
+.grp-h .l{padding:5px 12px;font-weight:700;font-size:12px;display:flex;gap:8px;align-items:center}
+.grp-h .l small{font-weight:400;color:var(--muted)}
+.grp-h .tw{color:var(--faint);font-size:11px;width:10px}
+.lane{display:grid;grid-template-columns:var(--lab) 1fr;border-bottom:1px solid var(--border);min-height:28px}
+.lane .l{padding:4px 12px;display:flex;flex-direction:column;justify-content:center;min-width:0;border-right:1px solid var(--border)}
+.lane .l .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lane .l .s{font-size:11px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lane.actor .l .n{font-weight:700}
+.lane.actor{background:color-mix(in srgb,var(--surface) 92%,var(--sunken))}
+.lane.sub .l{padding-left:26px}
+.track{position:relative;min-height:28px}
+.track .grid{position:absolute;inset:0;background-image:linear-gradient(to right,var(--border) 1px,transparent 1px);background-size:calc(100%/12) 100%;opacity:.55;pointer-events:none}
+.gapz{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,var(--hatch) 0 2px,transparent 2px 6px);opacity:.7;pointer-events:none}
+.blk{position:absolute;top:7px;height:14px;border-radius:3px;background:var(--ink);cursor:pointer;min-width:3px;border:0;padding:0}
+.blk.routine{background:var(--routine);top:9px;height:10px}
+.blk.unknown{background:transparent;border:1.5px solid var(--ink);box-sizing:border-box}
+.blk.notable{background:var(--notable)}
+.blk.look{background:var(--look)}
+.blk.sel{outline:2px solid var(--accent);outline-offset:2px}
+.blk:hover{filter:brightness(1.12)}
+.dash{position:absolute;top:14px;height:0;border-top:2px dashed var(--ink);pointer-events:none;opacity:.8}
+.dash.routine{border-top-color:var(--ink-soft)}
+.dash.look{border-top-color:var(--look)} .dash.notable{border-top-color:var(--notable)}
+.pin{position:absolute;top:6px;margin-left:6px;font-size:11px;color:var(--look);white-space:nowrap;pointer-events:none;font-weight:700;background:var(--surface);padding:0 3px;border-radius:3px;line-height:14px}
+.pin::before{content:"●";margin-right:2px}
+.lane.dim .track>*:not(.grid):not(.gapz){opacity:.25}
+.overlap{font-size:11px;color:var(--muted);white-space:normal;line-height:1.35}
+.lane .l .s:has(.overlap){white-space:normal}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:0 7px;border-radius:4px;background:var(--sunken);color:var(--muted);white-space:nowrap}
+.tag.cfg{background:transparent;border:1px dashed var(--faint)}
+.tag.look{background:var(--look-soft);color:var(--look);font-weight:700}
+.tag.notable{background:var(--notable-soft);color:var(--notable);font-weight:700}
+/* lists */
+.list{display:grid;align-content:start}
+.sec{padding:10px 14px 4px;font-size:12px;font-weight:700;color:var(--muted);display:flex;gap:8px;align-items:center;letter-spacing:.04em}
+.sec button{font:inherit;font-weight:400;border:0;background:none;color:var(--accent);cursor:pointer;padding:0}
+.item{display:grid;grid-template-columns:96px minmax(0,1fr);gap:4px 12px;padding:9px 14px;border-top:1px solid var(--border);cursor:pointer;align-items:start}
+.item:hover{background:var(--sunken)} .item.sel{background:var(--accent-soft)}
+.item .tm{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:1px}
+.item .tt{font-weight:500;min-width:0;overflow-wrap:anywhere}
+.item .tt .hl{color:var(--look);font-weight:700}
+.item.notable .tt .hl{color:var(--notable)}
+.item .meta{grid-column:2;display:flex;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:12px;align-items:center}
+.item.look{box-shadow:inset 3px 0 0 var(--look)} .item.notable{box-shadow:inset 3px 0 0 var(--notable)}
+.split{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:0;flex:1}
+.picker{border-right:1px solid var(--border);overflow:auto;min-height:0}
+.pick{padding:7px 12px;border-top:1px solid var(--border);cursor:pointer;display:grid;gap:1px}
+.pick:hover{background:var(--sunken)} .pick.sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.pick .n{overflow-wrap:anywhere;font-weight:500} .pick .s{font-size:11px;color:var(--faint)}
+.pick .s .lk{color:var(--look);font-weight:700}
+.pgrp{padding:8px 12px 4px;font-size:11px;font-weight:700;color:var(--faint);letter-spacing:.05em}
+.rcol{display:flex;flex-direction:column;min-height:0;min-width:0}
+.rcol>.scroll:first-child{flex:0 1 auto;max-height:55%}
+.rows-who .item{grid-template-columns:minmax(0,1fr) auto}
+/* detail */
+.dt{padding:14px;display:grid;gap:12px;align-content:start}
+.dt h3{margin:0;font-size:15px;text-wrap:balance;overflow-wrap:anywhere}
+.dt .who{display:grid;gap:2px}
+.dt .who b{overflow-wrap:anywhere}
+.kv{display:grid;grid-template-columns:72px minmax(0,1fr);gap:4px 10px;font-size:12px}
+.kv dt{color:var(--faint)} .kv dd{margin:0;overflow-wrap:anywhere}
+.why{font-size:12px;color:var(--muted);background:var(--sunken);border-radius:6px;padding:8px 10px}
+.why b{color:var(--fg)}
+.segs{display:flex;gap:6px;flex-wrap:wrap}
+.objs{display:grid;gap:0;font-size:12px;border:1px solid var(--border);border-radius:6px}
+.objs .o{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;padding:5px 8px;border-top:1px solid var(--border);align-items:baseline}
+.objs .o:first-child{border-top:0}
+.objs .o .k{color:var(--faint);font-size:11px} .objs .o .nm{overflow-wrap:anywhere} .objs .o .c{color:var(--muted);font-family:var(--f-mono)}
+.oplist{font-size:12px;font-family:var(--f-mono);display:grid;gap:1px;max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:6px 8px}
+.oplist .r{display:grid;grid-template-columns:64px 92px minmax(0,1fr);gap:6px}
+.oplist .r .v.hi{color:var(--look);font-weight:500}
+.foot{font-size:11px;color:var(--faint)}
+.empty{padding:24px;color:var(--muted)}
+/* bottom strip */
+.strip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.strip .lbl{font-size:12px;color:var(--muted);white-space:nowrap}
+.sbars{position:relative;height:36px}
+.sbars .b{position:absolute;bottom:12px;width:calc(100%/144 - 1px)}
+.sbars .b.p{background:var(--ink)} .sbars .b.r{background:var(--routine)}
+.sbars .g{position:absolute;bottom:12px;height:24px;background:repeating-linear-gradient(135deg,var(--hatch) 0 2px,transparent 2px 6px)}
+.sbars .lk{position:absolute;bottom:30px;width:7px;height:7px;border-radius:50%;background:var(--look);transform:translateX(-50%)}
+.sbars .hl{position:absolute;bottom:12px;height:26px;border:1.5px solid var(--accent);border-radius:3px;box-sizing:border-box;background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.sbars .ax{position:absolute;bottom:0;font-size:10px;color:var(--faint);transform:translateX(-50%);font-family:var(--f-mono)}
+.legend{display:flex;gap:10px;font-size:11px;color:var(--muted);flex-wrap:wrap;justify-content:flex-end;max-width:360px}
+.legend i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:4px;vertical-align:0}
+.notes{font-size:12px;color:var(--muted);padding:10px 14px;border-top:1px solid var(--border);display:grid;gap:4px}
+.notes b{color:var(--fg)}
+@media (max-width:900px){
+  .app{height:auto;min-height:100%}
+  main{grid-template-columns:1fr}
+  .pane{max-height:none} .scroll{max-height:70vh}
+  .split{grid-template-columns:1fr} .picker{max-height:200px;border-right:0;border-bottom:1px solid var(--border)}
+  .strip{grid-template-columns:1fr} .legend{justify-content:flex-start}
+  .tabs button .q{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="app">
+  <header class="top">
+    <div class="bar1">
+      <div class="brand">變更地圖<small>rke2、local ・ 2026-10-30（四）・ Asia/Taipei</small></div>
+      <div class="tabs" role="tablist" id="tabs">
+        <button role="tab" data-v="overview" aria-selected="true">活動總覽<span class="q">全日變更時間軸</span></button>
+        <button role="tab" data-v="events" aria-selected="false">稽核發現<span class="q">依風險分級的行為</span></button>
+        <button role="tab" data-v="people" aria-selected="false">依身分<span class="q">單一帳號的操作軌跡</span></button>
+        <button role="tab" data-v="places" aria-selected="false">依資源範圍<span class="q">單一 namespace 的變更來源</span></button>
+      </div>
+      <div class="mocknote">模型・lab 實際資料，非正式介面</div>
+    </div>
+    <div class="summary" id="summary"></div>
+  </header>
+  <main>
+    <section class="pane" id="mainpane"></section>
+    <aside class="pane" id="detail"></aside>
+  </main>
+  <footer class="strip">
+    <div class="lbl">一天的操作<br><span class="mono" style="font-size:11px">每格 10 分鐘</span></div>
+    <div class="sbars" id="strip"></div>
+    <div class="legend">
+      <span><i style="background:var(--ink)"></i>人與管理帳號</span>
+      <span><i style="background:var(--routine)"></i>例行（工作負載）</span>
+      <span><i style="background:repeating-linear-gradient(135deg,var(--hatch) 0 2px,transparent 2px 5px)"></i>沒有收集</span>
+      <span><i style="background:var(--look);width:8px;height:8px;border-radius:50%"></i>要看</span>
+    </div>
+  </footer>
+</div>
+<script>
+const DATA = __DATA__;
+const B = 600000, H = 3600000, DAYMS = 86400000;
+const VERB = {create:'建立',delete:'刪除',patch:'修改',update:'修改',deletecollection:'整批刪除',modified:'有變化',portforward:'port-forward',exec:'exec',attach:'attach',get:'讀取'};
+const RULE = {bypassed_rancher:'繞過 Rancher 直連 apiserver',pod_exec:'進入 Pod（exec／attach／port-forward）',namespace_deleted:'刪除 namespace',off_hours:'非上班時間'};
+const A = DATA.actors.map((a,i)=>({...a,i,group: a.cat==='human'?'people':(a.cat==='serviceaccount'?'routine':(a.id===''?'unrecorded':'unauth'))}));
+const short = id => { if(!id) return '未記錄執行者'; const m=/^system:serviceaccount:([^:]+):(.+)$/.exec(id); return m?`${m[2]}`:id; };
+const saNs = id => { const m=/^system:serviceaccount:([^:]+):/.exec(id||''); return m?m[1]:''; };
+const OPS = DATA.ops.map(r=>{ const o={}; DATA.cols.forEach((c,i)=>o[c]=r[i]); o.tns = o.kind==='Namespace' ? o.name : (o.ns||''); return o; });
+const fmt = ms => { const m=Math.floor(ms/60000); return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
+const gapsOf = cl => DATA.gaps.filter(g=>g.cl===cl).map(g=>({f:g.f-DATA.day0,t:g.t-DATA.day0,c:g.c}));
+const nsLabel = n => n || '叢集範圍';
+const clLabel = c => c;
+// merged collection gaps per cluster (for display)
+function mergedGaps(cl){ const g=gapsOf(cl).sort((a,b)=>a.f-b.f); const out=[]; for(const x of g){ const l=out[out.length-1]; if(l && x.f<=l.t){ l.t=Math.max(l.t,x.t); l.c.add(x.c);} else out.push({f:x.f,t:x.t,c:new Set([x.c])}); } return out; }
+const GAPS = {rke2:mergedGaps('rke2'), local:mergedGaps('local')};
+const longGaps = Object.entries(GAPS).flatMap(([cl,l])=>l.filter(g=>g.t-g.f>=H).map(g=>({cl,...g})));
+
+// ---- behaviors: actor + target namespace, 10-min slots, solid when adjacent, dashed within 1 h, broken after 1 h or a collection gap
+const groups = new Map();
+for(const o of OPS){ const k=o.cl+'|'+o.a+'|'+o.tns; if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(o); }
+const THREADS=[]; let tid=0;
+for(const [k,list] of groups){
+  list.sort((a,b)=>a.t-b.t);
+  const cl=list[0].cl, gp=GAPS[cl]||[];
+  let th=null, seg=null, prev=null;
+  for(const o of list){
+    const b=Math.floor(o.t/B);
+    const crossGap = prev && gp.some(g=>g.f>prev.t && g.f<o.t);
+    if(!th || o.t-prev.t>H || crossGap){ th={id:++tid,cl,a:o.a,ns:o.tns,segs:[],ops:[]}; THREADS.push(th); seg=null; }
+    if(!seg || b>seg.b1+1){ seg={b0:b,b1:b,ops:[]}; th.segs.push(seg); }
+    seg.b1=b; seg.ops.push(o); th.ops.push(o); prev=o;
+  }
+}
+for(const th of THREADS){
+  const a=A[th.a]; th.actor=a; th.first=th.ops[0].t; th.last=th.ops[th.ops.length-1].t;
+  const rules=new Map(); th.ops.forEach(o=>(o.rules||[]).forEach(([n,s])=>{ if(!rules.has(n)) rules.set(n,{n,s,c:0}); rules.get(n).c++; }));
+  th.rules=[...rules.values()];
+  const hi=th.ops.find(o=>o.sev==='high');
+  const notable=th.rules.find(r=>r.s!=='low' && !['bypassed_rancher','off_hours'].includes(r.n));
+  th.tier = hi?'look' : notable?'notable' : a.group==='routine'?'routine' : (a.group==='unrecorded'||a.group==='unauth')?a.group : 'normal';
+  th.head = hi || (notable && th.ops.find(o=>(o.rules||[]).some(r=>r[0]===notable.n))) || null;
+  th.direct = a.group!=='routine' && th.ops.some(o=>o.via==='direct');
+  th.viaRancher = th.ops.some(o=>o.via==='rancher');
+  th.offh = rules.has('off_hours');
+  const vc=new Map(); th.ops.forEach(o=>{ const key=(VERB[o.verb]||o.verb)+' '+o.kind; vc.set(key,(vc.get(key)||0)+1); });
+  th.what=[...vc.entries()].sort((x,y)=>y[1]-x[1]);
+  th.objs=new Map(); th.ops.forEach(o=>{ const key=o.kind+'/'+o.ns+'/'+o.name; if(!th.objs.has(key)) th.objs.set(key,{kind:o.kind,ns:o.ns,name:o.name,c:0,state:o.state}); th.objs.get(key).c++; });
+  th.trunc = DATA.trunc.filter(t=>t[0]===th.cl && [...th.objs.values()].some(x=>x.name===t[3] && (x.ns||'')===t[1]));
+}
+const TIER_ORDER={look:0,notable:1,normal:2,unrecorded:3,unauth:3,routine:4};
+const TIER_ZH={look:'要看',notable:'值得知道',normal:'一般操作',unrecorded:'未記錄執行者',unauth:'Rancher 未驗證請求',routine:'例行'};
+const whatText = (th,n=3) => th.what.slice(0,n).map(([k,c])=>`${k} ×${c}`).join('、') + (th.what.length>n?` 等 ${th.what.length} 種`:'');
+const opText = o => `${VERB[o.verb]||o.verb} ${o.kind} ${o.name}`;
+const range = th => th.first===th.last||Math.floor(th.first/60000)===Math.floor(th.last/60000) ? fmt(th.first) : `${fmt(th.first)}–${fmt(th.last)}`;
+
+// overlap between people (different accounts active in the same slots)
+const peopleIdx=A.filter(a=>a.group==='people').map(a=>a.i);
+const slotsOf = i => new Set(OPS.filter(o=>o.a===i).map(o=>Math.floor(o.t/B)));
+const OVERLAP={};
+for(const i of peopleIdx) for(const j of peopleIdx) if(i<j){ const si=slotsOf(i), sj=slotsOf(j); const both=[...si].filter(s=>sj.has(s)).sort((x,y)=>x-y); if(both.length){ const t=`${fmt(both[0]*B)}–${fmt((both[both.length-1]+1)*B)} 有 ${both.length} 格同時在操作`; (OVERLAP[i]??=[]).push({other:j,t}); (OVERLAP[j]??=[]).push({other:i,t}); } }
+
+// ---- state
+const S={view:'overview', sel:null, openGrp:{people:true,unrecorded:false,unauth:false,routine:false}, openActor:{}, person:null, place:null, showNormal:false, showRoutine:false};
+const el=(t,c,h)=>{ const e=document.createElement(t); if(c) e.className=c; if(h!=null) e.innerHTML=h; return e; };
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct = ms => (ms/DAYMS*100)+'%';
+
+function summary(){
+  const cnt=t=>THREADS.filter(x=>x.tier===t).length;
+  const look=THREADS.filter(x=>x.tier==='look');
+  const s=document.getElementById('summary'); s.innerHTML='';
+  const lead=el('span','lead',`這天有 ${THREADS.length} 段行為。${look.length? `${look.length} 段要看：${look.map(t=>esc(opText(t.head))).join('；')}。`:'沒有要看的。'}其餘是一般操作或例行背景。`);
+  s.append(lead);
+  const mk=(cls,label,n,fn)=>{ const b=el('button','chip '+cls,`${label} <b>${n}</b>`); b.onclick=fn; return b; };
+  s.append(mk('look','要看',cnt('look'),()=>go('events')), mk('notable','值得知道',cnt('notable'),()=>go('events')), mk('','一般操作',cnt('normal'),()=>{S.showNormal=true;go('events');}), mk('','未記錄執行者',cnt('unrecorded'),()=>{S.openGrp.unrecorded=true;go('overview');}), mk('','Rancher 未驗證請求',cnt('unauth'),()=>{S.openGrp.unauth=true;go('overview');}), mk('','例行',cnt('routine'),()=>{S.openGrp.routine=true;go('overview');}));
+  for(const g of longGaps){ const c=el('span','chip gap',`沒有收集 <b>${fmt(g.f)}–${fmt(g.t)}</b> ${g.cl}`); c.title=`收集元件 ${[...g.c].join('、')} 沒有回報；這段時間的操作不會補上`; s.append(c); }
+}
+
+// ---- lanes (shared by overview / people / places)
+function trackFor(threads, cl, opts={}){
+  const tr=el('div','track'); tr.append(el('div','grid'));
+  for(const g of (GAPS[cl]||[])){ const z=el('div','gapz'); z.style.left=pct(g.f); z.style.width=pct(Math.max(g.t-g.f,60000)); z.title=`沒有收集 ${fmt(g.f)}–${fmt(g.t)}（${[...g.c].join('、')}）`; tr.append(z); }
+  for(const th of threads){
+    const cls = th.tier==='routine'?'routine':(th.tier==='unrecorded'||th.tier==='unauth')?'unknown':th.tier==='look'?'look':th.tier==='notable'?'notable':'';
+    th.segs.forEach((sg,i)=>{
+      if(i>0){ const p=th.segs[i-1]; const d=el('div','dash '+cls); d.style.left=pct((p.b1+1)*B); d.style.width=pct((sg.b0-p.b1-1)*B); tr.append(d); }
+      const b=el('button','blk '+cls+(S.sel===th.id?' sel':'')); b.style.left=pct(sg.b0*B); b.style.width=`max(3px, calc(${pct((sg.b1-sg.b0+1)*B)} - 1px))`;
+      b.title=`${fmt(sg.b0*B)}–${fmt((sg.b1+1)*B)}　${short(th.actor.id)} @ ${nsLabel(th.ns)}　${sg.ops.length} 筆`;
+      b.setAttribute('aria-label',b.title); b.onclick=()=>select(th.id); tr.append(b);
+    });
+    if(th.tier==='look' && opts.pins!==false){ const p=el('div','pin',esc(opText(th.head))); const e=th.segs[th.segs.length-1].b1+1; p.style.left=pct(e*B); tr.append(p); }
+  }
+  return tr;
+}
+function lane(cls,label,sub,tr,title){ const r=el('div','lane '+cls); const l=el('div','l',`<span class="n">${esc(label)}</span>${sub?`<span class="s">${sub}</span>`:''}`); if(title) l.title=title; r.append(l,tr); return r; }
+function axis(lab){ const a=el('div','axis'); a.append(el('div','',`<div style="padding:4px 12px;font-size:11px;color:var(--faint)">${lab}</div>`)); const t=el('div','ticks'); for(let h=0;h<=24;h+=2){ const s=el('span','',String(h).padStart(2,'0')); s.style.left=pct(h*H); if(h===24) s.style.transform='translateX(-100%)'; if(h===0) s.style.transform='none'; t.append(s);} a.append(t); return a; }
+const actorThreads = i => THREADS.filter(t=>t.a===i);
+const tierMax = ths => ths.reduce((m,t)=>Math.min(m,TIER_ORDER[t.tier]),9);
+function actorBlock(container, a, forceOpen){
+  const ths=actorThreads(a.i); const cls=[...new Set(ths.map(t=>t.cl))];
+  const open = forceOpen || (S.openActor[a.i] ?? (a.group==='people'));
+  const ov=OVERLAP[a.i]?OVERLAP[a.i].map(o=>`與 ${short(A[o.other].id)} ${o.t}，無法確認是否同一人`).join('；'):'';
+  const sub=[esc(a.note), ...(a.group==='unauth'?['<span class="tag cfg">待確認：請求是否成功（回應碼未查）</span>']:[]), ...(a.group==='unrecorded'&&DATA.unattributedReason[cls[0]]?[`<span class="tag cfg">取決於設定：${cls[0]} 未啟用 apiserver audit log</span>`]:[]), ...(saNs(a.id)?[`namespace ${esc(saNs(a.id))}`]:[])].join('・');
+  for(const cl of cls){
+    const mine=ths.filter(t=>t.cl===cl);
+    const head=lane('actor', `${open?'▾':'▸'} ${short(a.id)}`+(cls.length>1?` ・ ${cl}`:''), sub+(ov?`<br><span class="overlap">⟷ ${esc(ov)}</span>`:''), trackFor(open?[]:mine, cl, {pins:true}), a.id||'未記錄執行者');
+    head.querySelector('.l').style.cursor='pointer'; head.querySelector('.l').onclick=()=>{ S.openActor[a.i]=!open; render(); };
+    if(ov) head.style.minHeight='44px';
+    container.append(head);
+    if(open){
+      const byNs=new Map(); mine.forEach(t=>{ if(!byNs.has(t.ns)) byNs.set(t.ns,[]); byNs.get(t.ns).push(t); });
+      [...byNs.entries()].sort((x,y)=>tierMax(x[1])-tierMax(y[1]) || x[1][0].first-y[1][0].first).forEach(([ns,list])=>{
+        const n=list.reduce((s,t)=>s+t.ops.length,0);
+        container.append(lane('sub', nsLabel(ns), `${list.length} 段・${n} 筆`, trackFor(list, cl)));
+      });
+    }
+  }
+}
+function viewOverview(){
+  const p=document.getElementById('mainpane'); p.innerHTML='';
+  const ph=el('div','ph','<h2>活動總覽</h2><span class="sub">每列是一個執行者在一個 namespace 的行為。實心塊是連續操作，虛線是一小時內又接著做，超過一小時就斷開。點色塊看明細。</span>'); p.append(ph);
+  const sc=el('div','scroll'); const L=el('div','lanes'); L.append(axis('執行者 ／ namespace')); sc.append(L); p.append(sc);
+  const G=[['people','人與管理帳號','人用的帳號；共用帳號另有標示'],['unrecorded','未記錄執行者','只記錄到物件變化，這座叢集沒有可對應執行者的紀錄'],['unauth','Rancher 未驗證請求','Rancher audit log 記為 system:cattle:error'],['routine','例行（工作負載的 ServiceAccount）','叢集裡的程式自己在做的事，預設收合']];
+  for(const [g,label,hint] of G){
+    const acts=A.filter(a=>a.group===g); if(!acts.length) continue;
+    const ths=THREADS.filter(t=>t.actor.group===g); const n=ths.reduce((s,t)=>s+t.ops.length,0);
+    const h=el('div','grp-h'); h.append(el('div','l',`<span class="tw">${S.openGrp[g]?'▾':'▸'}</span>${label}`), el('div','',`<span style="font-size:11px;color:var(--muted);padding-left:8px">${acts.length} 個帳號・${ths.length} 段・${n} 筆　<span style="color:var(--faint)">${hint}</span></span>`));
+    h.onclick=()=>{ S.openGrp[g]=!S.openGrp[g]; render(); }; L.append(h);
+    if(S.openGrp[g]) acts.sort((x,y)=>tierMax(actorThreads(x.i))-tierMax(actorThreads(y.i))).forEach(a=>actorBlock(L,a));
+    else { // one merged line for the whole group
+      for(const cl of [...new Set(ths.map(t=>t.cl))]) L.append(lane('', `${label}（合併）`, `${cl}・點標題展開`, trackFor(ths.filter(t=>t.cl===cl), cl)));
+    }
+  }
+  const nt=el('div','notes',`<div><b>分級（模型暫定）</b>：只有高風險規則算「要看」；「進入 Pod」這類中風險算「值得知道」；「繞過 Rancher」與「非上班時間」改成段落上的標籤，不再單獨升級。</div>`);
+  p.append(nt);
+}
+function itemFor(th, opts={}){
+  const it=el('div','item '+(th.tier==='look'||th.tier==='notable'?th.tier:'')+(S.sel===th.id?' sel':'')); it.tabIndex=0;
+  const head = th.head && th.tier!=='normal' ? `<span class="hl">${esc(opText(th.head))}</span>　` : '';
+  it.append(el('div','tm',range(th)), el('div','tt', `${head}${opts.noActor?'':esc(short(th.actor.id))+' 在 '}${esc(nsLabel(th.ns))}：${esc(whatText(th))}`));
+  const m=el('div','meta'); m.innerHTML = [ th.tier==='look'||th.tier==='notable'?`<span class="tag ${th.tier}">${TIER_ZH[th.tier]}</span>`:'', `<span>${th.cl}</span>`, `<span>${th.ops.length} 筆・${th.objs.size} 個物件・${th.segs.length} 小段</span>`, th.direct?'<span class="tag">直連 apiserver</span>':'', th.viaRancher&&th.actor.group==='people'?'<span class="tag">經 Rancher</span>':'', th.offh?'<span class="tag">非上班時間</span>':'' ].filter(Boolean).join('');
+  it.append(el('div','tm',''), m);
+  it.onclick=()=>select(th.id); it.onkeydown=e=>{ if(e.key==='Enter') select(th.id); };
+  return it;
+}
+function viewEvents(){
+  const p=document.getElementById('mainpane'); p.innerHTML='';
+  p.append(el('div','ph','<h2>稽核發現</h2><span class="sub">以行為為單位，依嚴重程度排列。一段行為只出現一次，標題是段內最嚴重的那一筆。</span>'));
+  const sc=el('div','scroll'); const L=el('div','list'); sc.append(L); p.append(sc);
+  const by=t=>THREADS.filter(x=>x.tier===t).sort((a,b)=>a.first-b.first);
+  const sec=(t,txt)=>{ const s=el('div','sec',txt); L.append(s); return s; };
+  sec('look',`要看 ${by('look').length}`); by('look').forEach(t=>L.append(itemFor(t)));
+  sec('notable',`值得知道 ${by('notable').length}`); by('notable').forEach(t=>L.append(itemFor(t)));
+  const rest=[...by('normal'),...by('unrecorded'),...by('unauth')].sort((a,b)=>a.first-b.first);
+  const s3=sec('n',`一般操作、未記錄執行者與未驗證請求 ${rest.length}`); const b3=el('button','',S.showNormal?'收合':'展開'); b3.onclick=()=>{S.showNormal=!S.showNormal;render();}; s3.append(b3);
+  if(S.showNormal) rest.forEach(t=>L.append(itemFor(t)));
+  const r=by('routine'); const s4=sec('r',`例行 ${r.length}`); const b4=el('button','',S.showRoutine?'收合':'展開'); b4.onclick=()=>{S.showRoutine=!S.showRoutine;render();}; s4.append(b4);
+  if(S.showRoutine) r.forEach(t=>L.append(itemFor(t)));
+  sec('g',`收集 ${DATA.gaps.length}`);
+  for(const [cl,list] of Object.entries(GAPS)) for(const g of list){ const it=el('div','item'); it.append(el('div','tm',`${fmt(g.f)}–${fmt(g.t)}`), el('div','tt',`${cl}：收集元件 ${[...g.c].join('、')} 沒有回報`), el('div','tm',''), el('div','meta','<span>這段時間的操作沒有收到，不會補上</span>')); it.style.cursor='default'; L.append(it); }
+}
+function picker(groups, cur, onPick){
+  const pk=el('div','picker');
+  for(const [title,items] of groups){ if(!items.length) continue; pk.append(el('div','pgrp',title)); for(const x of items){ const d=el('div','pick'+(cur===x.id?' sel':''),`<span class="n">${esc(x.label)}</span><span class="s">${x.sub}</span>`); d.tabIndex=0; d.onclick=()=>onPick(x.id); d.onkeydown=e=>{if(e.key==='Enter') onPick(x.id);}; pk.append(d);} }
+  return pk;
+}
+function viewPeople(){
+  const p=document.getElementById('mainpane'); p.innerHTML='';
+  if(S.person==null) S.person=A.find(a=>a.id==='system:admin')?.i ?? 0;
+  const a=A[S.person];
+  p.append(el('div','ph',`<h2>依身分：${esc(short(a.id))}</h2><span class="sub">${esc(a.note)}</span>`));
+  const sp=el('div','split');
+  const mk=g=>A.filter(x=>x.group===g).map(x=>{ const ths=actorThreads(x.i); const lk=ths.filter(t=>t.tier==='look').length; return {id:x.i,label:short(x.id),sub:`${ths.length} 段・${ths.reduce((s,t)=>s+t.ops.length,0)} 筆${lk?`・<span class="lk">要看 ${lk}</span>`:''}`}; });
+  sp.append(picker([['人與管理帳號',mk('people')],['未記錄執行者',mk('unrecorded')],['Rancher 未驗證請求',mk('unauth')],['例行（工作負載）',mk('routine')]], S.person, i=>{S.person=i; S.sel=null; render();}));
+  const rc=el('div','rcol'); const sc=el('div','scroll'); const L=el('div','lanes'); L.append(axis('namespace')); actorBlock(L,a,true); L.querySelector('.lane.actor')?.remove();
+  sc.append(L); rc.append(sc);
+  const ths=actorThreads(a.i).sort((x,y)=>TIER_ORDER[x.tier]-TIER_ORDER[y.tier]||x.first-y.first);
+  const ls=el('div','scroll list'); ls.style.borderTop='1px solid var(--border)'; ls.append(el('div','sec',`${ths.length} 段行為，依嚴重程度`)); ths.forEach(t=>ls.append(itemFor(t,{noActor:true}))); rc.append(ls);
+  sp.append(rc); p.append(sp);
+}
+function viewPlaces(){
+  const p=document.getElementById('mainpane'); p.innerHTML='';
+  const places=new Map(); THREADS.forEach(t=>{ const k=t.cl+'|'+t.ns; if(!places.has(k)) places.set(k,[]); places.get(k).push(t); });
+  if(S.place==null){ const lk=THREADS.find(t=>t.tier==='look'); S.place=lk?lk.cl+'|'+lk.ns:[...places.keys()][0]; }
+  const [cl,ns]=S.place.split('|'); const ths=places.get(S.place)||[];
+  p.append(el('div','ph',`<h2>依資源範圍：${esc(nsLabel(ns))}</h2><span class="sub">叢集 ${cl}。刪除 namespace 這類動作算在被刪的 namespace 這裡。</span>`));
+  const sp=el('div','split');
+  const items=cl0=>[...places.entries()].filter(([k])=>k.startsWith(cl0+'|')).map(([k,l])=>{ const who=new Set(l.map(t=>t.a)); const lk=l.filter(t=>t.tier==='look').length; const nr=l.filter(t=>t.tier!=='routine').length; return {id:k,label:nsLabel(k.split('|')[1]),sub:`${who.size} 個帳號・${l.length} 段${lk?`・<span class="lk">要看 ${lk}</span>`:''}`,o:TIER_ORDER[l.reduce((m,t)=>TIER_ORDER[t.tier]<TIER_ORDER[m]?t.tier:m,'routine')]*1000-nr}; }).sort((x,y)=>x.o-y.o);
+  sp.append(picker([['rke2',items('rke2')],['local',items('local')]], S.place, k=>{S.place=k; S.sel=null; render();}));
+  const rc=el('div','rcol'); const sc=el('div','scroll'); const L=el('div','lanes'); L.append(axis('誰動過這裡'));
+  const byA=new Map(); ths.forEach(t=>{ if(!byA.has(t.a)) byA.set(t.a,[]); byA.get(t.a).push(t); });
+  const order=[...byA.entries()].sort((x,y)=>tierMax(x[1])-tierMax(y[1])||y[1].length-x[1].length);
+  for(const [ai,list] of order){ const a=A[ai]; L.append(lane(a.group==='people'?'actor':'', short(a.id), esc(a.note), trackFor(list, cl), a.id)); }
+  sc.append(L); rc.append(sc);
+  const ls=el('div','scroll list rows-who'); ls.style.borderTop='1px solid var(--border)'; ls.append(el('div','sec','每個帳號一行摘要'));
+  for(const [ai,list] of order){ const a=A[ai]; const n=list.reduce((s,t)=>s+t.ops.length,0); const vc=new Map(); list.forEach(t=>t.what.forEach(([k,c])=>vc.set(k,(vc.get(k)||0)+c))); const w=[...vc.entries()].sort((x,y)=>y[1]-x[1]).slice(0,3).map(([k,c])=>`${k} ×${c}`).join('、');
+    const lk=list.find(t=>t.tier==='look'); const it=el('div','item'+(lk?' look':'')+(S.sel&&list.some(t=>t.id===S.sel)?' sel':'')); it.tabIndex=0;
+    it.append(el('div','tt',`<b>${esc(short(a.id))}</b>：${lk?`<span class="hl">${esc(opText(lk.head))}</span>　`:''}${esc(w)}`), el('div','tm',`${n} 筆`));
+    const m=el('div','meta',`<span>${list.length} 段・${fmt(list[0].first)}–${fmt(list[list.length-1].last)}</span><span>${esc(a.note)}</span>`); m.style.gridColumn='1 / -1'; it.append(m);
+    it.onclick=()=>select((lk||list[0]).id); ls.append(it); }
+  rc.append(ls); sp.append(rc); p.append(sp);
+}
+function detail(){
+  const d=document.getElementById('detail'); d.innerHTML='';
+  const th=THREADS.find(t=>t.id===S.sel);
+  if(!th){ d.append(el('div','empty','點一段行為看明細。')); return; }
+  const a=th.actor;
+  const box=el('div','scroll'); const dt=el('div','dt'); box.append(dt); d.append(el('div','ph',`<h2>行為明細</h2>${th.tier==='look'||th.tier==='notable'?`<span class="tag ${th.tier}">${TIER_ZH[th.tier]}</span>`:`<span class="tag">${TIER_ZH[th.tier]}</span>`}`), box);
+  dt.append(el('h3','', th.head&&th.tier!=='normal' ? `${esc(opText(th.head))}` : `${esc(nsLabel(th.ns))}：${esc(whatText(th,2))}`));
+  dt.append(el('div','who',`<b>${esc(a.id||'未記錄執行者')}</b><span style="color:var(--muted);font-size:12px">${esc(a.note)}</span>${a.group==='unrecorded'&&DATA.unattributedReason[th.cl]?`<span><span class="tag cfg">取決於設定：${th.cl} 未啟用 apiserver audit log</span></span>`:''}${a.group==='unauth'?'<span><span class="tag cfg">待確認：請求是否成功（回應碼未查），失敗的請求之後不列入</span></span>':''}`));
+  const kv=el('dl','kv'); kv.innerHTML=`<dt>時間</dt><dd class="mono">${range(th)}</dd><dt>地方</dt><dd>${th.cl} / ${esc(nsLabel(th.ns))}</dd><dt>規模</dt><dd>${th.ops.length} 筆・${th.objs.size} 個物件</dd><dt>管道</dt><dd>${[th.direct?'直連 apiserver（繞過 Rancher）':'',th.viaRancher?'經 Rancher':'',!th.direct&&!th.viaRancher?'不明':''].filter(Boolean).join('、')}</dd>`; dt.append(kv);
+  if(th.rules.length){ const w=el('div','why'); w.innerHTML='<b>觸發的規則</b><br>'+th.rules.sort((x,y)=>({high:0,medium:1,low:2}[x.s]-{high:0,medium:1,low:2}[y.s])).map(r=>`${esc(RULE[r.n]||r.n)}（${({high:'高',medium:'中',low:'低'})[r.s]}）×${r.c}${r.n==='bypassed_rancher'||r.n==='off_hours'?' → 只當標籤':''}`).join('<br>'); dt.append(w); }
+  const sg=el('div','',`<div style="font-size:12px;color:var(--faint);margin-bottom:4px">連續的小段（虛線相連）</div>`); const sw=el('div','segs'); th.segs.forEach(s=>sw.append(el('span','tag mono',`${fmt(s.b0*B)}–${fmt((s.b1+1)*B)}・${s.ops.length}`))); sg.append(sw); dt.append(sg);
+  const ob=el('div',''); ob.append(el('div','',`<div style="font-size:12px;color:var(--faint);margin-bottom:4px">動到的物件</div>`)); const ol=el('div','objs');
+  [...th.objs.values()].sort((x,y)=>y.c-x.c).slice(0,12).forEach(o=>ol.append(el('div','o',`<span class="k">${esc(o.kind)}</span><span class="nm">${esc(o.name)}</span><span class="c">${o.c}</span>`)));
+  if(th.objs.size>12) ol.append(el('div','o',`<span></span><span class="k">還有 ${th.objs.size-12} 個</span><span></span>`));
+  ob.append(ol); dt.append(ob);
+  const opl=el('div',''); opl.append(el('div','',`<div style="font-size:12px;color:var(--faint);margin-bottom:4px">操作紀錄</div>`)); const L=el('div','oplist');
+  th.ops.slice(0,300).forEach(o=>L.append(el('div','r',`<span>${fmt(o.t)}</span><span class="v${o.sev==='high'?' hi':''}">${esc(VERB[o.verb]||o.verb)}</span><span>${esc(o.kind)} ${esc(o.name)}</span>`)));
+  if(th.ops.length>300) L.append(el('div','r',`<span></span><span></span><span>還有 ${th.ops.length-300} 筆</span>`));
+  opl.append(L); dt.append(opl);
+  if(th.trunc.length) dt.append(el('div','foot',`資料說明：${th.trunc.map(t=>`${esc(t[3])} 當天 ${t[5]} 筆，匯出只含最近 ${t[4]} 筆`).join('；')}。這段的筆數是下限。`));
+  if(th.ops.some(o=>o.fromStory)) dt.append(el('div','foot','資料說明：有一筆操作是從警示紀錄補回的（物件明細被截斷）。'));
+}
+function strip(){
+  const s=document.getElementById('strip'); s.innerHTML='';
+  const p=new Array(144).fill(0), r=new Array(144).fill(0);
+  OPS.forEach(o=>{ const b=Math.min(143,Math.floor(o.t/B)); (A[o.a].group==='routine'?r:p)[b]++; });
+  const mx=Math.max(...p.map((v,i)=>v+r[i]));
+  const hgt=v=>v? Math.max(2, Math.sqrt(v/mx)*24):0;
+  for(const [cl,list] of Object.entries(GAPS)) for(const g of list){ const z=el('div','g'); z.style.left=pct(g.f); z.style.width=pct(Math.max(g.t-g.f,60000)); z.title=`${cl} 沒有收集 ${fmt(g.f)}–${fmt(g.t)}`; s.append(z); }
+  for(let i=0;i<144;i++){ if(r[i]){ const b=el('div','b r'); b.style.left=pct(i*B); b.style.height=(hgt(p[i]+r[i]))+'px'; s.append(b);} if(p[i]){ const b=el('div','b p'); b.style.left=pct(i*B); b.style.height=hgt(p[i])+'px'; b.title=`${fmt(i*B)} 人與管理帳號 ${p[i]} 筆`; s.append(b);} }
+  THREADS.filter(t=>t.tier==='look').forEach(t=>{ const d=el('div','lk'); d.style.left=pct(t.head.t); d.title=opText(t.head); s.append(d); });
+  const th=THREADS.find(t=>t.id===S.sel); if(th){ const h=el('div','hl'); h.style.left=pct(Math.floor(th.first/B)*B); h.style.width=pct((Math.floor(th.last/B)+1)*B-Math.floor(th.first/B)*B); s.append(h); }
+  for(let h=0;h<=24;h+=3){ const a=el('div','ax',String(h).padStart(2,'0')); a.style.left=pct(h*H); if(h===0) a.style.transform='none'; if(h===24) a.style.transform='translateX(-100%)'; s.append(a); }
+}
+function select(id){ S.sel=id; render(); }
+function go(v){ S.view=v; try{ history.replaceState(null,'','#'+v); }catch(e){ location.hash=v; } render(); }
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.v===S.view)));
+  ({overview:viewOverview,events:viewEvents,people:viewPeople,places:viewPlaces})[S.view]();
+  detail(); strip();
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+window.addEventListener('hashchange',()=>{ const v=location.hash.slice(1); if(['overview','events','people','places'].includes(v)&&v!==S.view){ S.view=v; render(); } });
+{ const v=location.hash.slice(1); if(['overview','events','people','places'].includes(v)) S.view=v; }
+S.sel=(THREADS.find(t=>t.tier==='look')||THREADS[0]).id;
+summary(); render();
+</script>

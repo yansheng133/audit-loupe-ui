@@ -11,6 +11,26 @@ entries:
       catalog.cattle.io/ui-component: plugins
       catalog.cattle.io/ui-extensions-version: '>= 3.0.0 < 4.0.0'
     apiVersion: v2
+    appVersion: 0.5.0
+    created: "2026-10-31T01:34:02.741778625Z"
+    description: Who changed what in this cluster, from Kubernetes audit events and
+      object history
+    digest: b9f381665263591099d80d6bc899887e74198935e660639957fe24897f45ed34
+    name: audit-loupe
+    type: application
+    urls:
+    - assets/audit-loupe/audit-loupe-0.5.0.tgz
+    version: 0.5.0
+  - annotations:
+      catalog.cattle.io/certified: rancher
+      catalog.cattle.io/namespace: cattle-ui-plugin-system
+      catalog.cattle.io/os: linux
+      catalog.cattle.io/permits-os: linux, windows
+      catalog.cattle.io/rancher-version: '>= 2.15.0'
+      catalog.cattle.io/scope: management
+      catalog.cattle.io/ui-component: plugins
+      catalog.cattle.io/ui-extensions-version: '>= 3.0.0 < 4.0.0'
+    apiVersion: v2
     appVersion: 0.4.0
     created: "2026-10-31T00:35:02.297210581Z"
     description: Who changed what in this cluster, from Kubernetes audit events and
@@ -41,4 +61,4 @@ entries:
     urls:
     - assets/audit-loupe/audit-loupe-0.3.0.tgz
     version: 0.3.0
-generated: "2026-10-31T00:35:02.296841917Z"
+generated: "2026-10-31T01:34:02.741386665Z"

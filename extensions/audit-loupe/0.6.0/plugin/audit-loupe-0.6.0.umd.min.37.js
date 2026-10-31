@@ -1,0 +1,2 @@
+(("undefined"!==typeof self?self:this)["webpackChunkaudit_loupe_0_6_0"]=("undefined"!==typeof self?self:this)["webpackChunkaudit_loupe_0_6_0"]||[]).push([[37],{9037:function(e){const u=[{product:{"audit-loupe":"Audit Loupe"},auditLoupe:{nav:{changes:"Change Map",access:"Access Review",coverage:"Collection Status",rules:"Rules"}}}];e.exports=u.length<=1?u[0]:u}}]);
+//# sourceMappingURL=audit-loupe-0.6.0.umd.min.37.js.map

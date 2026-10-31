@@ -10,16 +10,14 @@ const ZH = {
   },
   cluster:   '叢集',
   namespace: 'Namespace',
+  find:      '搜尋',
   state:     '稽核狀態',
   all:       '全部',
   tz:        '時區',
-  shown:     (ms) => (ms < 1000 ? `畫面 ${ ms } 毫秒` : `畫面 ${ (ms / 1000).toFixed(1) } 秒`),
-  shownHint: '上一次畫面更新花的時間：從進入這一頁（Rancher 本身載入完之後）或點選，到畫面顯示完成，在瀏覽器量，含網路與繪製。目標是 5 秒內。',
   full:      '全螢幕',
   exitFull:  '離開全螢幕（Esc）',
   resize:    '拖曳調整細節欄寬度；雙擊恢復預設',
-  tzHint:    (tz, src) => `時區 ${ tz }（來源：${ src }）`,
-  tzServer:  '後端設定',
+  tzLine:    (tz) => `時間以 ${ tz } 顯示`,
   colon:     '：',
   noActor:   '找不到執行者',
   cascade:   '刪除 namespace 時一併清空',
@@ -57,12 +55,12 @@ const ZH = {
   evReason: {
     'first-alert':        () => '當天第一次出現中、高風險警示',
     'first-unattributed': () => '當天第一次出現找不到執行者的變更',
-    'collector-stopped':  (c) => `收集元件 ${ c } 停止回報`,
-    'collector-resumed':  (c) => `收集元件 ${ c } 恢復回報`,
-    'collector-silent':   (c) => `收集元件 ${ c } 沒有回報`,
-    'collector-reported': (c, why) => `收集元件 ${ c } 回報這段沒有收集（${ why }）`,
-    'reported-gap-start': (c, why) => `收集元件 ${ c } 回報從這裡開始沒有收集（${ why }）`,
-    'reported-gap-end':   (c) => `收集元件 ${ c } 回報的缺口到這裡為止`,
+    'collector-stopped':  (c) => `「${ c }」收集停止回報`,
+    'collector-resumed':  (c) => `「${ c }」收集恢復回報`,
+    'collector-silent':   (c) => `「${ c }」收集沒有回報`,
+    'collector-reported': (c, why) => `「${ c }」收集回報這段沒有收集（${ why }）`,
+    'reported-gap-start': (c, why) => `「${ c }」收集回報從這裡開始沒有收集（${ why }）`,
+    'reported-gap-end':   (c) => `「${ c }」收集回報的缺口到這裡為止`,
   },
   cause: {
     'collector-silent':     '收集元件沒有回報（心跳中斷），這段期間可能沒有收集',
@@ -108,8 +106,11 @@ const ZH = {
   via: {
     rancher: 'Rancher', 'rancher-kubectl': 'Rancher kubectl', apiserver: '直連 apiserver', direct: '直連 apiserver', impersonation: 'Rancher 代理', unknown: '不明',
   },
-  collect:    { ok: '正常', blind: '看不到' },
-  collectOf:  (c) => `${ c } 收集`,
+  collect:   { ok: '有收集', blind: '沒有收集' },
+  collectOf: (c) => `叢集 ${ c } 的收集`,
+  collector: {
+    file: 'apiserver audit log', watch: '物件版本', rancher: 'Rancher audit log', neuvector: 'SUSE Security'
+  },
   relCols:    ['身分', '管道', '叢集', '物件（顏色＝稽核狀態，線越粗操作越多）'],
   bypass:     '繞過 Rancher',
   filterOn:   '只看：',
@@ -117,7 +118,7 @@ const ZH = {
   relEmpty:   '這一天沒有可畫的關係。',
   eventsHead: '只列稽核狀態的轉變，不列每一筆操作',
   evSource:   {
-    state: '物件狀態', heartbeat: 'Audit Loupe 沒收到心跳', reported: '收集元件回報'
+    state: '物件', heartbeat: '依心跳判斷', reported: '收集元件自己回報'
   },
   evEmpty:   '這一天沒有稽核狀態的轉變。',
   heldRows:  (n) => `被擱置 ${ n } 行`,
@@ -175,16 +176,14 @@ const EN = {
   },
   cluster:   'Cluster',
   namespace: 'Namespace',
+  find:      'Search',
   state:     'Audit state',
   all:       'All',
   tz:        'Time zone',
-  shown:     (ms) => (ms < 1000 ? `Shown in ${ ms } ms` : `Shown in ${ (ms / 1000).toFixed(1) } s`),
-  shownHint: 'How long the last update took: from entering this page (after Rancher itself has loaded) or clicking, to the screen being drawn, measured in the browser with network and drawing. The goal is within 5 seconds.',
   full:      'Full screen',
   exitFull:  'Exit full screen (Esc)',
   resize:    'Drag to resize the detail panel; double-click to reset',
-  tzHint:    (tz, src) => `Time zone ${ tz } (source: ${ src })`,
-  tzServer:  'backend setting',
+  tzLine:    (tz) => `Times in ${ tz }`,
   colon:     ': ',
   noActor:   'No author found',
   cascade:   'emptied when the namespace was deleted',
@@ -221,12 +220,12 @@ const EN = {
   evReason: {
     'first-alert':        () => 'First medium or high-risk alert this day',
     'first-unattributed': () => 'First change with no author found this day',
-    'collector-stopped':  (c) => `Collector ${ c } stopped reporting`,
-    'collector-resumed':  (c) => `Collector ${ c } resumed reporting`,
-    'collector-silent':   (c) => `Collector ${ c } did not report`,
-    'collector-reported': (c, why) => `Collector ${ c } reported nothing was collected here (${ why })`,
-    'reported-gap-start': (c, why) => `Collector ${ c } reported that collection stopped here (${ why })`,
-    'reported-gap-end':   (c) => `End of the gap collector ${ c } reported`,
+    'collector-stopped':  (c) => `${ c } collection stopped reporting`,
+    'collector-resumed':  (c) => `${ c } collection resumed reporting`,
+    'collector-silent':   (c) => `${ c } collection did not report`,
+    'collector-reported': (c, why) => `${ c } collection reported nothing was collected here (${ why })`,
+    'reported-gap-start': (c, why) => `${ c } collection reported that collecting stopped here (${ why })`,
+    'reported-gap-end':   (c) => `End of the gap ${ c } collection reported`,
   },
   cause: {
     'collector-silent':     'the collector stopped reporting (no heartbeat); this time may not have been collected',
@@ -272,8 +271,11 @@ const EN = {
   via: {
     rancher: 'Rancher', 'rancher-kubectl': 'Rancher kubectl', apiserver: 'direct apiserver', direct: 'direct apiserver', impersonation: 'Rancher proxy', unknown: 'unknown',
   },
-  collect:    { ok: 'normal', blind: 'blind' },
-  collectOf:  (c) => `${ c } collection`,
+  collect:   { ok: 'collected', blind: 'not collected' },
+  collectOf: (c) => `Collection in cluster ${ c }`,
+  collector: {
+    file: 'apiserver audit log', watch: 'Object versions', rancher: 'Rancher audit log', neuvector: 'SUSE Security'
+  },
   relCols:    ['Identity', 'Via', 'Cluster', 'Object (colour = audit state, thicker = more operations)'],
   bypass:     'bypasses Rancher',
   filterOn:   'Only: ',
@@ -281,7 +283,7 @@ const EN = {
   relEmpty:   'Nothing to draw for this day.',
   eventsHead: 'Only changes of audit state, not every operation',
   evSource:   {
-    state: 'object state', heartbeat: 'no heartbeat to Audit Loupe', reported: 'reported by collector'
+    state: 'object', heartbeat: 'from heartbeats', reported: 'reported by the collector'
   },
   evEmpty:   'No audit state changed on this day.',
   heldRows:  (n) => `${ n } lines held`,
@@ -358,7 +360,22 @@ export function noteText(T, code, text) {
 export function eventReason(T, e) {
   const f = e.reasonCode && T.evReason[e.reasonCode];
 
-  return f ? f(e.collector || '', (e.cause && T.cause[e.cause]) || e.cause || '') : (e.reason || '');
+  const c = e.collector ? (T.collector[e.collector] || e.collector) : '';
+
+  return f ? f(c, (e.cause && T.cause[e.cause]) || e.cause || '') : (e.reason || '');
+}
+
+// A cluster as people know it in Rancher (its display name), not its ID; the ID if Rancher's
+// list does not have it (yet).
+export function clusterLabel(store, id) {
+  if (!id) {
+    return '';
+  }
+  try {
+    return store.getters['management/byId']('management.cattle.io.cluster', id)?.nameDisplay || id;
+  } catch (e) {
+    return id;
+  }
 }
 
 // A ServiceAccount as namespace/name; anything else as it is.
@@ -428,7 +445,7 @@ export function viewFromQuery(q = {}) {
     day:       q.day || todayIso(),
     tab:       ['overview', 'relations', 'events'].includes(q.tab) ? q.tab : 'overview',
     cluster:   arr(q.cluster),
-    namespace: q.namespace || '',
+    namespace: arr(q.namespace),
     state:     STATES.includes(q.state) ? q.state : '',
     system:    q.system === '1',
     select:    q.select || '',
@@ -443,7 +460,7 @@ export function queryFromView(v) {
   if (v.cluster.length) {
     q.cluster = v.cluster;
   }
-  if (v.namespace) {
+  if (v.namespace.length) {
     q.namespace = v.namespace;
   }
   if (v.state) {
@@ -469,9 +486,7 @@ export function apiParams(v, cursor) {
   p.set('day', v.day);
   p.set('tab', v.tab);
   v.cluster.forEach((c) => p.append('cluster', c));
-  if (v.namespace) {
-    p.set('namespace', v.namespace);
-  }
+  v.namespace.forEach((n) => p.append('namespace', n));
   if (v.state) {
     p.set('state', v.state);
   }

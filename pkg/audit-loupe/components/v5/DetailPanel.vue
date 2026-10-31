@@ -1,8 +1,8 @@
 <script>
 import AlStateTag from './StateTag.vue';
-import { KIND_TAG, kindOf } from '../../lib/model';
+import { kindLabel, kindOf } from '../../lib/model';
 import {
-  fmtTime, getHistory, parseKey, splitDepends, BATCH, reasonText, noteText, shortWho
+  fmtTime, getHistory, parseKey, splitDepends, BATCH, reasonText, noteText, shortWho, clusterLabel
 } from '../../lib/v5';
 
 // Plain JSON line diff, enough to show what changed between two stored versions.
@@ -67,7 +67,7 @@ export default {
     kindTag() {
       const kind = this.row?.kind || kindOf(this.k.resource);
 
-      return KIND_TAG[kind] || String(kind || '').toUpperCase();
+      return kindLabel(kind);
     },
     batch() {
       return !!this.detail?.batch || this.k.name === BATCH;
@@ -79,7 +79,7 @@ export default {
       return splitDepends(this.detail);
     },
     where() {
-      return `${ this.k.cluster } / ${ this.k.namespace || this.T.clusterScope }`;
+      return `${ clusterLabel(this.$store, this.k.cluster) } / ${ this.k.namespace || this.T.clusterScope }`;
     },
     shownDiff() {
       const v = this.versions || [];

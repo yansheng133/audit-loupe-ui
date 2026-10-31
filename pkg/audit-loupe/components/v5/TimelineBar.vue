@@ -1,5 +1,5 @@
 <script>
-import { fmtTime, shiftDay, eventReason } from '../../lib/v5';
+import { fmtTime, shiftDay, eventReason, clusterLabel } from '../../lib/v5';
 import {
   dayLength, minuteAt, pickRange, barHeights, pctOf
 } from '../../lib/timeline';
@@ -42,6 +42,9 @@ export default {
     },
   },
   methods: {
+    clusterName(id) {
+      return clusterLabel(this.$store, id);
+    },
     pct(t) {
       return `${ pctOf(t, this.d0, this.dayMs) }%`;
     },
@@ -172,7 +175,7 @@ export default {
           :key="i"
           class="tl-label"
         >
-          {{ l.cluster === null ? T.tl.merged : l.cluster }} {{ T.tl.state }}
+          {{ l.cluster === null ? T.tl.merged : clusterName(l.cluster) }} {{ T.tl.state }}
         </div>
       </div>
       <div

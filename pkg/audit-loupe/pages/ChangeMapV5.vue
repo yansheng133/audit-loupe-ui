@@ -5,8 +5,9 @@ import AlDetailPanel from '../components/v5/DetailPanel.vue';
 import AlEventsList from '../components/v5/EventsList.vue';
 import AlRelationsGraph from '../components/v5/RelationsGraph.vue';
 import AlTimelineBar from '../components/v5/TimelineBar.vue';
+import MultiPick from '../components/v5/MultiPick.vue';
 import {
-  STATES, textsV5, viewFromQuery, queryFromView, apiParams, fetchChangemap, fetchDetail, takePrefetched, dayStartMs, prefetch, fmtTime
+  STATES, textsV5, viewFromQuery, queryFromView, apiParams, fetchChangemap, fetchDetail, takePrefetched, dayStartMs, prefetch, fmtTime, clusterLabel
 } from '../lib/v5';
 import { backendMessage } from '../lib/api';
 
@@ -31,7 +32,7 @@ function savedPanelWidth() {
 export default {
   name:       'AuditLoupeChangeMapV5',
   components: {
-    AlStateTag, AlOverviewTable, AlDetailPanel, AlEventsList, AlRelationsGraph, AlTimelineBar
+    AlStateTag, AlOverviewTable, AlDetailPanel, AlEventsList, AlRelationsGraph, AlTimelineBar, MultiPick
   },
 
   // Send the request when the route is entered, not when the page has mounted (spec §10).
@@ -57,6 +58,7 @@ export default {
       full:       false,
       panelW:     savedPanelWidth(),
       shownMs:    null,
+      clusterIds: [],
       shownWhat:  '',
       openedAt:   (typeof performance !== 'undefined' ? performance.now() : 0),
     };
@@ -75,19 +77,17 @@ export default {
     range() {
       return this.v.from !== null && this.v.to !== null ? [this.v.from, this.v.to] : null;
     },
+    // Every cluster with records, by its Rancher name, whichever are picked; and every
+    // namespace of the page (from the backend, which lists them whatever is picked).
     clusterOptions() {
-      const set = new Set([...Object.keys(this.data?.asOf || {}), ...this.v.cluster]);
+      const set = new Set([...Object.keys(this.data?.asOf || {}), ...this.clusterIds, ...this.v.cluster]);
 
-      return [...set].sort();
+      return [...set].map((c) => ({ value: c, label: clusterLabel(this.$store, c) })).sort((a, b) => a.label.localeCompare(b.label));
     },
     nsOptions() {
-      const set = new Set(this.rows.map((r) => r.namespace).filter(Boolean));
+      const set = new Set([...(this.data?.namespaces || this.rows.map((r) => r.namespace).filter(Boolean)), ...this.v.namespace]);
 
-      if (this.v.namespace) {
-        set.add(this.v.namespace);
-      }
-
-      return [...set].sort();
+      return [...set].sort().map((n) => ({ value: n, label: n }));
     },
     notes() {
       return this.noteLines(this.data && this.data.meta);
@@ -129,6 +129,13 @@ export default {
 
   created() {
     this.load();
+    // Rancher's cluster list, for names in the menu (and every cluster, even one with nothing
+    // this day). Without it the menu shows cluster IDs.
+    this.$store.dispatch('management/findAll', { type: 'management.cattle.io.cluster' })
+      .then((list) => {
+        this.clusterIds = (list || []).map((c) => c.id);
+      })
+      .catch(() => {});
   },
 
   mounted() {
@@ -342,7 +349,7 @@ export default {
 
     setClusters(list) {
       this.set({
-        cluster: list, namespace: '', select: '', from: null, to: null
+        cluster: list, namespace: [], select: '', from: null, to: null
       });
     },
 
@@ -393,40 +400,24 @@ export default {
         </button>
       </nav>
       <div class="filters">
-        <details class="multi">
-          <summary>{{ T.cluster }} <b>{{ v.cluster.length ? v.cluster.join('、') : T.all }}</b></summary>
-          <div class="multi-pop">
-            <label
-              v-for="c in clusterOptions"
-              :key="c"
-            ><input
-              type="checkbox"
-              :checked="v.cluster.includes(c)"
-              @change="toggleCluster(c)"
-            > {{ c }}</label>
-            <button
-              v-if="v.cluster.length"
-              type="button"
-              class="link"
-              @click="setClusters([])"
-            >
-              {{ T.clear }}
-            </button>
-          </div>
-        </details>
-        <label>{{ T.namespace }}
-          <select
-            :value="v.namespace"
-            @change="set({namespace: $event.target.value, select: ''})"
-          >
-            <option value="">{{ T.all }}</option>
-            <option
-              v-for="n in nsOptions"
-              :key="n"
-              :value="n"
-            >{{ n }}</option>
-          </select>
-        </label>
+        <MultiPick
+          :label="T.cluster"
+          :options="clusterOptions"
+          :value="v.cluster"
+          :all-text="T.all"
+          :clear-text="T.clear"
+          :find-text="T.find"
+          @change="setClusters"
+        />
+        <MultiPick
+          :label="T.namespace"
+          :options="nsOptions"
+          :value="v.namespace"
+          :all-text="T.all"
+          :clear-text="T.clear"
+          :find-text="T.find"
+          @change="(list) => set({namespace: list, select: ''})"
+        />
         <label>{{ T.state }}
           <select
             :value="v.state"
@@ -440,16 +431,7 @@ export default {
             >{{ T.states[s] }}</option>
           </select>
         </label>
-        <span
-          class="tz"
-          :title="T.tzHint(tz, data ? T.tzServer : 'browser')"
-        >{{ T.tz }} {{ tz }}</span>
-        <span
-          v-if="shownMs !== null"
-          class="tz shown"
-          :class="{slow: shownMs > 5000}"
-          :title="T.shownHint"
-        >{{ T.shown(shownMs) }}</span>
+        <span class="tz">{{ T.tzLine(tz) }}</span>
         <button
           type="button"
           class="btn-al full-btn"

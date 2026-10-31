@@ -256,10 +256,10 @@ const EN = {
 // Watch-only changes (no author recorded) carry the change itself as the action.
 const WATCH = {
   zh: {
-    added: '新增', modified: '有變化', deleted: '刪除', deleting: '刪除中', update: '修改', patch: '修改'
+    added: '新增', modified: '有變化', deleted: '刪除', deleting: '刪除中', update: '修改', patch: '修改', added_unseen: '新增（重新連線後才發現）', modified_unseen: '有變化（重新連線後才發現）'
   },
   en: {
-    added: 'added', modified: 'changed', deleted: 'deleted', deleting: 'being deleted', update: 'updated', patch: 'patched'
+    added: 'added', modified: 'changed', deleted: 'deleted', deleting: 'being deleted', update: 'updated', patch: 'patched', added_unseen: 'added (found after reconnecting)', modified_unseen: 'changed (found after reconnecting)'
   },
 };
 
@@ -273,8 +273,11 @@ export function textsV6(store) {
     ...v5,
     ...own,
     zh,
-    // Never "no author found": the actor is either not recorded or an unauthenticated request.
+    // The v5 wording for a missing author is retired: the actor is either not recorded or an
+    // unauthenticated request.
     note:     { ...v5.note, 'no-actor': own.tiers.unrecorded },
+    noActor:  own.tiers.unrecorded,
+    evReason: { ...v5.evReason, 'first-unattributed': () => own.tiers.unrecorded },
     verbs:    { ...m.verbs, ...(zh ? WATCH.zh : WATCH.en) },
     rules:    m.rules,
     ruleWhat: m.rulesPage?.what_ || {},

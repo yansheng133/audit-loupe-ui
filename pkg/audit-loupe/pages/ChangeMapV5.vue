@@ -8,6 +8,7 @@ import AlTimelineBar from '../components/v5/TimelineBar.vue';
 import {
   STATES, textsV5, viewFromQuery, queryFromView, apiParams, fetchChangemap, fetchDetail, takePrefetched, dayStartMs, prefetch, fmtTime
 } from '../lib/v5';
+import { backendMessage } from '../lib/api';
 
 // v5 change map (docs/design/v5/spec.md). One /api/changemap request per user action; the
 // URL holds the whole view so a copied link reopens the same screen.
@@ -177,9 +178,9 @@ export default {
           return;
         }
         console.error('audit-loupe: changemap failed', e); // eslint-disable-line no-console
-        if ([403, 404, 503].includes(e.status)) {
-          this.missing = true;
-        } else {
+        // missing holds the message about the backend itself (no permission, none here, down).
+        this.missing = backendMessage(this.T, e) || false;
+        if (!this.missing) {
           this.error = `${ this.T.loadFailed }: ${ e.message }`;
         }
       } finally {
@@ -484,7 +485,7 @@ export default {
       v-if="missing || error"
       class="banner-al"
     >
-      {{ missing ? T.backendMissing : error }}
+      {{ missing || error }}
     </div>
 
     <div

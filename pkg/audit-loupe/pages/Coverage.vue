@@ -1,5 +1,5 @@
 <script>
-import { getJson } from '../lib/api';
+import { getJson, backendMessage } from '../lib/api';
 import { texts, fmtDate } from '../lib/model';
 
 // Is collection working? Per cluster: each collector's last check-in and own report, gaps
@@ -49,7 +49,7 @@ export default {
           getJson('/api/forwarding'),
         ]);
       } catch (e) {
-        this.error = [403, 404, 503].includes(e.status) ? this.T.backendMissing : `${ this.T.error }: ${ e.message }`;
+        this.error = backendMessage(this.T, e) || `${ this.T.error }: ${ e.message }`;
       } finally {
         this.loading = false;
       }

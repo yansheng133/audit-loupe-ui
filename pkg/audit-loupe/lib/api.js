@@ -80,3 +80,34 @@ export async function postJson(path) {
 
   return body;
 }
+
+// What a failed request says about the backend, for a message that names the actual problem:
+// no permission (403, or 401 once the Rancher session has ended), no backend there (404: no
+// such service in this cluster), or a backend that is not answering (503: Kubernetes found no
+// ready pod behind the service; 502/504: the pod or cluster did not answer). Anything else
+// (null) is the backend's own error and is shown as such.
+export function backendState(e) {
+  const s = e?.status;
+
+  if (s === 401 || s === 403) {
+    return 'forbidden';
+  }
+  if (s === 404) {
+    return 'absent';
+  }
+  if (s === 502 || s === 503 || s === 504) {
+    return 'down';
+  }
+
+  return null;
+}
+
+// The message for backendState(e), from a page's texts (backendForbidden, backendMissing,
+// backendDown, each given the status), or null when the failure is the backend's own.
+export function backendMessage(T, e) {
+  const key = {
+    forbidden: 'backendForbidden', absent: 'backendMissing', down: 'backendDown'
+  }[backendState(e)];
+
+  return key ? T[key](e.status) : null;
+}

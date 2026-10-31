@@ -4,7 +4,7 @@ import TopologyMap from '../components/TopologyMap.vue';
 import EvidencePanel from '../components/EvidencePanel.vue';
 import TimeAxis from '../components/TimeAxis.vue';
 import RecomputeBanner from '../components/RecomputeBanner.vue';
-import { getJson, backendCluster, setBackendCluster } from '../lib/api';
+import { getJson, backendCluster, setBackendCluster, backendMessage } from '../lib/api';
 import {
   texts, buildModel, coverageOf, dayStart, fmtMin, isRisky, pad
 } from '../lib/model';
@@ -250,9 +250,9 @@ export default {
         this.openFirstStory();
       } catch (e) {
         console.error('audit-loupe: load failed', e); // eslint-disable-line no-console
-        if ([403, 404, 503].includes(e.status)) {
-          this.missing = true;
-        } else {
+        // missing holds the message about the backend itself (no permission, none here, down).
+        this.missing = backendMessage(this.T, e) || false;
+        if (!this.missing) {
           this.error = `${ this.T.error }: ${ e.message }`;
         }
       } finally {
@@ -437,7 +437,7 @@ export default {
       v-if="missing || error"
       class="banner-al"
     >
-      <span>{{ missing ? T.backendMissing : error }}</span>
+      <span>{{ missing || error }}</span>
       <template v-if="missing">
         <label class="check">{{ T.backendCluster }}
           <input

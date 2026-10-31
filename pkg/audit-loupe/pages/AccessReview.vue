@@ -1,5 +1,5 @@
 <script>
-import { getJson, baseUrl } from '../lib/api';
+import { getJson, baseUrl, backendMessage } from '../lib/api';
 import { texts, fmtDate, principalShort, pad } from '../lib/model';
 
 function localInput(d) {
@@ -116,7 +116,7 @@ export default {
           this.sel = this.users[0]?.user_id || '';
         }
       } catch (e) {
-        this.error = [403, 404, 503].includes(e.status) ? this.T.backendMissing : `${ this.T.error }: ${ e.message }`;
+        this.error = backendMessage(this.T, e) || `${ this.T.error }: ${ e.message }`;
       } finally {
         this.loading = false;
       }

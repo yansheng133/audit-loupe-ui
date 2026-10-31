@@ -1,7 +1,7 @@
 <script>
 import RecomputeBanner from '../components/RecomputeBanner.vue';
 import IdentitiesSection from '../components/IdentitiesSection.vue';
-import { getJson } from '../lib/api';
+import { getJson, backendMessage } from '../lib/api';
 import { texts, fmtDate } from '../lib/model';
 
 // The rule settings in force: on or off, severity (and the default), exempt scopes with their
@@ -36,7 +36,7 @@ export default {
       try {
         this.status = await getJson('/api/rules');
       } catch (e) {
-        this.error = [403, 404, 503].includes(e.status) ? this.T.backendMissing : `${ this.T.error }: ${ e.message }`;
+        this.error = backendMessage(this.T, e) || `${ this.T.error }: ${ e.message }`;
       } finally {
         this.loading = false;
       }

@@ -228,10 +228,10 @@ export default {
 
 <style lang="scss">
 .al-ids h3 { font-size: 14px; margin: 16px 0 6px; }
-.al-ids .cfg { font-size: 11px; font-weight: normal; padding: 1px 6px; border-radius: 8px; border: 1px solid var(--warning, #c98a00); color: var(--warning, #c98a00); margin-left: 6px; }
+.al-ids .cfg { font-size: 13px; font-weight: normal; padding: 1px 6px; border-radius: 8px; border: 1px solid var(--warning, #c98a00); color: var(--warning, #c98a00); margin-left: 6px; }
 .al-ids .ids-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
-.al-ids .ids-chip { display: inline-flex; width: auto; flex: none; min-height: 0; line-height: 18px; border: 1px solid var(--border, #d6d9e1); background: none; color: inherit; border-radius: 12px; padding: 2px 10px; font-size: 12px; cursor: pointer; }
+.al-ids .ids-chip { display: inline-flex; width: auto; flex: none; min-height: 0; line-height: 18px; border: 1px solid var(--border, #d6d9e1); background: none; color: inherit; border-radius: 12px; padding: 2px 10px; font-size: 13px; cursor: pointer; }
 .al-ids .ids-chip.on { border-color: var(--primary, #0b7356); color: var(--primary, #0b7356); font-weight: 600; }
 .al-ids .ids-chip:disabled { opacity: .4; cursor: default; }
-.al-ids .ids-q { margin-left: auto; max-width: 240px; padding: 3px 8px; font-size: 12px; }
+.al-ids .ids-q { margin-left: auto; max-width: 240px; padding: 3px 8px; font-size: 13px; }
 </style>

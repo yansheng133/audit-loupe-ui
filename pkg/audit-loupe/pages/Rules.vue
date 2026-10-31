@@ -41,6 +41,14 @@ export default {
         this.loading = false;
       }
     },
+    // The button reloads everything on the page: the rules, the re-judging notice (it has its
+    // own request, so reloading only the rules left a finished or new notice stale) and the
+    // identities.
+    refresh() {
+      this.load();
+      this.$refs.banner?.load();
+      this.$refs.ids?.load();
+    },
     sevLabel(s) {
       return this.T.sev[s] || s;
     },
@@ -94,7 +102,7 @@ export default {
         <button
           class="btn-al"
           type="button"
-          @click="load"
+          @click="refresh"
         >
           {{ P.refresh }}
         </button>
@@ -293,7 +301,7 @@ export default {
 .al.al-rules { height: auto; display: flex; flex-direction: column; }
 .al.al-rules .col { flex: none; }
 .al-rules .dim { opacity: .55; }
-.al-rules .mono { font-family: var(--al-mono); font-size: 12px; }
+.al-rules .mono { font-family: var(--al-mono); font-size: 13px; }
 .al-rules .exc { margin: 0; padding-left: 16px; }
 .al-rules .exc li + li { margin-top: 6px; }
 .al-rules .tbl td { vertical-align: top; }

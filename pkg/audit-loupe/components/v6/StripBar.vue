@@ -36,6 +36,10 @@ export default {
 
       return m ? { left: `${ this.pct(m[0]) }%`, width: `${ Math.max(0.4, this.pct(m[1]) - this.pct(m[0])) }%` } : null;
     },
+    // With system components listed, the light bars include them too.
+    withSystem() {
+      return (this.strip?.cells || []).some((c) => c.system !== undefined);
+    },
     hours() {
       return [0, 3, 6, 9, 12, 15, 18, 21, 24];
     },
@@ -99,7 +103,7 @@ export default {
       >{{ T.strip.cell(strip.cellMinutes ?? T.tbc) }}</span>
       <div class="legend">
         <span><i class="lg people" />{{ T.strip.people }}</span>
-        <span><i class="lg other" />{{ T.strip.other }}</span>
+        <span><i class="lg other" />{{ withSystem ? T.strip.otherSys : T.strip.other }}</span>
         <span><i class="lg blind" />{{ T.strip.gap }}</span>
         <span><i class="lg lookdot" />{{ T.strip.look }}</span>
         <span><i class="lg mark" />{{ T.strip.mark }}</span>

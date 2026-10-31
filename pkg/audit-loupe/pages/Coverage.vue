@@ -136,6 +136,7 @@ export default {
                 <span
                   class="pill"
                   :class="status(c)[0]"
+                  :title="c.retired ? C.retiredHint : null"
                 >{{ status(c)[1] }}</span>
               </td>
               <td class="muted">

@@ -8,6 +8,7 @@ The Rancher UI extension for Audit Loupe. Backend, chart and docs: [yansheng133/
 
 1. 在 Rancher 的 `Apps` → `Repositories` 加入 `https://yansheng133.github.io/audit-loupe-ui`。
 2. 到 Extensions 頁面安裝 Audit Loupe。
+3. 升級：在 Extensions 頁面選新版本。用 helm 指令升級時加 `--reset-values`，不要用 `--reuse-values`（會沿用舊版的下載位址，Rancher 找不到檔案，擴充功能載不起來）。0.7.0 的變更地圖需要 server 0.7.0（`/api/behaviors`）。
 
 後端（server 與收集元件）的安裝見主 repo 的 `docs/deploy.md`。
 

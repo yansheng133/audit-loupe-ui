@@ -11,7 +11,7 @@ const ZH = {
     activity: '全日變更時間軸', findings: '依風險分級的行為', identities: '單一帳號的操作軌跡', scopes: '單一 namespace 的變更來源'
   },
   tbc:       '待確認',
-  rangeLine: (a, b, n) => `只列出和 ${ a }–${ b } 重疊的 ${ n } 段行為；上面的件數仍是整天。`,
+  rangeLine: (a, b, n, sys) => `只列出和 ${ a }–${ b } 重疊的 ${ n } 段行為${ sys ? `（另有系統元件 ${ sys } 段）` : '' }；上面的件數仍是整天。`,
   lang:      {
     label: '語言', auto: '跟隨 Rancher', zh: '中文', en: 'English'
   },
@@ -147,7 +147,7 @@ const EN = {
     activity: 'Changes across the day', findings: 'Behaviours by risk', identities: 'One account at a time', scopes: 'One namespace at a time'
   },
   tbc:       'to be confirmed',
-  rangeLine: (a, b, n) => `Only the ${ n } behaviour${ n === 1 ? '' : 's' } overlapping ${ a }–${ b } are listed; the counts above are still whole-day.`,
+  rangeLine: (a, b, n, sys) => `Only the ${ n } behaviour${ n === 1 ? '' : 's' } overlapping ${ a }–${ b } are listed${ sys ? ` (plus ${ sys } of system components)` : '' }; the counts above are still whole-day.`,
   lang:      {
     label: 'Language', auto: 'Same as Rancher', zh: '中文', en: 'English'
   },

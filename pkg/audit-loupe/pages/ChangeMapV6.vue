@@ -568,7 +568,7 @@ export default {
             v-if="range"
             class="sum-hidden small"
           >
-            <b>{{ T.rangeLine(fmt(range[0]), range[1] >= d0 + dayMs ? '24:00' : fmt(range[1]), list.length) }}</b>
+            <b>{{ T.rangeLine(fmt(range[0]), range[1] >= d0 + dayMs ? '24:00' : fmt(range[1]), list.filter((b) => b.tier !== 'system').length, list.filter((b) => b.tier === 'system').length) }}</b>
           </p>
           <p
             v-if="settingsLine || hidden"

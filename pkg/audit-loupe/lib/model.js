@@ -685,6 +685,11 @@ export function fmtDate(ms) {
   return `${ d.getFullYear() }-${ pad(d.getMonth() + 1) }-${ pad(d.getDate()) } ${ pad(d.getHours()) }:${ pad(d.getMinutes()) }`;
 }
 
+// To the second, cut not rounded: a collector gap is often only seconds long.
+export function fmtDateSec(ms) {
+  return `${ fmtDate(ms) }:${ pad(new Date(ms).getSeconds()) }`;
+}
+
 export const sevOf = (ev) => ev.alerts.map((r) => ev.sev?.[r] || RULE_SEV[r] || 'low').sort((x, y) => SEV_RANK[x] - SEV_RANK[y])[0] || null;
 export const worst = (list) => list.filter(Boolean).sort((x, y) => SEV_RANK[x] - SEV_RANK[y])[0] || null;
 export const isRisky = (ev) => ['high', 'medium'].includes(sevOf(ev));

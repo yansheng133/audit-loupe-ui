@@ -326,7 +326,7 @@ export default {
 @import '../styles/change-map.scss';
 .al.al-page { height: auto; display: flex; flex-direction: column; }
 .al .work-2 { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 8px; min-height: 480px; }
-.al .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.al .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .al .tbl th { text-align: left; font-weight: 700; color: var(--al-muted); border-bottom: 1px solid var(--al-border); padding: 4px 6px; }
 .al .tbl td { border-bottom: 1px solid var(--al-border); padding: 4px 6px; vertical-align: top; }
 @media (max-width: 900px) { .al .work-2 { grid-template-columns: minmax(0, 1fr); } }

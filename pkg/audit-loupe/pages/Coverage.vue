@@ -1,6 +1,7 @@
 <script>
 import { getJson, backendMessage } from '../lib/api';
-import { texts, fmtDate } from '../lib/model';
+import { texts, fmtDate, fmtDateSec } from '../lib/model';
+import { textsV5 } from '../lib/v5';
 
 // Is collection working? Per cluster: each collector's last check-in and own report, gaps
 // in the last 7 days; the record chain's verification; forwarding to the SIEM.
@@ -9,7 +10,7 @@ export default {
 
   data() {
     return {
-      T: texts(this.$store), rows: [], chain: [], forwarding: [], loading: false, error: null,
+      T: texts(this.$store), V: textsV5(this.$store), rows: [], chain: [], forwarding: [], loading: false, error: null,
     };
   },
 
@@ -25,6 +26,11 @@ export default {
 
   methods: {
     fmtDate,
+    fmtDateSec,
+    // Why a collector did not collect, in the words the change map uses for the same gap.
+    cause(g) {
+      return g.reason ? (this.V.cause[g.reason] || g.reason) : '';
+    },
     clusterName(id) {
       try {
         return this.$store.getters['management/byId']('management.cattle.io.cluster', id)?.nameDisplay || id;
@@ -109,10 +115,10 @@ export default {
             >
               <td>{{ C.kinds[c.collector] || c.collector }}</td>
               <td>{{ c.instance }}</td>
-              <td class="num">
-                {{ fmtDate(c.lastMs) }}
+              <td class="num nowrap">
+                {{ fmtDateSec(c.lastMs) }}
               </td>
-              <td>
+              <td class="nowrap">
                 <span
                   class="pill"
                   :class="c.stale ? 'deleted' : 'added'"
@@ -132,7 +138,9 @@ export default {
           :key="i"
           class="quiet"
         >
-          {{ C.kinds[g.collector] || g.collector }}（{{ g.instance }}）：{{ fmtDate(g.fromMs) }} → {{ g.toMs ? fmtDate(g.toMs) : C.stillSilent }}
+          {{ C.kinds[g.collector] || g.collector }}（{{ g.instance }}）：{{ fmtDateSec(g.fromMs) }} → {{ g.toMs ? fmtDateSec(g.toMs) : C.stillSilent }}<template v-if="cause(g)">
+            — {{ cause(g) }}
+          </template>
         </div>
         <div
           v-if="chainOf(r.cluster)"
@@ -186,7 +194,10 @@ export default {
 @import '../styles/change-map.scss';
 .al.al-page { height: auto; display: flex; flex-direction: column; }
 .al .cov-card { flex: none; }
-.al .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.al .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.al .tbl .nowrap { white-space: nowrap; }
+/* The collector's own report (a list of watched resources) wraps; the time and status do not. */
+.al .tbl td.muted { overflow-wrap: anywhere; }
 .al .tbl th { text-align: left; font-weight: 700; color: var(--al-muted); border-bottom: 1px solid var(--al-border); padding: 4px 6px; }
 .al .tbl td { border-bottom: 1px solid var(--al-border); padding: 4px 6px; vertical-align: top; }
 </style>

@@ -1,6 +1,6 @@
 {
   "name": "audit-loupe-ui",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": false,
   "engines": {
     "node": ">=24"

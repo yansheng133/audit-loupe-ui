@@ -195,9 +195,14 @@ export function trackMarks(b, d0, dayMs) {
   return { blocks, dashes };
 }
 
-// The time a behaviour covers on the time bar: its first cell to the end of its last.
+// The time a behaviour covers on the time bar: its first cell to the end of its last, the
+// same span its blocks are drawn over (the server's fromMs/toMs are the operations' own times).
 export function behaviourSpan(b) {
-  return b && b.fromMs !== null && b.toMs !== null ? [b.fromMs, b.toMs] : null;
+  if (!b || !b.segments.length) {
+    return null;
+  }
+
+  return [b.segments[0].fromMs, b.segments[b.segments.length - 1].toMs];
 }
 
 // The rows of one actor in one cluster: one per target namespace, worst first, then earliest.

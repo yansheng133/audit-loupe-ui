@@ -294,6 +294,8 @@ export function textsV6(store) {
     rules:    m.rules,
     ruleWhat: m.rulesPage?.what_ || {},
     sevWord:  m.sev,
+    refused:  m.refused,
+    failed:   m.failed,
     detail:   { ...v5.detail, ...own.detail },
   };
 }

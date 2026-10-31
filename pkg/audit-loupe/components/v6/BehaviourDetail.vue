@@ -80,8 +80,16 @@ export default {
     scopeLabel(s) {
       return scopeLabel(this.T, s);
     },
+    // The action, and whether the server refused or failed it (a failed request is listed
+    // only when it carries an alert).
     verb(o) {
-      return verbText(this.T, o);
+      const v = verbText(this.T, o);
+
+      if (o.code === 403) {
+        return `${ v }${ this.T.refused }`;
+      }
+
+      return o.code >= 400 ? `${ v }${ this.T.failed(o.code) }` : v;
     },
     rangeText,
   },

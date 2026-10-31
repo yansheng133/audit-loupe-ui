@@ -40,14 +40,22 @@ const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 // The lane group: the server's, else people (an unknown group is never hidden).
 export const actorGroup = (a) => (a && GROUPS.includes(a.group) ? a.group : 'people');
 
-export function normActor(a = {}) {
+// An identity as the page tells them apart: the server's key, except the actor nobody recorded,
+// which the server lists once per cluster (the reason differs per cluster).
+export const identityId = (key, group, cluster) => (group === 'unrecorded' ? `~${ cluster || '' }` : key);
+
+export function normActor(a = {}, cluster = '') {
+  const key = a.key ?? a.name ?? '';
+  const group = actorGroup(a);
+
   return {
-    key:       a.key ?? a.name ?? '',
+    id:        identityId(key, group, cluster || (a.clusters || [])[0]),
+    key,
     name:      a.name || '',
     category:  a.category || null,
     noteCode:  a.noteCode || null,
     note:      a.note || '',
-    group:     actorGroup(a),
+    group,
     dependsOn: a.dependsOn || null,
   };
 }
@@ -65,7 +73,7 @@ export function normBehaviour(b) {
     id:             String(b.id),
     cluster:        b.cluster || '',
     scope:          b.scope || '',
-    actor:          normActor(b.actor),
+    actor:          normActor(b.actor, b.cluster),
     tier:           TIERS.includes(b.tier) ? b.tier : null,
     title:          b.title || null,
     what:           b.what || [],
@@ -103,7 +111,7 @@ export function normalize(res) {
     gaps:       res?.gaps || [],
     behaviours,
     actors:     (res?.actors || []).map((a) => ({
-      ...normActor(a), clusters: a.clusters || [], behaviors: num(a.behaviors), ops: num(a.ops), look: num(a.look)
+      ...normActor(a, (a.clusters || [])[0]), clusters: a.clusters || [], behaviors: num(a.behaviors), ops: num(a.ops), look: num(a.look)
     })),
     scopes: (res?.scopes || []).map((s) => ({
       cluster: s.cluster || '', scope: s.scope || '', actors: num(s.actors), behaviors: num(s.behaviors), ops: num(s.ops), look: num(s.look), tier: s.tier || null
@@ -196,7 +204,7 @@ export function scopeRowsOf(list) {
   const by = groupBy(list, (b) => b.scope);
 
   return [...by.entries()].map(([scope, bs]) => ({
-    type: 'sub', key: `s|${ bs[0].cluster }|${ bs[0].actor.key }|${ scope }`, scope, cluster: bs[0].cluster, behaviours: bs.sort(byTime), ops: sumOps(bs), worst: worstTier(bs)
+    type: 'sub', key: `s|${ bs[0].cluster }|${ bs[0].actor.id }|${ scope }`, scope, cluster: bs[0].cluster, behaviours: bs.sort(byTime), ops: sumOps(bs), worst: worstTier(bs)
   })).sort((x, y) => tierRank(x.worst) - tierRank(y.worst) || byTime(x.behaviours[0], y.behaviours[0]));
 }
 
@@ -215,7 +223,7 @@ export function activityRows(list, open = {}) {
       continue;
     }
     const isOpen = groupsOpen.includes(g);
-    const actors = groupBy(inG, (b) => b.actor.key);
+    const actors = groupBy(inG, (b) => b.actor.id);
 
     rows.push({
       type: 'group', key: `g|${ g }`, group: g, open: isOpen, actors: actors.size, behaviours: inG.length, ops: sumOps(inG)
@@ -277,11 +285,11 @@ export function identityGroups(actors) {
 export function defaultIdentity(list) {
   const b = [...list].sort(byTier)[0];
 
-  return b ? b.actor.key : null;
+  return b ? b.actor.id : null;
 }
 
 export function identityRows(list, key) {
-  const mine = list.filter((b) => b.actor.key === key);
+  const mine = list.filter((b) => b.actor.id === key);
   const rows = [];
   const clusters = groupBy(mine, (b) => b.cluster);
 
@@ -293,7 +301,7 @@ export function identityRows(list, key) {
 }
 
 export function identityBehaviours(list, key) {
-  return list.filter((b) => b.actor.key === key).sort(byTier);
+  return list.filter((b) => b.actor.id === key).sort(byTier);
 }
 
 // ---------- scopes tab (the server's namespace list) ----------
@@ -321,7 +329,7 @@ export function scopeActors(list, key) {
   const { cluster, scope } = parsePlace(key);
   const here = list.filter((b) => b.cluster === cluster && b.scope === scope);
 
-  return [...groupBy(here, (b) => b.actor.key).entries()].map(([k, bs]) => {
+  return [...groupBy(here, (b) => b.actor.id).entries()].map(([k, bs]) => {
     const what = new Map();
 
     bs.forEach((b) => b.what.forEach((w) => {
@@ -571,7 +579,7 @@ export function actorsOpen(v, behaviours) {
   const out = {};
 
   for (const b of behaviours) {
-    const k = b.actor.key;
+    const k = b.actor.id;
 
     if (!(k in out)) {
       out[k] = (b.actor.group === 'people') !== v.flip.includes(k);

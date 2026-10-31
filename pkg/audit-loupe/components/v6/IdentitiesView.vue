@@ -31,13 +31,13 @@ export default {
       return identityGroups(this.actors);
     },
     current() {
-      return this.groups.flatMap((g) => g.items).find((x) => x.key === this.who) || null;
+      return this.groups.flatMap((g) => g.items).find((x) => x.id === this.who) || null;
     },
     rows() {
-      return this.current ? identityRows(this.behaviours, this.current.key) : [];
+      return this.current ? identityRows(this.behaviours, this.current.id) : [];
     },
     list() {
-      return this.current ? identityBehaviours(this.behaviours, this.current.key) : [];
+      return this.current ? identityBehaviours(this.behaviours, this.current.id) : [];
     },
     // Under the account's name: the setting a missing author depends on, and other accounts
     // active in the same cells (a hint, never "the same person").
@@ -70,6 +70,12 @@ export default {
     note(a) {
       return noteOf(this.T, a);
     },
+    // The actor nobody recorded is listed once per cluster; say which.
+    label(a) {
+      const name = actorLabel(this.T, a);
+
+      return a.group === 'unrecorded' && a.clusters?.length ? `${ name } ・ ${ this.T.inCluster(clusterLabel(this.$store, a.clusters[0])) }` : name;
+    },
   },
 };
 </script>
@@ -89,15 +95,15 @@ export default {
         </div>
         <button
           v-for="x in g.items"
-          :key="x.key"
+          :key="x.id"
           type="button"
           class="pick"
-          :class="{sel: current && current.key === x.key}"
-          :aria-pressed="String(!!current && current.key === x.key)"
+          :class="{sel: current && current.id === x.id}"
+          :aria-pressed="String(!!current && current.id === x.id)"
           :title="x.name || null"
-          @click="$emit('who', x.key)"
+          @click="$emit('who', x.id)"
         >
-          <span class="n">{{ actorLabel(T, x) }}</span>
+          <span class="n">{{ label(x) }}</span>
           <span class="s">{{ T.actorLine(n(x.behaviors), n(x.ops)) }}<b
             v-if="x.look"
             class="lk"
@@ -110,7 +116,7 @@ export default {
       class="rcol"
     >
       <div class="rhead">
-        <h3>{{ T.identityHead(actorLabel(T, current)) }}</h3>
+        <h3>{{ T.identityHead(label(current)) }}</h3>
         <span class="muted small">{{ current.name }}<template v-if="note(current)"> ・ {{ note(current) }}</template></span>
         <span
           v-for="(x, i) in extra"

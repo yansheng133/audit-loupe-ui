@@ -16,7 +16,7 @@ const zh = textsV6({ getters: { 'i18n/current': () => 'zh-hant' } });
 
 test('every behaviour lands in exactly one activity lane, and the counts add up to the server\'s', { skip }, () => {
   const M = load();
-  const rows = activityRows(M.behaviours, { groups: GROUPS, actors: Object.fromEntries(M.behaviours.map((b) => [b.actor.key, true])) });
+  const rows = activityRows(M.behaviours, { groups: GROUPS, actors: Object.fromEntries(M.behaviours.map((b) => [b.actor.id, true])) });
   const seen = rows.filter((r) => r.type === 'sub').flatMap((r) => r.behaviours.map((b) => b.id));
 
   assert.equal(seen.length, M.behaviours.length);
@@ -83,7 +83,7 @@ test('every account and namespace the server lists can be opened, and has words'
 
   for (const g of identityGroups(M.actors)) {
     for (const a of g.items) {
-      assert.ok(identityRows(M.behaviours, a.key).length, `account ${ a.key } has no lanes`);
+      assert.ok(identityRows(M.behaviours, a.id).length, `account ${ a.id } has no lanes`);
       assert.ok(actorLabel(zh, a) !== zh.tbc || a.key === '', a.key);
     }
   }

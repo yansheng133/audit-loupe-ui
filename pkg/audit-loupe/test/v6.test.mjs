@@ -217,6 +217,8 @@ test('the unrecorded actor: its own name, never "no author found", and the setti
   const b = byId('u~c2~kube-public~1');
 
   assert.equal(actorLabel(zh, b.actor), '未記錄執行者');
+  assert.equal(b.actor.id, '~c2', 'the actor nobody recorded is told apart per cluster');
+  assert.equal(M.actors.find((a) => a.group === 'unrecorded').id, '~c2');
   assert.equal(actorLabel(en, b.actor), 'Author not recorded');
   assert.deepEqual(settingNote(b.actor), { code: 'no-apiserver-audit', cluster: 'c2', collectors: ['rancher', 'watch'] });
   assert.equal(settingNote(byId('b1').actor), null);

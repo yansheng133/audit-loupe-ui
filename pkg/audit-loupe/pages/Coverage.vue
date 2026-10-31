@@ -153,7 +153,7 @@ export default {
           :key="i"
           class="quiet"
         >
-          {{ C.kinds[g.collector] || g.collector }}（{{ g.instance }}）：{{ fmtDateSec(g.fromMs) }} → {{ g.toMs ? fmtDateSec(g.toMs) : C.stillSilent }}<template v-if="cause(g)">
+          {{ C.kinds[g.collector] || g.collector }}（{{ g.instance }}）：{{ fmtDateSec(g.fromMs) }} → {{ g.toMs ? fmtDateSec(g.toMs) : (g.retired ? C.retired : C.stillSilent) }}<template v-if="cause(g)">
             — {{ cause(g) }}
           </template>
         </div>

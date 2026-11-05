@@ -21,6 +21,8 @@ const ZH = {
   colon:     '：',
   dot:       ' ・ ',
   sevSep:    '・',
+  // Width of the overview table's state column: the English labels are longer.
+  stateCol:  '118px',
   list:      '、',
   paren:     (x) => `（${ x }）`,
   noActor:   '找不到執行者',
@@ -192,6 +194,7 @@ const EN = {
   colon:     ': ',
   dot:       ' · ',
   sevSep:    ' · ',
+  stateCol:  '160px',
   list:      ', ',
   paren:     (x) => ` (${ x })`,
   noActor:   'No actor found',

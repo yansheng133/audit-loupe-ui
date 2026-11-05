@@ -43,7 +43,8 @@
   .ln-ticks span.first { transform: none; }
   .ln-ticks span.last { transform: translateX(-100%); }
   .ln-group { display: grid; grid-template-columns: var(--lab) 1fr; align-items: center; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--al-border); background: var(--al-sunken); padding: 0; cursor: pointer; }
-  .ln-group .ln-l { padding: 5px 12px; display: flex; gap: 8px; align-items: center; }
+  .ln-group .ln-l { padding: 5px 12px; display: flex; gap: 8px; align-items: center; min-width: 0; }
+  .ln-group .ln-l b { min-width: 0; white-space: normal; overflow-wrap: anywhere; } // long English group names wrap instead of running into the counts
   .ln-group .tw { width: 10px; color: var(--al-muted); font-size: 11px; }
   .ln-gsub { font-size: 12px; padding-left: 8px; display: flex; gap: 10px; flex-wrap: wrap; }
   .ln-act { color: var(--al-primary); text-decoration: underline; margin-left: auto; padding-right: 12px; }

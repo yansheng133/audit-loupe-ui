@@ -117,7 +117,7 @@ export default {
     >
       <div class="rhead">
         <h3>{{ T.identityHead(label(current)) }}</h3>
-        <span class="muted small">{{ current.name }}<template v-if="note(current)">{{ T.dot }}{{ note(current) }}</template></span>
+        <span class="muted small">{{ [current.name, note(current)].filter(Boolean).join(T.dot) }}</span>
         <span
           v-for="(x, i) in extra"
           :key="i"

@@ -93,3 +93,15 @@ test('a backend without title codes still marks a failed login and a 403', () =>
   assert.equal(en.rangeLine('09:00', '10:00', 1, 0), 'Listing the activity that overlaps 09:00–10:00; the counts above cover the whole day.');
   assert.equal(en.summary(1234), '1,234 activities this day. ');
 });
+
+test('hidden-count line leaves out zero items and formats counts', () => {
+  const h = {
+    system: 0, uiMaintenance: 5, requestOnly: 1, failed: 2, failedSystem: 209
+  };
+
+  assert.equal(en.hiddenLine(h), 'Not listed as activities: 5 Rancher UI maintenance actions, 1 request that leaves no object, 2 failed requests (plus 209 from system components).');
+  assert.equal(zh.hiddenLine(h), '沒有列成行為：Rancher 介面的維護動作 5 筆、不留下物件的請求 1 筆、失敗的請求 2 筆（系統元件另有 209 筆）');
+  assert.equal(en.hiddenLine({ system: 1524, uiMaintenance: 0, requestOnly: 0, failed: 0, failedSystem: 0 }), 'Not listed as activities: 1,524 system component operations.');
+  assert.equal(en.hiddenLine({ system: 0, uiMaintenance: 0, requestOnly: 0, failed: 0, failedSystem: 0 }), '');
+  assert.match(whatText(en, [{ verb: 'update', kind: 'ConfigMap', count: 2591 }]), /×2,591/);
+});

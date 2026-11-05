@@ -12,6 +12,14 @@
 - 變更地圖 V5 的隱藏筆數多了失敗的請求（配合後端 PR #33），單位改成「筆」（以前寫「列」，但數的是紀錄）。
 - 新測試 `test/english.test.mjs`：英文文字表不能有中文或全形標點、單數、失敗標題、401 訊息、語言選擇。
 
+### 在 Rancher 實際看過畫面後的修正（11/06）
+- 分組標題太長時不再壓到右邊的數字（英文的「Routine (workload ServiceAccounts)」、中文的「例行（工作負載的 ServiceAccount）」都會），改成換行。
+- 「沒有列成行為」那句不再列出 0 的項目（例如打開系統元件後的「系統元件 0 筆」），數字加千分位（中文也是）。
+- 行為標題的「×2591」加千分位。
+- 依身分：帳號沒有名稱時，副標題開頭不再多一個分隔符號（改版前就有）。
+- 英文：ServiceAccount 所在 namespace 那行改成「Namespace: …」，不再跟上一行「ServiceAccount of a workload」讀成一句；權限覆核的「Existed before tracking or retention」改成「Granted before tracking began, or the record has expired」。
+- V5 總覽表的狀態欄在英文時加寬，「Needs review · medium」不再被切掉。
+
 ## 0.7.0（預覽版）
 
 配 Audit Loupe server 的 `/api/behaviors`（[audit-loupe](https://github.com/yansheng133/audit-loupe) `docs/api/behaviors-v0.md`）。後端還沒有這支 API 時，變更地圖會說明這一點並附上舊版（v5）頁面的連結；v5 的頁面還在 `changes-v5`。

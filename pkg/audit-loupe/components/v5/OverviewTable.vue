@@ -102,7 +102,9 @@ export default {
     <table class="ov">
       <thead>
         <tr>
-          <th>{{ T.cols.state }}</th>
+          <th :style="{ width: T.stateCol }">
+            {{ T.cols.state }}
+          </th>
           <th>{{ T.cols.object }}</th>
           <th>{{ T.cols.where }}</th>
           <th class="ticks-h">

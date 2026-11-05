@@ -332,7 +332,7 @@ const EN = {
     project:        'Project',
     adminLike:      'Admin-like',
     none:           'No permissions at this time.',
-    beforeTracking: 'Existed before tracking or retention',
+    beforeTracking: 'Granted before tracking began, or the record has expired',
     automatic:      'Created by Rancher',
     derived:        'Derived from a global role',
     unknown:        'No actor found',

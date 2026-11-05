@@ -3,6 +3,7 @@
 // tier and counts everything; this file only lays out what it returns (groups, lanes, lists,
 // positions) and words it. Nothing here segments operations or judges a tier.
 import { fmtTime } from './v5.js';
+import { num as fmtNum } from './model.js';
 import { baseUrl } from './api.js';
 
 // GET a JSON answer; a failure keeps its status and its JSON body (if any).
@@ -428,7 +429,7 @@ export function titleText(T, t) {
 
 export function whatText(T, what, n = 3) {
   const list = what || [];
-  const shown = list.slice(0, n).map((w) => `${ verbText(T, w) } ${ w.kind || '' } ×${ w.count ?? T.tbc }${ unseenText(T, w) }`);
+  const shown = list.slice(0, n).map((w) => `${ verbText(T, w) } ${ w.kind || '' } ×${ fmtNum(w.count) ?? T.tbc }${ unseenText(T, w) }`);
 
   return shown.join(T.listSep) + (list.length > n ? T.moreKinds(list.length, list.length - n) : '');
 }

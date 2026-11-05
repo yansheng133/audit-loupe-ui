@@ -89,8 +89,18 @@ const ZH = {
   viaWord: {
     direct: '直連 apiserver（繞過 Rancher）', rancher: '經 Rancher', impersonation: '經 Rancher 代理', ace: '直連下游叢集的授權端點', unknown: '不明（沒有 audit 紀錄）'
   },
-  overlap:        (o, a, b, n) => `與 ${ o } 在 ${ a }–${ b } 有 ${ n } 格同時在操作，無法確認是否同一人`,
-  hiddenLine:     (h) => `沒有列成行為：系統元件 ${ h.system } 筆、Rancher 介面的維護動作 ${ h.uiMaintenance } 筆、不留下物件的請求 ${ h.requestOnly } 筆、失敗的請求 ${ h.failed } 筆（系統元件另有 ${ h.failedSystem } 筆）`,
+  overlap:    (o, a, b, n) => `與 ${ o } 在 ${ a }–${ b } 有 ${ n } 格同時在操作，無法確認是否同一人`,
+  // Items that are 0 are left out (with system components shown, h.system is 0).
+  hiddenLine: (h) => {
+    const items = [
+      h.system && `系統元件 ${ num(h.system) } 筆`,
+      h.uiMaintenance && `Rancher 介面的維護動作 ${ num(h.uiMaintenance) } 筆`,
+      h.requestOnly && `不留下物件的請求 ${ num(h.requestOnly) } 筆`,
+      (h.failed || h.failedSystem) && `失敗的請求 ${ num(h.failed || 0) } 筆${ h.failedSystem ? `（系統元件另有 ${ num(h.failedSystem) } 筆）` : '' }`,
+    ].filter(Boolean);
+
+    return items.length ? `沒有列成行為：${ items.join('、') }` : '';
+  },
   showSystem:     '顯示系統元件',
   hideSystem:     '隱藏系統元件',
   building:       '正在整理這天的行為（升級後第一次啟動，或切段設定改了）。整理完之前這裡是空的，不代表這天沒有操作。',
@@ -198,7 +208,7 @@ const EN = {
   collapse:     'Collapse',
   clusterScope: CLUSTER_SCOPE,
   inCluster:    (c) => `cluster ${ c }`,
-  saNs:         (ns) => `ServiceAccount in namespace ${ ns }`,
+  saNs:         (ns) => `Namespace: ${ ns }`,
   dependsAudit: (c) => `Depends on a setting: ${ c } does not send the API server audit log`,
   summary:      (n) => `${ acts(n) } this day. `,
   summaryLook:  (n, list) => `${ n } need${ n === 1 ? 's' : '' } review: ${ list }. `,
@@ -227,8 +237,17 @@ const EN = {
   viaWord: {
     direct: 'Direct to the API server (bypassing Rancher)', rancher: 'Through Rancher', impersonation: 'Through the Rancher proxy', ace: 'Through the Authorized Cluster Endpoint', unknown: 'Unknown (no audit record)'
   },
-  overlap:        (o, a, b, n) => `Active at the same time as ${ o } between ${ a } and ${ b } (${ plural(n, 'time cell') }); it may be the same person`,
-  hiddenLine:     (h) => `Not listed as activities: ${ plural(h.system, 'system component operation') }, ${ plural(h.uiMaintenance, 'Rancher UI maintenance action') }, ${ plural(h.requestOnly, 'request') } that leave${ h.requestOnly === 1 ? 's' : '' } no object, ${ plural(h.failed, 'failed request') } (plus ${ num(h.failedSystem) } from system components).`,
+  overlap:    (o, a, b, n) => `Active at the same time as ${ o } between ${ a } and ${ b } (${ plural(n, 'time cell') }); it may be the same person`,
+  hiddenLine: (h) => {
+    const items = [
+      h.system && plural(h.system, 'system component operation'),
+      h.uiMaintenance && plural(h.uiMaintenance, 'Rancher UI maintenance action'),
+      h.requestOnly && `${ plural(h.requestOnly, 'request') } that leave${ h.requestOnly === 1 ? 's' : '' } no object`,
+      (h.failed || h.failedSystem) && `${ plural(h.failed || 0, 'failed request') }${ h.failedSystem ? ` (plus ${ num(h.failedSystem) } from system components)` : '' }`,
+    ].filter(Boolean);
+
+    return items.length ? `Not listed as activities: ${ items.join(', ') }.` : '';
+  },
   showSystem:     'Show system components',
   hideSystem:     'Hide system components',
   building:       'Grouping this day into activities (first start after an upgrade, or the settings changed). Until this is done the page stays empty; that does not mean nothing happened.',

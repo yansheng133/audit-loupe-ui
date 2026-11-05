@@ -414,13 +414,16 @@ export function titleText(T, t) {
   if (!t) {
     return null;
   }
-  if (t.verb === 'login' && t.code >= 400) {
-    return T.rules.login_failed || T.failed(t.code);
+  // A backend before 0.7.1 sends no code; the rule that fired still tells a failed login or a 403.
+  const code = t.code ?? { login_failed: 401, forbidden: 403 }[t.rule];
+
+  if (t.verb === 'login' && code >= 400) {
+    return T.rules.login_failed || T.failed(code);
   }
   // A login has no object: its kind and name repeat the verb ("logged in login").
   const obj = t.verb === 'login' ? [] : [t.kind, t.name];
 
-  return [verbText(T, t), ...obj].filter(Boolean).join(' ') + unseenText(T, t) + resultText(T, t.code);
+  return [verbText(T, t), ...obj].filter(Boolean).join(' ') + unseenText(T, t) + resultText(T, code);
 }
 
 export function whatText(T, what, n = 3) {

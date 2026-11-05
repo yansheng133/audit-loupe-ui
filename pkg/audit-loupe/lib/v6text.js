@@ -5,7 +5,8 @@ import {
   texts as modelTexts, isZh, plural, num, savedLang, saveLang
 } from './model.js';
 
-const acts = (n) => (n === 1 ? '1 activity' : `${ n } activities`);
+const CLUSTER_SCOPE = 'Cluster scope';
+const acts = (n) => (n === 1 ? '1 activity' : `${ num(n) } activities`);
 
 const ZH = {
   dot:    ' ・ ',
@@ -155,7 +156,7 @@ const EN = {
     activity: 'Changes across the day', findings: 'Activities by risk', identities: 'One account at a time', scopes: 'One namespace at a time'
   },
   tbc:       'unknown',
-  rangeLine: (a, b, n, sys) => `Listing the ${ n === 1 ? 'activity' : `${ n } activities` } that overlap ${ a }–${ b }${ sys ? ` (plus ${ sys } from system components)` : '' }; the counts above cover the whole day.`,
+  rangeLine: (a, b, n, sys) => `Listing the ${ n === 1 ? 'activity that overlaps' : `${ num(n) } activities that overlap` } ${ a }–${ b }${ sys ? ` (plus ${ sys } from system components)` : '' }; the counts above cover the whole day.`,
   lang:      {
     label: 'Language', auto: 'Same as Rancher', zh: '中文', en: 'English'
   },
@@ -195,7 +196,7 @@ const EN = {
   actorLine:    (b, o) => `${ acts(b) } · ${ plural(o, 'operation') }`,
   expand:       'Expand',
   collapse:     'Collapse',
-  clusterScope: 'Cluster scope',
+  clusterScope: CLUSTER_SCOPE,
   inCluster:    (c) => `cluster ${ c }`,
   saNs:         (ns) => `ServiceAccount in namespace ${ ns }`,
   dependsAudit: (c) => `Depends on a setting: ${ c } does not send the API server audit log`,
@@ -216,7 +217,7 @@ const EN = {
   pickGroups:   'Accounts',
   listHead:     (n) => `${ acts(n) }, most serious first`,
   perActor:     'One line per account',
-  inScope:      (a, s) => (s === 'Cluster scope' ? `${ a } at cluster scope` : `${ a } in ${ s }`),
+  inScope:      (a, s) => (s === CLUSTER_SCOPE ? `${ a } at cluster scope` : `${ a } in ${ s }`),
   itemMeta:     (o, j, s) => `${ plural(o, 'operation') } · ${ plural(j, 'object') } · ${ plural(s, 'segment') }`,
   scopeMeta:    (a, b) => `${ plural(a, 'account') } · ${ acts(b) }`,
   lookN:        (n) => `${ n } to review`,

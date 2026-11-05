@@ -1,7 +1,7 @@
 // v5 change map: texts, the one /api/changemap request per user action, and URL <-> view state.
 // The backend computes every audit state; this file only formats what it returns.
 import { getJson, baseUrl } from './api.js';
-import { pad, isZh, plural } from './model.js';
+import { pad, isZh, plural, num } from './model.js';
 
 // ---------- text ----------
 const ZH = {
@@ -20,6 +20,7 @@ const ZH = {
   tzLine:    (tz) => `時間以 ${ tz } 顯示`,
   colon:     '：',
   dot:       ' ・ ',
+  sevSep:    '・',
   list:      '、',
   paren:     (x) => `（${ x }）`,
   noActor:   '找不到執行者',
@@ -190,6 +191,7 @@ const EN = {
   tzLine:    (tz) => `Times in ${ tz }`,
   colon:     ': ',
   dot:       ' · ',
+  sevSep:    ' · ',
   list:      ', ',
   paren:     (x) => ` (${ x })`,
   noActor:   'No actor found',
@@ -261,8 +263,8 @@ const EN = {
   cols:       {
     state: 'Audit state', object: 'Object', where: 'Cluster / Namespace', ticks: 'Operations (00–24)', ops: 'Count', last: 'Last', who: 'Who', via: 'Via',
   },
-  clusterScope:     'cluster-scoped',
-  hiddenRows:       (h) => `Hidden: ${ plural(h.system, 'system component record') }, ${ plural(h.uiMaintenance, 'Rancher UI maintenance record') }${ h.failed || h.failedSystem ? `, ${ plural(h.failed, 'failed request') } (plus ${ h.failedSystem } from system components)` : '' }`,
+  clusterScope:     'Cluster scope',
+  hiddenRows:       (h) => `Hidden: ${ plural(h.system, 'system component record') }, ${ plural(h.uiMaintenance, 'Rancher UI maintenance record') }${ h.failed || h.failedSystem ? `, ${ plural(h.failed, 'failed request') } (plus ${ num(h.failedSystem) } from system components)` : '' }`,
   show:             'Show',
   hide:             'Hide',
   more:             'Load more',
@@ -390,7 +392,7 @@ export function shortWho(name) {
 export function stateLabel(T, state, severity) {
   const base = T.states[state] || state || '—';
 
-  return state === 'look' && T.sev[severity] ? `${ base }・${ T.sev[severity] }` : base;
+  return state === 'look' && T.sev[severity] ? `${ base }${ T.sevSep }${ T.sev[severity] }` : base;
 }
 
 // ---------- time (shown in the backend's time zone) ----------

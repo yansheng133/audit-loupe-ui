@@ -86,3 +86,10 @@ test('the page\'s own language choice wins over Rancher\'s, on every page', () =
     delete globalThis.window;
   }
 });
+
+test('a backend without title codes still marks a failed login and a 403', () => {
+  assert.equal(titleText(en, { verb: 'login', kind: 'login', name: 'login', rule: 'login_failed' }), 'Login failed');
+  assert.equal(titleText(en, { verb: 'get', kind: 'Secret', name: 'db', rule: 'forbidden' }), 'read Secret db, denied (403)');
+  assert.equal(en.rangeLine('09:00', '10:00', 1, 0), 'Listing the activity that overlaps 09:00–10:00; the counts above cover the whole day.');
+  assert.equal(en.summary(1234), '1,234 activities this day. ');
+});

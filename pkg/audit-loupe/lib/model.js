@@ -84,6 +84,7 @@ const ZH = {
       auditLog: 'audit log 檔', lagBytes: '尚未讀取', lastSentMs: '最後送出', rotations: '輪替次數', state: '狀態', podsFollowing: '讀取中的 Rancher Pod', sidecarMissing: '缺少 audit log sidecar 的 Pod',
     },
     value: { present: '存在', missing: '找不到' },
+    bytes: (n) => `${ n } 位元組`,
   },
   title:             '變更地圖',
   crumb:             '稽核',
@@ -376,7 +377,7 @@ const EN = {
     noForwarding: 'No forwarding target is set. Without an external anchor, the hash chain can only detect accidental damage.',
     pending:      (n) => `${ n } pending`,
     kinds:        {
-      file: 'apiserver audit log', rancher: 'Rancher audit log', watch: 'Object versions', neuvector: 'SUSE Security'
+      file: 'API server audit log', rancher: 'Rancher audit log', watch: 'Object watch', neuvector: 'SUSE Security'
     },
     watching:   (n) => `Watching ${ plural(n, 'type') } (hover for the list)`,
     watchState: {
@@ -386,6 +387,7 @@ const EN = {
       auditLog: 'Audit log file', lagBytes: 'Unread backlog', lastSentMs: 'Last sent', rotations: 'Rotations', state: 'State', podsFollowing: 'Rancher pods being read', sidecarMissing: 'Pods without the audit log sidecar',
     },
     value: { present: 'present', missing: 'missing' },
+    bytes: (n) => `${ num(n) } bytes`,
   },
   title:             'Change Map',
   crumb:             '',
@@ -441,8 +443,8 @@ const EN = {
   truncated:         (n) => `Only the first ${ n } records were loaded; narrow the range.`,
   cluster:           'Cluster',
   project:           'Project',
-  clusterScope:      'Cluster-scoped',
-  notNamespaced:     'Cluster-scoped',
+  clusterScope:      'Cluster scope',
+  notNamespaced:     'Cluster scope',
   noProject:         'Not in a project',
   rancherSettings:   'Rancher settings',
   rancherGlobal:     'Rancher global',
@@ -470,7 +472,7 @@ const EN = {
     ui: 'Rancher UI', kubectl: 'Rancher kubectl', rancher: 'Through Rancher', direct: 'Bypassed Rancher', ace: 'Authorized Cluster Endpoint', imp: 'Other impersonation', controller: 'System component', unknown: 'Collection gap'
   },
   verbs: {
-    create: 'created', update: 'updated', patch: 'patched', delete: 'deleted', deletecollection: 'bulk-deleted', get: 'read', list: 'listed', login: 'logged in', generatekubeconfig: 'generated a kubeconfig', exec: 'ran exec in', attach: 'attached to', portforward: 'port-forwarded to', proxy: 'proxied to', token: 'requested a token for', eviction: 'evicted', binding: 'bound'
+    create: 'created', update: 'updated', patch: 'patched', delete: 'deleted', deletecollection: 'bulk-deleted', get: 'read', list: 'listed', login: 'logged in', generatekubeconfig: 'generated a kubeconfig', exec: 'ran exec in', attach: 'attached to', portforward: 'port-forwarded to', proxy: 'proxied to', token: 'requested a token for', eviction: 'evicted', binding: 'scheduled'
   },
   refused:   ', denied (403)',
   failed:    (c) => ` (failed, HTTP ${ c })`,
@@ -530,7 +532,7 @@ const EN = {
   },
   recompute: {
     pending:   (n, since) => `The rule settings changed on ${ since }; ${ plural(n, 'earlier record') } ${ n === 1 ? 'was' : 'were' } evaluated with the old settings.`,
-    explain:   (total, eta) => `You can re-evaluate ${ total === 1 ? 'the 1 record' : `all ${ total } records` } with the current settings (alerts and "Needs attention"). Estimated time: ${ eta }; everything stays usable meanwhile. The records and their hash chain do not change; only the evaluation does.`,
+    explain:   (total, eta) => `You can re-evaluate ${ total === 1 ? 'the 1 record' : `all ${ total } records` } with the current settings (alerts and audit states). Estimated time: ${ eta }; everything stays usable meanwhile. The records and their hash chain do not change; only the evaluation does.`,
     limits:    'Only records still within retention can be re-evaluated; alerts already forwarded to the SIEM are not resent.',
     eta:       (s) => (s < 60 ? 'under a minute' : `about ${ plural(Math.ceil(s / 60), 'minute') }`),
     start:     'Re-evaluate',

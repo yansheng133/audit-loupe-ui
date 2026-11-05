@@ -3,7 +3,7 @@
 ## 未發版
 
 ### 英文介面
-英文審查（11/06）的修正，中文介面除了兩處更通順以外不變：
+英文審查（11/06）的修正。中文介面只有小幅調整：「重新連線後才發現」移到物件後面、子資源 proxy 等有了中文名稱、分隔符號統一（・前後的空白、群組後的冒號）、V5 隱藏筆數的單位從「列」改成「筆」。
 - **說錯事情的地方**：被拒、失敗的操作在標題上標出來（登入失敗顯示「Login failed」，不再是「logged in login」）；Rancher 登入失效（401）改說「重新登入」，不再叫人去找管理者開權限；權限覆核、收集狀態、規則三頁不再說「在下面指定後端叢集」（那裡沒有欄位）；V5 關係圖的篩選標籤與滑鼠提示不再出現中文。
 - **用語**：美式拼法；「behaviour」改稱 activity；最高一級「Look」改為 Needs review；「judge again」改為 re-evaluate；執行者一律叫 actor；403 叫 denied／Forbidden；Rancher 的 Authorized Cluster Endpoint 用正式名稱；動作欄時態一致（ran exec in、port-forwarded to、bulk-deleted），子資源 proxy、token、eviction、binding 也有名稱。
 - **單複數與數字**：1 筆時用單數；大數字有千分位；「and N more」是剩下的數量，不是總數。

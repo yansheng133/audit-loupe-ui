@@ -68,7 +68,7 @@ export default {
         if (/Ms$/.test(k) && typeof v === 'number') {
           out.push(`${ name || k }: ${ fmtDateSec(v) }`);
         } else if (k === 'lagBytes') {
-          out.push(`${ name || k }: ${ v } bytes`);
+          out.push(`${ name || k }${ this.T.colon }${ this.C.bytes(v) }`);
         } else {
           out.push(`${ name || k }: ${ typeof v === 'object' ? JSON.stringify(v) : (this.C.value[v] || v) }`);
         }

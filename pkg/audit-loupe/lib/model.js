@@ -3,6 +3,10 @@
 
 // ---------- text ----------
 const ZH = {
+  dot:    ' ・ ',
+  list:   '、',
+  paren:  (x) => `（${ x }）`,
+  colon:  '：',
   access: {
     title:          '權限覆核',
     at:             '時間點',
@@ -80,6 +84,7 @@ const ZH = {
       auditLog: 'audit log 檔', lagBytes: '尚未讀取', lastSentMs: '最後送出', rotations: '輪替次數', state: '狀態', podsFollowing: '讀取中的 Rancher Pod', sidecarMissing: '缺少 audit log sidecar 的 Pod',
     },
     value: { present: '存在', missing: '找不到' },
+    bytes: (n) => `${ n } 位元組`,
   },
   title:             '變更地圖',
   crumb:             '稽核',
@@ -125,7 +130,8 @@ const ZH = {
   day:               '日期',
   today:             '今天',
   loading:           '載入中…',
-  backendMissing:    (s) => `這座叢集找不到 Audit Loupe 後端（HTTP ${ s }）：audit-loupe-system namespace 裡沒有 audit-loupe 服務。後端裝在別的叢集的話，請在下面指定。`,
+  backendMissing:    (s) => `這座叢集找不到 Audit Loupe 後端（HTTP ${ s }）：audit-loupe-system namespace 裡沒有 audit-loupe 服務。`,
+  backendSession:    (s) => `你的 Rancher 登入已經失效（HTTP ${ s }）：請重新登入後再重新整理這一頁。`,
   backendForbidden:  (s) => `你沒有權限讀取 Audit Loupe 的資料（HTTP ${ s }）：需要後端所在叢集 audit-loupe-system namespace 的 services/proxy 權限，請找管理者開。`,
   backendDown:       (s) => `Audit Loupe 後端沒有回應（HTTP ${ s }）：server 目前沒有在執行，或所在叢集連不上。這不是權限問題；請檢查 audit-loupe-system 的 server Pod。後端恢復後，讀 audit log 的收集元件會從中斷的地方接著送。`,
   backendCluster:    '後端所在叢集',
@@ -163,7 +169,7 @@ const ZH = {
     ui: 'Rancher 介面', kubectl: 'Rancher kubectl', rancher: '經 Rancher', direct: '繞過 Rancher', ace: 'ACE 直連', imp: '其他代理身分', controller: '系統元件', unknown: '收集中斷'
   },
   verbs: {
-    create: '新增', update: '修改', patch: '修改', delete: '刪除', deletecollection: '整批刪除', get: '讀取', list: '列出', login: '登入', generatekubeconfig: '產生 kubeconfig', exec: '進入容器（exec）', attach: '連進容器（attach）', portforward: '轉送連接埠'
+    create: '新增', update: '修改', patch: '修改', delete: '刪除', deletecollection: '整批刪除', get: '讀取', list: '列出', login: '登入', generatekubeconfig: '產生 kubeconfig', exec: '進入容器（exec）', attach: '連進容器（attach）', portforward: '轉送連接埠', proxy: '經代理存取', token: '取得 token', eviction: '驅逐', binding: '指派節點'
   },
   refused:   '，被拒絕',
   failed:    (c) => `（失敗 ${ c }）`,
@@ -300,8 +306,12 @@ const ZH = {
 };
 
 const EN = {
+  dot:    ' · ',
+  list:   ', ',
+  paren:  (x) => ` (${ x })`,
+  colon:  ': ',
   access: {
-    title:          'Access review',
+    title:          'Access Review',
     at:             'As of',
     compareFrom:    'Compare from',
     apply:          'Apply',
@@ -310,9 +320,9 @@ const EN = {
     search:         'Search name or ID',
     pick:           'Pick a person',
     groups:         'Groups',
-    role:           'Permission',
+    role:           'Role',
     scope:          'Scope',
-    via:            'Obtained',
+    via:            'Granted via',
     grantedBy:      'Granted by',
     grantedAt:      'Granted at',
     direct:         'Direct',
@@ -322,10 +332,10 @@ const EN = {
     project:        'Project',
     adminLike:      'Admin-like',
     none:           'No permissions at this time.',
-    beforeTracking: 'Existed before tracking or retention',
+    beforeTracking: 'Granted before tracking began, or the record has expired',
     automatic:      'Created by Rancher',
     derived:        'Derived from a global role',
-    unknown:        'No author found',
+    unknown:        'No actor found',
     grants:         (n) => `${ n } permission${ n === 1 ? '' : 's' }`,
     roleName:       'Role',
     change:         'Change',
@@ -347,7 +357,7 @@ const EN = {
     groupNote:     'Group-based permissions follow Rancher\'s last refresh of each user\'s groups (at login, hourly while in use, daily; SAML and generic OIDC only at login) and may lag by up to a day.',
   },
   cov: {
-    title:        'Collection status',
+    title:        'Collection Status',
     refresh:      'Refresh',
     collector:    'Collector',
     instance:     'Instance',
@@ -355,31 +365,32 @@ const EN = {
     status:       'Status',
     report:       'Report',
     ok:           'OK',
-    silent:       'Silent',
+    silent:       'Not reporting',
     retired:      'Probably removed',
-    retiredHint:  'Silent for over a day while other nodes in this cluster report: probably a replaced node. If the node is still running, its collector is broken and nothing was collected from it',
+    retiredHint:  'Not reporting for over a day while other nodes in this cluster report: probably a replaced node. If the node is still running, its collector is broken and nothing was collected from it.',
     gaps:         'Gaps in the last 7 days',
-    stillSilent:  'still silent',
+    stillSilent:  'still not reporting',
     chain:        'Record integrity',
-    chainOk:      (n) => `Chain intact (${ n } records checked)`,
-    chainBroken:  (id) => `Chain breaks at record ${ id }: records may have been changed`,
+    chainOk:      (n) => `Chain intact (${ plural(n, 'record') } checked)`,
+    chainBroken:  (id) => `The chain breaks at record ${ id }: records may have been changed.`,
     forwarding:   'SIEM forwarding',
-    noForwarding: 'No forwarding target set. Without external anchors the chain only detects accidental damage.',
+    noForwarding: 'No forwarding target is set. Without an external anchor, the hash chain can only detect accidental damage.',
     pending:      (n) => `${ n } pending`,
     kinds:        {
-      file: 'apiserver audit log', rancher: 'Rancher audit log', watch: 'Object versions', neuvector: 'SUSE Security'
+      file: 'API server audit log', rancher: 'Rancher audit log', watch: 'Object watch', neuvector: 'SUSE Security'
     },
-    watching:   (n) => `Watching ${ n } types (hover for the list)`,
+    watching:   (n) => `Watching ${ plural(n, 'type') } (hover for the list)`,
     watchState: {
-      watching: 'watching', 'not served': 'not in this cluster', forbidden: 'refused (the ClusterRole does not allow it)', failing: 'failing',
+      watching: 'watching', 'not served': 'not in this cluster', forbidden: 'forbidden (the collector\'s ClusterRole does not allow watch)', failing: 'failing',
     },
     field: {
-      auditLog: 'Audit log file', lagBytes: 'Not read yet', lastSentMs: 'Last sent', rotations: 'Rotations', state: 'State', podsFollowing: 'Rancher pods being read', sidecarMissing: 'Pods without the audit log sidecar',
+      auditLog: 'Audit log file', lagBytes: 'Unread backlog', lastSentMs: 'Last sent', rotations: 'Rotations', state: 'State', podsFollowing: 'Rancher pods being read', sidecarMissing: 'Pods without the audit log sidecar',
     },
     value: { present: 'present', missing: 'missing' },
+    bytes: (n) => `${ num(n) } bytes`,
   },
-  title:             'Change map',
-  crumb:             'Audit',
+  title:             'Change Map',
+  crumb:             '',
   allClusters:       'All clusters',
   allProjects:       'All projects',
   allNs:             'All namespaces',
@@ -393,9 +404,9 @@ const EN = {
   added:             'Added',
   modified:          'Modified',
   deleted:           'Deleted',
-  readOnly:          'Read or entered only',
+  readOnly:          'Read or exec only',
   clickForRelations: 'Click an object to see its relations',
-  ops:               'actions',
+  ops:               'operations',
   objChanged:        'objects changed',
   needAttention:     'Needs attention',
   items:             '',
@@ -407,7 +418,7 @@ const EN = {
   empty:             'Nothing happened in this range. Widen the time range or filters.',
   pickTitle:         'Nothing selected',
   pickBody:          'Pick an item under "Needs attention", an object in the middle, or a dot on the timeline.',
-  opsToday:          (n, dim) => `${ n } actions this day${ dim ? ' (outside the range dimmed)' : '' }`,
+  opsToday:          (n, dim) => `${ plural(n, 'operation') } this day${ dim ? ' (outside the range dimmed)' : '' }`,
   whoDidIt:          (t) => `Who did it at ${ t }`,
   whatChanged:       (t) => `What changed at ${ t }`,
   notes:             (t) => `Notes for ${ t }`,
@@ -415,24 +426,25 @@ const EN = {
   relatedLoading:    'Loading related objects…',
   hourly:            'Per hour',
   rangeLabel:        (a, b) => `Range A ${ a } → B ${ b }`,
-  keys:              'Drag to select; drag A or B alone · ● change ◆ read or enter ○ delete · red ring: medium/high risk · grey: outside working hours',
+  keys:              'Drag to select; drag A or B alone · ● change ◆ read or exec ○ delete · red ring: medium/high risk · gray: outside working hours',
   allDay:            'All day',
   workHours:         (a, b) => `Working ${ a }–${ b }`,
   afterHours:        (b) => `After ${ b }`,
   day:               'Day',
   today:             'Today',
   loading:           'Loading…',
-  backendMissing:    (s) => `No Audit Loupe backend in this cluster (HTTP ${ s }): there is no audit-loupe service in the audit-loupe-system namespace. If the backend runs in another cluster, name it below.`,
-  backendForbidden:  (s) => `You may not read Audit Loupe data (HTTP ${ s }): it needs services/proxy in the audit-loupe-system namespace of the backend cluster. Ask an administrator for it.`,
+  backendMissing:    (s) => `No Audit Loupe backend in this cluster (HTTP ${ s }): there is no audit-loupe service in the audit-loupe-system namespace.`,
+  backendForbidden:  (s) => `You don't have permission to read Audit Loupe data (HTTP ${ s }). You need get on services/proxy in the audit-loupe-system namespace of the backend cluster; ask an administrator.`,
+  backendSession:    (s) => `Your Rancher session has ended (HTTP ${ s }). Log in again, then reload this page.`,
   backendDown:       (s) => `The Audit Loupe backend is not answering (HTTP ${ s }): the server is not running, or its cluster cannot be reached. This is not a permission problem; check the server pod in audit-loupe-system. Once it is back, the collectors that read audit logs continue from where they stopped.`,
   backendCluster:    'Backend cluster',
   backendSave:       'Apply',
   error:             'Failed to load',
-  truncated:         (n) => `Only the first ${ n } records were loaded; narrow the range`,
+  truncated:         (n) => `Only the first ${ n } records were loaded; narrow the range.`,
   cluster:           'Cluster',
   project:           'Project',
   clusterScope:      'Cluster scope',
-  notNamespaced:     'Not namespaced',
+  notNamespaced:     'Cluster scope',
   noProject:         'Not in a project',
   rancherSettings:   'Rancher settings',
   rancherGlobal:     'Rancher global',
@@ -443,47 +455,48 @@ const EN = {
   },
   records:     (n, who, t) => `${ n } · last ${ who } ${ t }`,
   deletedUser: 'Deleted',
-  readded:     (n) => `Deleted and re-added (${ n } periods)`,
+  readded:     (n) => `Deleted and re-added (${ plural(n, 'period') })`,
   lifetime:    (a, b) => `${ a } – ${ b || 'now' }`,
   split:       'Split',
   merge:       'Merge',
   storyBurst:  (who, m, n) => `${ who }: ${ n } privileged actions within ${ m } minutes`,
   coverage:    'Collected: ',
-  covFull:     'Full: apiserver audit + object versions',
+  covFull:     'Full: API server audit + object versions',
   covRancher:  'Actions through Rancher',
   covObjects:  'What changed only',
-  covAudit:    'apiserver audit only',
+  covAudit:    'API server audit only',
   covNone:     'No data in this period',
   covGap:      (n) => `Collection gaps (${ n })`,
-  covNoAudit:  'No apiserver audit log found; audit may be off',
+  covNoAudit:  'No API server audit log found; auditing may be off',
   via:         {
-    ui: 'Rancher UI', kubectl: 'Rancher kubectl', rancher: 'Through Rancher', direct: 'Bypassed Rancher', ace: 'Authorized endpoint', imp: 'Other impersonation', controller: 'System component', unknown: 'Collection gap'
+    ui: 'Rancher UI', kubectl: 'Rancher kubectl', rancher: 'Through Rancher', direct: 'Bypassed Rancher', ace: 'Authorized Cluster Endpoint', imp: 'Other impersonation', controller: 'System component', unknown: 'Collection gap'
   },
   verbs: {
-    create: 'created', update: 'updated', patch: 'patched', delete: 'deleted', deletecollection: 'deleted (collection)', get: 'read', list: 'listed', login: 'logged in', generatekubeconfig: 'generated a kubeconfig', exec: 'exec into container', attach: 'attached to container', portforward: 'port-forward'
+    create: 'created', update: 'updated', patch: 'patched', delete: 'deleted', deletecollection: 'bulk-deleted', get: 'read', list: 'listed', login: 'logged in', generatekubeconfig: 'generated a kubeconfig', exec: 'ran exec in', attach: 'attached to', portforward: 'port-forwarded to', proxy: 'proxied to', token: 'requested a token for', eviction: 'evicted', binding: 'scheduled'
   },
-  refused:   ', refused',
-  failed:    (c) => ` (failed ${ c })`,
+  refused:   ', denied (403)',
+  failed:    (c) => ` (failed, HTTP ${ c })`,
   rulesPage: {
-    title:      'Rules',
-    refresh:    'Refresh',
-    intro:      'Which actions are flagged, how serious they are, and where a rule does not apply. Settings live in the Helm values (server.rules) and take effect when the backend is redeployed; this page only shows them. Only people are checked, not service accounts or system components.',
-    rule:       'Rule',
-    what:       'Fires when',
-    state:      'State',
-    on:         'On',
-    off:        'Off',
-    severity:   'Severity',
-    defaultWas: (s) => `default ${ s }`,
-    exceptions: 'Does not apply to',
-    none:       '—',
-    reason:     'Reason',
-    until:      (t) => `until ${ t }`,
-    expired:    'expired',
-    scope:      {
+    title:       'Rules',
+    refresh:     'Refresh',
+    intro:       'Which actions are flagged, how serious they are, and where a rule does not apply. Settings live in the Helm values (server.rules) and take effect when the backend is redeployed; this page only shows them. Only people are checked, not service accounts or system components.',
+    rule:        'Rule',
+    what:        'Fires when',
+    state:       'State',
+    on:          'On',
+    off:         'Off',
+    severity:    'Severity',
+    defaultWas:  (s) => `default ${ s }`,
+    exceptions:  'Exceptions',
+    exceptionsN: (n) => plural(n, 'exception'),
+    none:        '—',
+    reason:      'Reason',
+    until:       (t) => `until ${ t }`,
+    expired:     'expired',
+    scope:       {
       clusters: 'clusters', namespaces: 'namespaces', namespaceLabels: 'namespace labels', users: 'users', resources: 'resources'
     },
-    windows:    (n) => (n ? `${ n } change windows set: "Outside working hours" is off and "Outside change window" decides instead.` : 'No change windows set: working hours decide "Outside working hours", and "Outside change window" is off.'),
+    windows:    (n) => (n ? `${ plural(n, 'change window') } ${ n === 1 ? 'is' : 'are' } configured, so "Outside change window" applies and "Outside working hours" is inactive.` : 'No change windows are configured, so "Outside working hours" uses the working hours and "Outside change window" is inactive.'),
     history:    'Settings history',
     since:      'In force from',
     code:       'Settings version',
@@ -493,9 +506,9 @@ const EN = {
     summary:    'Differs from the defaults',
     same:       'Same as the defaults',
     sep:        [': ', ', ', '; '],
-    force:      'Judge all records again',
-    forceHint:  'Every record was judged by the current settings. For records stored before this version the settings then are unknown; judge them all again if in doubt.',
-    recomputes: 'Re-judging runs',
+    force:      'Re-evaluate all records',
+    forceHint:  'All records have been evaluated with the current settings. For records stored before this version, the settings in force at the time are unknown; re-evaluate all records if in doubt.',
+    recomputes: 'Re-evaluation runs',
     ran:        'Ran',
     covered:    'Records from',
     records:    'Records',
@@ -503,41 +516,41 @@ const EN = {
     ok:         'done',
     inProgress: 'running',
     what_:      {
-      namespace_deleted:     'A namespace is deleted',
-      rbac_changed:          'Kubernetes Roles, RoleBindings, ClusterRoles or ClusterRoleBindings, or Rancher GlobalRoles, RoleTemplates and bindings, are created, changed or deleted',
-      pod_exec:              'exec, attach or port-forward into a pod',
-      bypassed_rancher:      'A write or exec straight to the downstream apiserver, not through Rancher',
+      namespace_deleted:     'Someone deletes a namespace',
+      rbac_changed:          'Someone creates, changes or deletes a Kubernetes Role, RoleBinding, ClusterRole or ClusterRoleBinding, or a Rancher GlobalRole, RoleTemplate or binding',
+      pod_exec:              'Someone runs exec, attach or port-forward on a Pod',
+      bypassed_rancher:      'Someone writes to, or runs exec through, a downstream API server directly instead of through Rancher',
       gitops_bypassed:       'Someone edits an object Fleet deploys (the change is not in Git)',
-      outside_change_window: 'With change windows set, a change when no window covering the object is open',
-      user_deleted:          'A Rancher user is deleted',
-      secret_read:           'A Secret is read or listed',
-      credential_issued:     'A kubeconfig is generated or a Rancher token created',
-      off_hours:             'Without change windows, a change outside working hours',
-      forbidden:             'A request is refused (403)',
+      outside_change_window: 'With change windows configured, someone makes a change when no window covering the object is open',
+      user_deleted:          'Someone deletes a Rancher user',
+      secret_read:           'Someone reads or lists a Secret',
+      credential_issued:     'Someone generates a kubeconfig or creates a Rancher token',
+      off_hours:             'With no change windows configured, someone makes a change outside working hours',
+      forbidden:             'A request is denied (403 Forbidden)',
       login_failed:          'A Rancher login fails (401)',
     },
   },
   recompute: {
-    pending:   (n, since) => `The rule settings changed on ${ since }; ${ n } earlier records were judged by the old settings.`,
-    explain:   (total, eta) => `You can judge all ${ total } records again with the current settings (alerts and "Needs attention"). Estimated time: ${ eta }; everything stays usable meanwhile. The records and their hash chain do not change; only the judgement does.`,
-    limits:    'Only records still within retention can be judged again; alerts already forwarded to the SIEM are not resent.',
-    eta:       (s) => (s < 60 ? 'under a minute' : `about ${ Math.ceil(s / 60) } minutes`),
-    start:     'Judge again',
+    pending:   (n, since) => `The rule settings changed on ${ since }; ${ plural(n, 'earlier record') } ${ n === 1 ? 'was' : 'were' } evaluated with the old settings.`,
+    explain:   (total, eta) => `You can re-evaluate ${ total === 1 ? 'the 1 record' : `all ${ total } records` } with the current settings (alerts and audit states). Estimated time: ${ eta }; everything stays usable meanwhile. The records and their hash chain do not change; only the evaluation does.`,
+    limits:    'Only records still within retention can be re-evaluated; alerts already forwarded to the SIEM are not resent.',
+    eta:       (s) => (s < 60 ? 'under a minute' : `about ${ plural(Math.ceil(s / 60), 'minute') }`),
+    start:     'Re-evaluate',
     later:     'Not now',
-    running:   (d, t) => `Judging again: ${ d } / ${ t } records`,
+    running:   (d, t) => `Re-evaluating: ${ d } / ${ t } records`,
     done:      'Done; the view is updated.',
-    failed:    (e) => `Judging again failed: ${ e }`,
-    forbidden: 'You may not start this (it needs create on services/proxy in the backend namespace).',
-    busy:      'A run is already going, or nothing needs judging again.',
+    failed:    (e) => `Re-evaluation failed: ${ e }`,
+    forbidden: 'You don\'t have permission to start a re-evaluation (it needs create on services/proxy in the backend namespace).',
+    busy:      'A run is already in progress, or nothing needs re-evaluating.',
   },
   rules: {
     namespace_deleted:     'Namespace deleted',
     rbac_changed:          'Permissions changed',
-    pod_exec:              'Exec into container',
+    pod_exec:              'Exec into a container',
     secret_read:           'Secret read',
     bypassed_rancher:      'Bypassed Rancher',
     off_hours:             'Outside working hours',
-    forbidden:             'Refused',
+    forbidden:             'Forbidden',
     user_deleted:          'User deleted',
     credential_issued:     'Credential issued',
     login_failed:          'Login failed',
@@ -554,18 +567,18 @@ const EN = {
     impersonating:         'Acting as',
     wrote:                 'Wrote to',
     rancherApi:            'Rancher API',
-    apiserver:             (c) => `${ c } apiserver`,
+    apiserver:             (c) => `${ c } API server`,
     credential:            'Credential',
     component:             'Component',
     who:                   'Who',
     unknown:               'Unknown',
     found:                 'Found by',
     foundBy:               'Comparing versions after reconnecting',
-    paired:                'Source: the Rancher audit log and the downstream apiserver audit log matched as one action.',
+    paired:                'Source: the Rancher audit log and the downstream API server audit log, matched as one action.',
     rancherOnly:           'Source: the Rancher API audit log.',
-    rancherOnlyDownstream: 'Only Rancher recorded this: the cluster\'s apiserver audit did not match it (not enabled, or still on its way).',
-    downstreamOnly:        'Only the downstream apiserver recorded this; nothing matched on the Rancher side.',
-    direct:                'Only the downstream apiserver audit log has this; Rancher has no record, so no person can be named. Check who can obtain this credential.',
+    rancherOnlyDownstream: 'Only Rancher recorded this: the cluster\'s API server audit log had no match (not enabled, or not received yet).',
+    downstreamOnly:        'Only the downstream API server recorded this; nothing matched on the Rancher side.',
+    direct:                'Only the downstream API server audit log has this; Rancher has no record, so no person can be named. Check who can obtain this credential.',
     controller:            'Made automatically by Kubernetes or an operator, usually because something upstream changed.',
     unattributed:          'Only what changed and roughly when are known; no audit record matches.'
   },
@@ -574,7 +587,7 @@ const EN = {
   noteConfigMap: 'ConfigMap values are masked; only which key changed is shown.',
   noteGone:      'The object is gone; this is the last content seen.',
   secTitle:      'Processes SUSE Security flagged',
-  secNote:       'Only processes SUSE Security judged violations or suspicious; not a full command history.',
+  secNote:       'Only processes that SUSE Security flagged as violations or suspicious are listed; this is not a full command history.',
   secNone:       'SUSE Security flagged no processes in this pod in that period (which does not mean nothing was run).',
   restore:       'Download restore YAML',
   restoreHint:   'The state before this change; generated only, never applied.',
@@ -596,14 +609,56 @@ const EN = {
   },
 };
 
-export function texts(store) {
-  let locale = 'en-us';
+// English numbers with thousands separators, and counts: "1 record", "2,400 records".
+export const num = (n) => (typeof n === 'number' ? n.toLocaleString('en-US') : n);
 
+export function plural(n, word) {
+  return `${ num(n) } ${ word }${ n === 1 ? '' : 's' }`;
+}
+
+// The page's own language choice ('zh-hant', 'en-us'), kept in this browser; '' follows
+// Rancher's language. Picked on the change map, used by every page. Changing it never
+// touches the Rancher account's language setting.
+const LANG_KEY = 'audit-loupe.lang';
+
+export function savedLang() {
   try {
-    locale = store.getters['i18n/current']() || locale;
-  } catch (e) {}
+    return window.localStorage.getItem(LANG_KEY) || '';
+  } catch (e) {
+    return '';
+  }
+}
 
-  return locale.startsWith('zh') ? ZH : EN;
+export function saveLang(lang) {
+  try {
+    if (lang) {
+      window.localStorage.setItem(LANG_KEY, lang);
+    } else {
+      window.localStorage.removeItem(LANG_KEY);
+    }
+  } catch (e) {}
+}
+
+// The language the page speaks: `lang` when given, else the page's own choice, else Rancher's.
+export function pageLocale(store, lang = '') {
+  const own = lang || savedLang();
+
+  if (own) {
+    return own;
+  }
+  try {
+    return store.getters['i18n/current']() || 'en-us';
+  } catch (e) {
+    return 'en-us';
+  }
+}
+
+export function isZh(store, lang = '') {
+  return pageLocale(store, lang).startsWith('zh');
+}
+
+export function texts(store, lang = '') {
+  return isZh(store, lang) ? ZH : EN;
 }
 
 // ---------- constants ----------

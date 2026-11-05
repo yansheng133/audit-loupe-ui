@@ -68,13 +68,13 @@ export default {
         if (/Ms$/.test(k) && typeof v === 'number') {
           out.push(`${ name || k }: ${ fmtDateSec(v) }`);
         } else if (k === 'lagBytes') {
-          out.push(`${ name || k }: ${ v } bytes`);
+          out.push(`${ name || k }${ this.T.colon }${ this.C.bytes(v) }`);
         } else {
           out.push(`${ name || k }: ${ typeof v === 'object' ? JSON.stringify(v) : (this.C.value[v] || v) }`);
         }
       });
 
-      return out.join('・');
+      return out.join(this.T.dot);
     },
     // The full list of watched types, for the tooltip.
     detailsTitle(d) {
@@ -106,7 +106,7 @@ export default {
 <template>
   <div class="al al-page">
     <div class="topbar">
-      <span class="crumb">Audit Loupe ／ {{ T.crumb }}</span>
+      <span class="crumb">Audit Loupe<template v-if="T.crumb"> ／ {{ T.crumb }}</template></span>
       <h1>{{ C.title }}</h1>
       <div class="filters">
         <button
@@ -182,8 +182,8 @@ export default {
           :key="i"
           class="quiet"
         >
-          {{ C.kinds[g.collector] || g.collector }}（{{ g.instance }}）：{{ fmtDateSec(g.fromMs) }} → {{ g.toMs ? fmtDateSec(g.toMs) : C.stillSilent }}<template v-if="g.retired">
-            （{{ C.retired }}）
+          {{ C.kinds[g.collector] || g.collector }}{{ T.paren(g.instance) }}{{ T.colon }}{{ fmtDateSec(g.fromMs) }} → {{ g.toMs ? fmtDateSec(g.toMs) : C.stillSilent }}<template v-if="g.retired">
+            {{ T.paren(C.retired) }}
           </template><template v-if="cause(g)">
             — {{ cause(g) }}
           </template>

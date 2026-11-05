@@ -1,5 +1,25 @@
 # 變更紀錄
 
+## 未發版
+
+### 英文介面
+英文審查（11/06）的修正。中文介面只有小幅調整：「重新連線後才發現」移到物件後面、子資源 proxy 等有了中文名稱、分隔符號統一（・前後的空白、群組後的冒號）、V5 隱藏筆數的單位從「列」改成「筆」。
+- **說錯事情的地方**：被拒、失敗的操作在標題上標出來（登入失敗顯示「Login failed」，不再是「logged in login」）；Rancher 登入失效（401）改說「重新登入」，不再叫人去找管理者開權限；權限覆核、收集狀態、規則三頁不再說「在下面指定後端叢集」（那裡沒有欄位）；V5 關係圖的篩選標籤與滑鼠提示不再出現中文。
+- **用語**：美式拼法；「behaviour」改稱 activity；最高一級「Look」改為 Needs review；「judge again」改為 re-evaluate；執行者一律叫 actor；403 叫 denied／Forbidden；Rancher 的 Authorized Cluster Endpoint 用正式名稱；動作欄時態一致（ran exec in、port-forwarded to、bulk-deleted），子資源 proxy、token、eviction、binding 也有名稱。
+- **單複數與數字**：1 筆時用單數；大數字有千分位；「and N more」是剩下的數量，不是總數。
+- **標點**：英文不再出現全形標點與「・」，分隔符號改由文字表依語言提供。
+- **語言選擇**：變更地圖上選的語言，權限覆核、收集狀態、規則、身分分類與叢集首頁卡片也照用（以前這幾頁只跟 Rancher 的語言）。
+- 變更地圖 V5 的隱藏筆數多了失敗的請求（配合後端 PR #33），單位改成「筆」（以前寫「列」，但數的是紀錄）。
+- 新測試 `test/english.test.mjs`：英文文字表不能有中文或全形標點、單數、失敗標題、401 訊息、語言選擇。
+
+### 在 Rancher 實際看過畫面後的修正（11/06）
+- 分組標題太長時不再壓到右邊的數字（英文的「Routine (workload ServiceAccounts)」、中文的「例行（工作負載的 ServiceAccount）」都會），改成換行。
+- 「沒有列成行為」那句不再列出 0 的項目（例如打開系統元件後的「系統元件 0 筆」），數字加千分位（中文也是）。
+- 行為標題的「×2591」加千分位。
+- 依身分：帳號沒有名稱時，副標題開頭不再多一個分隔符號（改版前就有）。
+- 英文：ServiceAccount 所在 namespace 那行改成「Namespace: …」，不再跟上一行「ServiceAccount of a workload」讀成一句；權限覆核的「Existed before tracking or retention」改成「Granted before tracking began, or the record has expired」。
+- V5 總覽表的狀態欄在英文時加寬，「Needs review · medium」不再被切掉。
+
 ## 0.7.0（預覽版）
 
 配 Audit Loupe server 的 `/api/behaviors`（[audit-loupe](https://github.com/yansheng133/audit-loupe) `docs/api/behaviors-v0.md`）。後端還沒有這支 API 時，變更地圖會說明這一點並附上舊版（v5）頁面的連結；v5 的頁面還在 `changes-v5`。

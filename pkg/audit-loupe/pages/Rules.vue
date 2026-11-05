@@ -84,7 +84,7 @@ export default {
             parts.push(this.sevLabel(r.severity));
           }
           if (r.except?.length) {
-            parts.push(`${ this.P.exceptions } ${ r.except.length }`);
+            parts.push(this.P.exceptionsN ? this.P.exceptionsN(r.except.length) : `${ this.P.exceptions } ${ r.except.length }`);
           }
         }
         if (parts.length) {
@@ -104,7 +104,7 @@ export default {
 <template>
   <div class="al al-page al-rules">
     <div class="topbar">
-      <span class="crumb">Audit Loupe ／ {{ T.crumb }}</span>
+      <span class="crumb">Audit Loupe<template v-if="T.crumb"> ／ {{ T.crumb }}</template></span>
       <h1>{{ P.title }}</h1>
       <div class="filters">
         <button
@@ -137,7 +137,7 @@ export default {
       <section class="col">
         <div class="col-head">
           <h2>{{ P.title }}</h2>
-          <span class="muted">{{ P.version(versionOf(status.fingerprint)) }}・{{ P.since }} {{ fmtDate(status.sinceMs) }}</span>
+          <span class="muted">{{ P.version(versionOf(status.fingerprint)) }}{{ T.dot }}{{ P.since }} {{ fmtDate(status.sinceMs) }}</span>
         </div>
         <div class="detail">
           <p class="muted">
@@ -208,9 +208,9 @@ export default {
                       :class="{ dim: expired(x) }"
                     >
                       <span
-                        v-for="[k, v] in scopes(x)"
+                        v-for="([k, v], j) in scopes(x)"
                         :key="k"
-                      >{{ k }}{{ P.sep[0] }}<code>{{ v }}</code>&#12288;</span>
+                      >{{ k }}{{ P.sep[0] }}<code>{{ v }}</code><template v-if="j < scopes(x).length - 1">{{ T.dot }}</template></span>
                       <div>{{ P.reason }}{{ P.sep[0] }}{{ x.reason }}</div>
                       <div
                         v-if="x.until"

@@ -6,6 +6,7 @@ export default {
   name: 'MultiPick',
 
   props: {
+    listSep:   { type: String, default: ', ' },
     label:     { type: String, required: true },
     // [{ value, label }]
     options:   { type: Array, default: () => [] },
@@ -34,7 +35,7 @@ export default {
       }
       const names = this.value.map((v) => this.options.find((o) => o.value === v)?.label || v);
 
-      return names.length > 2 ? `${ names.slice(0, 2).join('、') } +${ names.length - 2 }` : names.join('、');
+      return names.length > 2 ? `${ names.slice(0, 2).join(this.listSep) } +${ names.length - 2 }` : names.join(this.listSep);
     },
     shown() {
       const f = this.find.trim().toLowerCase();

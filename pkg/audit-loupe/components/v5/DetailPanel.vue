@@ -325,7 +325,7 @@ export default {
                 class="muted small"
               >
                 {{ T.via[o.via] || o.via }}<template v-if="noteText(T, o.noteCode, o.note)">
-                  ・ {{ noteText(T, o.noteCode, o.note) }}
+                  {{ T.dot }}{{ noteText(T, o.noteCode, o.note) }}
                 </template>
               </div>
               <button
@@ -340,7 +340,7 @@ export default {
               <code
                 v-if="o.raw && openRaw[i]"
                 class="raw"
-              >{{ o.raw.verb }} {{ o.raw.resource }} ・ {{ o.raw.user }}</code>
+              >{{ o.raw.verb }} {{ o.raw.resource }}{{ T.dot }}{{ o.raw.user }}</code>
             </div>
           </li>
         </ul>

@@ -73,7 +73,7 @@ export default {
       }[b.tier] || 'plain';
     },
     blockLabel(b, s) {
-      return `${ this.fmt(s.fromMs) }–${ this.fmt(s.toMs) } ・ ${ actorLabel(this.T, b.actor) } ・ ${ this.scopeLabel(b.scope) } ・ ${ this.T.tiers[b.tier] || this.T.tbc } ・ ${ this.n(s.ops) } ${ this.T.zh ? '筆' : 'operations' }`;
+      return `${ this.fmt(s.fromMs) }–${ this.fmt(s.toMs) }${ this.T.dot }${ actorLabel(this.T, b.actor) }${ this.T.dot }${ this.scopeLabel(b.scope) }${ this.T.dot }${ this.T.tiers[b.tier] || this.T.tbc }${ this.T.dot }${ this.T.zh ? `${ this.n(s.ops) } 筆` : `${ this.n(s.ops) } operation${ s.ops === 1 ? '' : 's' }` }`;
     },
     pin(b) {
       if (b.tier !== 'look' || !b.segments.length) {
@@ -88,7 +88,7 @@ export default {
     gapTitle(g) {
       const c = g.collectors.map((x) => this.T.collector[x] || x).join(this.T.listSep) || this.T.tbc;
 
-      return `${ this.T.gapChip } ${ this.fmt(g.fromMs) }–${ this.fmt(g.toMs) } ・ ${ this.cl(g.cluster) } ・ ${ c }`;
+      return `${ this.T.gapChip } ${ this.fmt(g.fromMs) }–${ this.fmt(g.toMs) }${ this.T.dot }${ this.cl(g.cluster) }${ this.T.dot }${ c }`;
     },
     // Rows with blocks: every type but the group heading.
     rowGaps(r) {
@@ -186,7 +186,7 @@ export default {
             <span
               v-if="r.multiCluster || r.actor.group === 'unrecorded'"
               class="muted"
-            >・ {{ cl(r.cluster) }}</span>
+            >{{ T.dot }}{{ cl(r.cluster) }}</span>
           </button>
           <span
             v-for="(s, i) in actorSub(r.actor)"
@@ -204,7 +204,7 @@ export default {
             class="n"
             :title="T.merged(T.groupShort[r.group])"
           >{{ T.merged(T.groupShort[r.group]) }}</span>
-          <span class="s">{{ T.inCluster(cl(r.cluster)) }} ・ {{ T.mergedHint(r.group) }}</span>
+          <span class="s">{{ T.inCluster(cl(r.cluster)) }}{{ T.dot }}{{ T.mergedHint(r.group) }}</span>
           <span
             v-for="(s, i) in actorSub(r.actor, false).filter((x) => x.cfg)"
             :key="i"
@@ -234,7 +234,7 @@ export default {
             class="n"
             :title="scopeLabel(r.scope)"
           >{{ scopeLabel(r.scope) }}</span>
-          <span class="s">{{ T.actorLine(r.behaviours.length, n(r.ops)) }}<template v-if="r.showCluster"> ・ {{ cl(r.cluster) }}</template></span>
+          <span class="s">{{ T.actorLine(r.behaviours.length, n(r.ops)) }}<template v-if="r.showCluster">{{ T.dot }}{{ cl(r.cluster) }}</template></span>
         </div>
         <div class="ln-track">
           <i

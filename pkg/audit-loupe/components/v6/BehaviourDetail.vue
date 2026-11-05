@@ -1,7 +1,7 @@
 <script>
 import { fmtTime, clusterLabel } from '../../lib/v5';
 import {
-  rangeText, headline, scopeLabel, settingNote, verbText, noteOf, tagTexts
+  rangeText, headline, scopeLabel, settingNote, verbText, unseenText, noteOf, tagTexts
 } from '../../lib/v6';
 
 // The right-hand detail of one behaviour: title, who (and what that identity is), time, place,
@@ -83,7 +83,7 @@ export default {
     // The action, and whether the server refused or failed it (a failed request is listed
     // only when it carries an alert).
     verb(o) {
-      const v = verbText(this.T, o);
+      const v = verbText(this.T, o) + unseenText(this.T, o);
 
       if (o.code === 403) {
         return `${ v }${ this.T.refused }`;
@@ -237,7 +237,7 @@ export default {
               {{ o.name || T.batch }}<span
                 v-if="o.namespace && o.namespace !== b.scope"
                 class="muted"
-              > ・ {{ T.namespace }} {{ o.namespace }}</span>
+              >{{ T.dot }}{{ T.namespace }} {{ o.namespace }}</span>
             </td>
             <td class="r num">
               {{ n(o.ops) }}
@@ -283,7 +283,7 @@ export default {
                 {{ verb(o) }}<span
                   v-if="o.cascade"
                   class="muted"
-                > ・ {{ T.cascade }}</span>
+                >{{ T.dot }}{{ T.cascade }}</span>
               </td>
               <td class="nm">
                 <span class="muted">{{ o.kind }}</span> {{ o.name || T.batch }}

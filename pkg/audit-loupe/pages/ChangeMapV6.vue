@@ -193,7 +193,7 @@ export default {
         return lines;
       }
       if (meta.dataNote) {
-        lines.push(`${ meta.dataNote } ・ ${ this.T.dataUntil } ${ meta.dataUntilMs ? fmtTime(meta.dataUntilMs, this.tz) : this.T.tbc }`);
+        lines.push(`${ meta.dataNote }${ this.T.dot }${ this.T.dataUntil } ${ meta.dataUntilMs ? fmtTime(meta.dataUntilMs, this.tz) : this.T.tbc }`);
       }
       for (const p of meta.progress || []) {
         if (p.what === 'behaviors') {
@@ -459,6 +459,7 @@ export default {
       </nav>
       <div class="filters">
         <MultiPick
+          :list-sep="T.list || T.listSep"
           :label="T.cluster"
           :options="clusterOptions"
           :value="v.cluster"
@@ -574,7 +575,7 @@ export default {
             v-if="settingsLine || hidden"
             class="sum-hidden muted small"
           >
-            {{ [settingsLine, hidden].filter(Boolean).join(T.zh ? '。' : '. ') }}
+            {{ [settingsLine, hidden].filter(Boolean).join(T.zh ? '。' : ' ') }}
           </p>
         </div>
 

@@ -202,7 +202,7 @@ test('blocks and dashed links sit where the server put the parts', () => {
 test('titles name the actual action; without one the title is where and what', () => {
   assert.equal(titleText(zh, byId('b1').title), '刪除 Namespace demo');
   assert.equal(titleText(zh, byId('b2').title), '轉送連接埠 Pod web-1', 'a port-forward is not called exec');
-  assert.equal(titleText(en, byId('b2').title), 'port-forward Pod web-1');
+  assert.equal(titleText(en, byId('b2').title), 'port-forwarded to Pod web-1');
   assert.equal(headline(zh, byId('b3')), '叢集範圍：修改 Node ×2');
   assert.equal(whatText(zh, byId('b1').what, 2), '新增 Pod ×7、刪除 Pod ×7 等 3 種');
   assert.equal(headline(zh, byId('u~c2~kube-public~1')), 'kube-public：有變化 ConfigMap ×4');
@@ -219,7 +219,7 @@ test('the unrecorded actor: its own name, never "no author found", and the setti
   assert.equal(actorLabel(zh, b.actor), '未記錄執行者');
   assert.equal(b.actor.id, '~c2', 'the actor nobody recorded is told apart per cluster');
   assert.equal(M.actors.find((a) => a.group === 'unrecorded').id, '~c2');
-  assert.equal(actorLabel(en, b.actor), 'Author not recorded');
+  assert.equal(actorLabel(en, b.actor), 'Actor not recorded');
   assert.deepEqual(settingNote(b.actor), { code: 'no-apiserver-audit', cluster: 'c2', collectors: ['rancher', 'watch'] });
   assert.equal(settingNote(byId('b1').actor), null);
   assert.equal(zh.dependsAudit('c2'), '取決於設定：c2 未啟用 apiserver audit log');

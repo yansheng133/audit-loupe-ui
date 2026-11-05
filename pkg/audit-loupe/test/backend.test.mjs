@@ -7,7 +7,7 @@ const err = (status) => Object.assign(new Error(`HTTP ${ status }`), { status })
 
 test('no permission, no backend and a backend that is down are told apart', () => {
   assert.equal(backendState(err(403)), 'forbidden');
-  assert.equal(backendState(err(401)), 'forbidden');
+  assert.equal(backendState(err(401)), 'session');
   assert.equal(backendState(err(404)), 'absent');
   assert.equal(backendState(err(503)), 'down');
   assert.equal(backendState(err(502)), 'down');

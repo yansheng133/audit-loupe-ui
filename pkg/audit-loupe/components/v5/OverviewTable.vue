@@ -80,7 +80,7 @@ export default {
     whoTitle(r) {
       const w = r.who || {};
 
-      return [w.name, noteText(this.T, w.noteCode, w.note)].filter(Boolean).join(' ・ ');
+      return [w.name, noteText(this.T, w.noteCode, w.note)].filter(Boolean).join(this.T.dot);
     },
     dimmed(r) {
       if (!this.range) {
@@ -102,7 +102,9 @@ export default {
     <table class="ov">
       <thead>
         <tr>
-          <th>{{ T.cols.state }}</th>
+          <th :style="{ width: T.stateCol }">
+            {{ T.cols.state }}
+          </th>
           <th>{{ T.cols.object }}</th>
           <th>{{ T.cols.where }}</th>
           <th class="ticks-h">
@@ -209,7 +211,7 @@ export default {
       >
         {{ T.more }}
       </button>
-      <span v-if="hidden">{{ T.hiddenRows(hidden.system, hidden.uiMaintenance) }} ・ </span>
+      <span v-if="hidden">{{ T.hiddenRows(hidden) }}{{ T.dot }}</span>
       <button
         type="button"
         class="link"

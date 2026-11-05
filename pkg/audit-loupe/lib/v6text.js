@@ -1,10 +1,17 @@
 // Words of the v6 change map, Chinese and English. Shared words (states, collectors, gap
 // reasons, error messages) come from the v5 texts; verbs and rule names from the model texts.
 import { textsV5 } from './v5.js';
-import { texts as modelTexts } from './model.js';
+import {
+  texts as modelTexts, isZh, plural, num, savedLang, saveLang
+} from './model.js';
+
+const CLUSTER_SCOPE = 'Cluster scope';
+const acts = (n) => (n === 1 ? '1 activity' : `${ num(n) } activities`);
 
 const ZH = {
-  tabs: {
+  dot:    ' ・ ',
+  unseen: '（重新連線後才發現）',
+  tabs:   {
     activity: '活動總覽', findings: '稽核發現', identities: '依身分', scopes: '依資源範圍'
   },
   tabSub: {
@@ -82,8 +89,18 @@ const ZH = {
   viaWord: {
     direct: '直連 apiserver（繞過 Rancher）', rancher: '經 Rancher', impersonation: '經 Rancher 代理', ace: '直連下游叢集的授權端點', unknown: '不明（沒有 audit 紀錄）'
   },
-  overlap:        (o, a, b, n) => `與 ${ o } 在 ${ a }–${ b } 有 ${ n } 格同時在操作，無法確認是否同一人`,
-  hiddenLine:     (h) => `沒有列成行為：系統元件 ${ h.system } 筆、Rancher 介面的維護動作 ${ h.uiMaintenance } 筆、不留下物件的請求 ${ h.requestOnly } 筆、失敗的請求 ${ h.failed } 筆（系統元件另有 ${ h.failedSystem } 筆）`,
+  overlap:    (o, a, b, n) => `與 ${ o } 在 ${ a }–${ b } 有 ${ n } 格同時在操作，無法確認是否同一人`,
+  // Items that are 0 are left out (with system components shown, h.system is 0).
+  hiddenLine: (h) => {
+    const items = [
+      h.system && `系統元件 ${ num(h.system) } 筆`,
+      h.uiMaintenance && `Rancher 介面的維護動作 ${ num(h.uiMaintenance) } 筆`,
+      h.requestOnly && `不留下物件的請求 ${ num(h.requestOnly) } 筆`,
+      (h.failed || h.failedSystem) && `失敗的請求 ${ num(h.failed || 0) } 筆${ h.failedSystem ? `（系統元件另有 ${ num(h.failedSystem) } 筆）` : '' }`,
+    ].filter(Boolean);
+
+    return items.length ? `沒有列成行為：${ items.join('、') }` : '';
+  },
   showSystem:     '顯示系統元件',
   hideSystem:     '隱藏系統元件',
   building:       '正在整理這天的行為（升級後第一次啟動，或切段設定改了）。整理完之前這裡是空的，不代表這天沒有操作。',
@@ -140,135 +157,146 @@ const ZH = {
 };
 
 const EN = {
-  tabs: {
+  dot:    ' · ',
+  unseen: ' (found after reconnecting)',
+  tabs:   {
     activity: 'Activity', findings: 'Findings', identities: 'Identities', scopes: 'Scopes'
   },
   tabSub: {
-    activity: 'Changes across the day', findings: 'Behaviours by risk', identities: 'One account at a time', scopes: 'One namespace at a time'
+    activity: 'Changes across the day', findings: 'Activities by risk', identities: 'One account at a time', scopes: 'One namespace at a time'
   },
-  tbc:       'to be confirmed',
-  rangeLine: (a, b, n, sys) => `Only the ${ n } behaviour${ n === 1 ? '' : 's' } overlapping ${ a }–${ b } are listed${ sys ? ` (plus ${ sys } of system components)` : '' }; the counts above are still whole-day.`,
+  tbc:       'unknown',
+  rangeLine: (a, b, n, sys) => `Listing the ${ n === 1 ? 'activity that overlaps' : `${ num(n) } activities that overlap` } ${ a }–${ b }${ sys ? ` (plus ${ sys } from system components)` : '' }; the counts above cover the whole day.`,
   lang:      {
     label: 'Language', auto: 'Same as Rancher', zh: '中文', en: 'English'
   },
-  oldBackend: 'This Audit Loupe backend has no behaviours API yet (/api/behaviors). Upgrade the backend, or use the previous change map for now.',
+  oldBackend: 'This Audit Loupe backend does not have the activity API yet (/api/behaviors). Upgrade the backend, or use the previous change map for now.',
   openV5:     'Open the previous change map',
   tbcHint:    'The server did not send this value',
   listSep:    ', ',
-  moreKinds:  (n) => ` and more (${ n } kinds)`,
+  moreKinds:  (total, rest) => ` and ${ rest } more`,
   tiers:      {
-    look: 'Look', notable: 'Worth knowing', normal: 'Ordinary', unrecorded: 'Author not recorded', unauthenticated: 'Unauthenticated Rancher request', routine: 'Routine', system: 'System component'
+    look: 'Needs review', notable: 'Worth knowing', normal: 'Ordinary', unrecorded: 'Actor not recorded', unauthenticated: 'Unauthenticated Rancher requests', routine: 'Routine', system: 'System components'
   },
   tierHint: {
     look:            'Has a high-risk alert',
-    notable:         'Has a medium-risk alert ("bypassed Rancher" and "outside working hours" are only labels and do not count)',
-    normal:          'Other behaviours of people and admin accounts',
-    unrecorded:      'This cluster has no record of who made the change; only the object change is seen',
+    notable:         'Has a medium-risk alert ("Bypassed Rancher" and "Outside working hours" are only labels and do not count)',
+    normal:          'Other activity by people and admin accounts',
+    unrecorded:      'This cluster has no record of who made the change; only the change to the object is seen',
     unauthenticated: 'Requests the Rancher audit log records as system:cattle:error',
     routine:         'What programs in the cluster (workload ServiceAccounts) do on their own',
     system:          'Built-in cluster components, and Rancher working in its own namespaces',
   },
   groups: {
-    people: 'People and admin accounts', unrecorded: 'Author not recorded', unauthenticated: 'Unauthenticated Rancher requests', routine: 'Routine (workload ServiceAccounts)', system: 'System components'
+    people: 'People and admin accounts', unrecorded: 'Actor not recorded', unauthenticated: 'Unauthenticated Rancher requests', routine: 'Routine (workload ServiceAccounts)', system: 'System components'
   },
   groupHint: {
     people:          'Accounts people use; shared accounts are marked',
     unrecorded:      'Only object changes were recorded, not who made them',
     unauthenticated: 'Requests Rancher could not tie to an identity (system:cattle:error)',
-    routine:         'Programs in the cluster acting on their own; closed by default',
+    routine:         'Programs in the cluster acting on their own; collapsed by default',
     system:          'Listed only when system components are shown',
   },
-  groupLine:  (a, b, o, g) => `${ a } ${ g === 'unrecorded' ? 'cluster' : 'account' }${ a === 1 ? '' : 's' } ・ ${ b } behaviour${ b === 1 ? '' : 's' } ・ ${ o } operation${ o === 1 ? '' : 's' }`,
+  groupLine:  (a, b, o, g) => `${ plural(a, g === 'unrecorded' ? 'cluster' : 'account') } · ${ acts(b) } · ${ plural(o, 'operation') }`,
   groupShort: {
-    people: 'People and admins', unrecorded: 'Author not recorded', unauthenticated: 'Unauthenticated requests', routine: 'Routine', system: 'System components'
+    people: 'People and admins', unrecorded: 'Actor not recorded', unauthenticated: 'Unauthenticated requests', routine: 'Routine', system: 'System components'
   },
   merged:       (g) => `${ g } (merged into one line)`,
   mergedHint:   (g) => `Click the group heading to show one line per ${ g === 'unrecorded' ? 'cluster' : 'account' }`,
-  actorLine:    (b, o) => `${ b } behaviour${ b === 1 ? '' : 's' } ・ ${ o } operation${ o === 1 ? '' : 's' }`,
+  actorLine:    (b, o) => `${ acts(b) } · ${ plural(o, 'operation') }`,
   expand:       'Expand',
   collapse:     'Collapse',
-  clusterScope: 'cluster-scoped',
+  clusterScope: CLUSTER_SCOPE,
   inCluster:    (c) => `cluster ${ c }`,
-  saNs:         (ns) => `ServiceAccount in namespace ${ ns }`,
-  dependsAudit: (c) => `Depends on a setting: ${ c } does not send the apiserver audit log`,
-  summary:      (n) => `${ n } behaviour${ n === 1 ? '' : 's' } this day. `,
-  summaryLook:  (n, list) => `${ n } to look at: ${ list }. `,
-  summaryNone:  'Nothing to look at. ',
+  saNs:         (ns) => `Namespace: ${ ns }`,
+  dependsAudit: (c) => `Depends on a setting: ${ c } does not send the API server audit log`,
+  summary:      (n) => `${ acts(n) } this day. `,
+  summaryLook:  (n, list) => `${ n } need${ n === 1 ? 's' : '' } review: ${ list }. `,
+  summaryNone:  'Nothing needs review. ',
   summaryRest:  'The rest is ordinary work or routine background.',
   gapChip:      'Not collected',
-  gapChipHint:  (c) => `Collector ${ c } did not report; operations in this time are not filled in later`,
+  gapChipHint:  (c) => `Not reported by: ${ c }. Operations during this gap are lost and will not be backfilled.`,
   axis:         {
     activity: 'Actor / namespace', identities: 'Namespace', scopes: 'Accounts that changed it'
   },
-  activityHead: 'Each line is one actor in one namespace. A solid block is continuous work; a dashed line means more work within an hour; after an hour, or a collection gap, it is a new behaviour. Click a block for details.',
-  findingsHead: 'Behaviours by how serious they are. Each behaviour appears once; its title is its most serious operation.',
+  activityHead: 'Each line is one actor in one namespace. A solid block is continuous work; a dashed line joins work resumed within an hour. After an hour, or a collection gap, a new activity starts. Click a block for details.',
+  findingsHead: 'Activities grouped by how serious they are. Each activity appears once, titled by its most serious operation.',
   identityHead: (a) => `Identity: ${ a }`,
   scopeHead:    (s) => `Scope: ${ s }`,
-  scopeSub:     (c) => `Cluster ${ c }. Deleting a namespace counts in the namespace deleted.`,
+  scopeSub:     (c) => `Cluster ${ c }. A namespace deletion counts toward the deleted namespace.`,
   pickGroups:   'Accounts',
-  listHead:     (n) => `${ n } behaviour${ n === 1 ? '' : 's' }, most serious first`,
+  listHead:     (n) => `${ acts(n) }, most serious first`,
   perActor:     'One line per account',
-  inScope:      (a, s) => `${ a } in ${ s }`,
-  itemMeta:     (o, j, s) => `${ o } operation${ o === 1 ? '' : 's' } ・ ${ j } object${ j === 1 ? '' : 's' } ・ ${ s } part${ s === 1 ? '' : 's' }`,
-  scopeMeta:    (a, b) => `${ a } account${ a === 1 ? '' : 's' } ・ ${ b } behaviour${ b === 1 ? '' : 's' }`,
-  lookN:        (n) => `look ${ n }`,
+  inScope:      (a, s) => (s === CLUSTER_SCOPE ? `${ a } at cluster scope` : `${ a } in ${ s }`),
+  itemMeta:     (o, j, s) => `${ plural(o, 'operation') } · ${ plural(j, 'object') } · ${ plural(s, 'segment') }`,
+  scopeMeta:    (a, b) => `${ plural(a, 'account') } · ${ acts(b) }`,
+  lookN:        (n) => `${ n } to review`,
   tags:         {
-    direct: 'Direct to apiserver', 'via-rancher': 'Through Rancher', 'off-hours': 'Outside working hours', 'bypassed-rancher': 'Direct to apiserver'
+    direct: 'Direct to API server', 'via-rancher': 'Through Rancher', 'off-hours': 'Outside working hours', 'bypassed-rancher': 'Direct to API server'
   },
   viaWord: {
-    direct: 'Direct to apiserver (bypassing Rancher)', rancher: 'Through Rancher', impersonation: 'Through the Rancher proxy', ace: 'Direct to the downstream cluster endpoint', unknown: 'Unknown (no audit record)'
+    direct: 'Direct to the API server (bypassing Rancher)', rancher: 'Through Rancher', impersonation: 'Through the Rancher proxy', ace: 'Through the Authorized Cluster Endpoint', unknown: 'Unknown (no audit record)'
   },
-  overlap:        (o, a, b, n) => `Active in the same ${ n } cells as ${ o } between ${ a } and ${ b }; whether it is one person cannot be told`,
-  hiddenLine:     (h) => `Not listed as behaviours: ${ h.system } system component operations, ${ h.uiMaintenance } Rancher UI maintenance actions, ${ h.requestOnly } requests that leave no object, ${ h.failed } failed requests (plus ${ h.failedSystem } by system components)`,
+  overlap:    (o, a, b, n) => `Active at the same time as ${ o } between ${ a } and ${ b } (${ plural(n, 'time cell') }); it may be the same person`,
+  hiddenLine: (h) => {
+    const items = [
+      h.system && plural(h.system, 'system component operation'),
+      h.uiMaintenance && plural(h.uiMaintenance, 'Rancher UI maintenance action'),
+      h.requestOnly && `${ plural(h.requestOnly, 'request') } that leave${ h.requestOnly === 1 ? 's' : '' } no object`,
+      (h.failed || h.failedSystem) && `${ plural(h.failed || 0, 'failed request') }${ h.failedSystem ? ` (plus ${ num(h.failedSystem) } from system components)` : '' }`,
+    ].filter(Boolean);
+
+    return items.length ? `Not listed as activities: ${ items.join(', ') }.` : '';
+  },
   showSystem:     'Show system components',
   hideSystem:     'Hide system components',
-  building:       'Sorting this day into behaviours (first start after an upgrade, or the settings changed). Until it is done this stays empty; that does not mean nothing happened.',
-  rulesLine:      (cell, join) => `${ cell }-minute cells; a gap of more than ${ join } minutes, or a collection gap, starts a new behaviour`,
+  building:       'Grouping this day into activities (first start after an upgrade, or the settings changed). Until this is done the page stays empty; that does not mean nothing happened.',
+  rulesLine:      (cell, join) => `${ cell }-minute cells; a pause of more than ${ join } minutes, or a collection gap, starts a new activity.`,
   startedBefore:  'started the day before',
   continuesAfter: 'continues the next day',
   strip:          {
     title:     'Operations this day',
     people:    'People and admin accounts',
-    other:     'Others (routine, author not recorded, unauthenticated)',
-    otherSys:  'Others (routine, author not recorded, unauthenticated, system components)',
+    other:     'Others (routine, actor not recorded, unauthenticated)',
+    otherSys:  'Others (routine, actor not recorded, unauthenticated, system components)',
     rangeHint: 'Click a cell or drag to pick a range',
     gap:       'Not collected',
-    look:      'Behaviour to look at',
-    mark:      'Selected behaviour',
+    look:      'Activity that needs review',
+    mark:      'Selected activity',
     cell:      (m) => `${ m }-minute cells, height = operations`,
-    bar:       (a, b, p, o) => `${ a }–${ b } ・ people and admin accounts ${ p } ・ others ${ o }`,
+    bar:       (a, b, p, o) => `${ a }–${ b } · people and admin accounts: ${ p } · others: ${ o }`,
   },
   gapsSection:  'Collection gaps',
-  gapsSub:      'Operations in this time were not received and are not filled in later',
-  gapSilent:    (list) => `collector ${ list } did not report`,
-  gapOpen:      'not reporting yet',
-  noBehaviours: 'No behaviours on this day in this scope.',
+  gapsSub:      'Operations during these gaps were not received and will not be backfilled',
+  gapSilent:    (list) => `not reported by: ${ list }`,
+  gapOpen:      'still not reporting',
+  noBehaviours: 'No activity on this day in this scope.',
   emptySection: 'None.',
   detail:       {
-    head:       'Behaviour details',
-    pick:       'Click a behaviour to see its details.',
+    head:       'Activity details',
+    pick:       'Click an activity to see its details.',
     close:      'Close',
     time:       'Time',
     where:      'Where',
     size:       'Size',
-    via:        'Route',
-    sizeLine:   (o, j) => `${ o } operation${ o === 1 ? '' : 's' } ・ ${ j } object${ j === 1 ? '' : 's' }`,
+    via:        'Via',
+    sizeLine:   (o, j) => `${ plural(o, 'operation') } · ${ plural(j, 'object') }`,
     rules:      'Rules triggered',
-    ruleLine:   (name, sev, c) => `${ name } (${ sev } risk) ×${ c }`,
+    ruleLine:   (name, sev, c) => `${ name } (${ String(sev).toLowerCase() } risk) ×${ c }`,
     tagOnly:    'label only, does not change the tier',
-    segments:   'Continuous parts (joined by dashed lines)',
-    segLine:    (a, b, n) => `${ a === b ? a : `${ a }–${ b }` } ・ ${ n } operation${ n === 1 ? '' : 's' }`,
+    segments:   'Segments (joined by dashed lines)',
+    segLine:    (a, b, n) => `${ a === b ? a : `${ a }–${ b }` } · ${ plural(n, 'operation') }`,
     objects:    'Objects touched',
     objCols:    ['Kind', 'Name', 'Operations'],
     opsHead:    'Operations',
     opCols:     ['Time', 'Action', 'Object'],
-    moreObj:    (n) => `${ n } more objects not listed`,
-    moreOps:    (n) => `${ n } more operations not listed`,
+    moreObj:    (n) => `${ n } more ${ n === 1 ? 'object' : 'objects' } not listed`,
+    moreOps:    (n) => `${ n } more ${ n === 1 ? 'operation' : 'operations' } not listed`,
     truncObjs:  (shown, total) => `Showing the first ${ shown } of ${ total } objects.`,
     truncOps:   (shown, total) => `Showing the first ${ shown } of ${ total } operations.`,
     tags:       'Labels',
     loading:    'Loading…',
-    none:       'This behaviour was not found (it may have been judged again).',
+    none:       'This activity was not found (it may have been re-evaluated).',
     whoNote:    'About this identity',
     tbcObjects: 'The server did not send the objects touched',
     tbcOps:     'The server did not send the operations',
@@ -278,40 +306,19 @@ const EN = {
 // Watch-only changes (no author recorded) carry the change itself as the action.
 const WATCH = {
   zh: {
-    added: '新增', modified: '有變化', deleted: '刪除', deleting: '刪除中', update: '修改', patch: '修改', added_unseen: '新增（重新連線後才發現）', modified_unseen: '有變化（重新連線後才發現）'
+    added: '新增', modified: '有變化', deleted: '刪除', deleting: '刪除中', update: '修改', patch: '修改', added_unseen: '新增', modified_unseen: '有變化'
   },
   en: {
-    added: 'added', modified: 'changed', deleted: 'deleted', deleting: 'being deleted', update: 'updated', patch: 'patched', added_unseen: 'added (found after reconnecting)', modified_unseen: 'changed (found after reconnecting)'
+    added: 'added', modified: 'changed', deleted: 'deleted', deleting: 'started deleting', update: 'updated', patch: 'patched', added_unseen: 'added', modified_unseen: 'changed'
   },
 };
 
-// The page's own language choice ('zh-hant', 'en-us'), kept in this browser; '' follows
-// Rancher's language. Changing it never touches the Rancher account's language setting.
-const LANG_KEY = 'audit-loupe.lang';
+export { savedLang, saveLang };
 
-export function savedLang() {
-  try {
-    return window.localStorage.getItem(LANG_KEY) || '';
-  } catch (e) {
-    return '';
-  }
-}
-
-export function saveLang(lang) {
-  try {
-    if (lang) {
-      window.localStorage.setItem(LANG_KEY, lang);
-    } else {
-      window.localStorage.removeItem(LANG_KEY);
-    }
-  } catch (e) {}
-}
-
-export function textsV6(rancherStore, lang = '') {
-  const store = lang ? { getters: { 'i18n/current': () => lang } } : rancherStore;
-  const v5 = textsV5(store);
-  const m = modelTexts(store);
-  const zh = v5 === textsV5({ getters: { 'i18n/current': () => 'zh-hant' } });
+export function textsV6(store, lang = '') {
+  const v5 = textsV5(store, lang);
+  const m = modelTexts(store, lang);
+  const zh = isZh(store, lang);
   const own = zh ? ZH : EN;
 
   return {

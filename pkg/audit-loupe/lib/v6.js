@@ -395,19 +395,39 @@ export function verbText(T, w) {
   return (v && T.verbs[v]) || v || T.tbc;
 }
 
+// A change found only after collection reconnected says so after the object, not inside the verb.
+export function unseenText(T, w) {
+  return String(w?.verb || '').endsWith('_unseen') ? (T.unseen || '') : '';
+}
+
+// A refused or failed request with an alert stays in a behaviour (a failed login, a 403); its
+// title says so instead of reading as if it went through.
+export function resultText(T, code) {
+  if (code === 403) {
+    return T.refused;
+  }
+
+  return code >= 400 ? T.failed(code) : '';
+}
+
 export function titleText(T, t) {
   if (!t) {
     return null;
   }
+  if (t.verb === 'login' && t.code >= 400) {
+    return T.rules.login_failed || T.failed(t.code);
+  }
+  // A login has no object: its kind and name repeat the verb ("logged in login").
+  const obj = t.verb === 'login' ? [] : [t.kind, t.name];
 
-  return [verbText(T, t), t.kind, t.name].filter(Boolean).join(' ');
+  return [verbText(T, t), ...obj].filter(Boolean).join(' ') + unseenText(T, t) + resultText(T, t.code);
 }
 
 export function whatText(T, what, n = 3) {
   const list = what || [];
-  const shown = list.slice(0, n).map((w) => `${ verbText(T, w) } ${ w.kind || '' } ×${ w.count ?? T.tbc }`);
+  const shown = list.slice(0, n).map((w) => `${ verbText(T, w) } ${ w.kind || '' } ×${ w.count ?? T.tbc }${ unseenText(T, w) }`);
 
-  return shown.join(T.listSep) + (list.length > n ? T.moreKinds(list.length) : '');
+  return shown.join(T.listSep) + (list.length > n ? T.moreKinds(list.length, list.length - n) : '');
 }
 
 // The title of a behaviour: its most serious operation, or "where: what" when it has none.

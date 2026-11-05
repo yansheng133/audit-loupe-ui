@@ -102,7 +102,9 @@ export default {
       });
     },
     focusLabel() {
-      return this.nodes.find((n) => n.id === this.focus)?.label || '';
+      const n = this.nodes.find((x) => x.id === this.focus);
+
+      return n ? this.fullLabel(n) : '';
     },
   },
   watch: {
@@ -146,18 +148,23 @@ export default {
         this.focus = this.focus === n.id ? null : n.id;
       }
     },
-    label(n) {
-      let l = n.label;
-
+    // The node's name in the page's language, in full (the backend's label is Chinese for the
+    // "no actor" and group nodes, and a code for routes).
+    fullLabel(n) {
       if (n.type === 'via') {
-        l = this.T.via[n.label] || n.label;
-      } else if (n.type === 'identity' && n.noActor) {
-        l = this.T.noActor;
-      } else if (n.type === 'identity' && n.group) {
-        l = this.T.groupOf(this.T.category[n.category] || n.category);
-      } else if (n.type === 'identity') {
-        l = shortWho(n.label);
+        return this.T.via[n.label] || n.label;
       }
+      if (n.type === 'identity' && n.noActor) {
+        return this.T.noActor;
+      }
+      if (n.type === 'identity' && n.group) {
+        return this.T.groupOf(this.T.category[n.category] || n.category);
+      }
+
+      return n.label;
+    },
+    label(n) {
+      const l = n.type === 'identity' && !n.noActor && !n.group ? shortWho(n.label) : this.fullLabel(n);
 
       return l.length > 30 ? `${ l.slice(0, 29) }…` : l;
     },
@@ -220,7 +227,7 @@ export default {
         class="edge"
         :class="{bypass: e.bypass, off: !e.on, on: lit && e.on}"
         :stroke-width="e.w"
-      ><title>{{ e.count }}{{ e.bypass ? ` ・ ${T.bypass}` : '' }}</title></path>
+      ><title>{{ e.count }}{{ e.bypass ? `${T.dot}${T.bypass}` : '' }}</title></path>
       <g
         v-for="n in nodes.filter((x) => layout.pos[x.id])"
         :key="n.id"
@@ -253,7 +260,7 @@ export default {
           y="40"
           class="sub"
         >{{ sub(n) }}</text>
-        <title>{{ n.label }}{{ n.bypass ? ` ・ ${T.bypass}` : '' }}</title>
+        <title>{{ fullLabel(n) }}{{ n.bypass ? `${T.dot}${T.bypass}` : '' }}</title>
       </g>
     </svg>
   </div>

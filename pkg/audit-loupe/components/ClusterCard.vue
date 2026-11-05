@@ -24,7 +24,7 @@ export default {
 
 <template>
   <div class="audit-loupe-card">
-    <span>Audit Loupe：{{ T.evidenceHint }}</span>
+    <span>Audit Loupe{{ T.colon }}{{ T.evidenceHint }}</span>
     <router-link :to="to">
       {{ T.title }} →
     </router-link>

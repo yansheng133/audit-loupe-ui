@@ -25,7 +25,7 @@ export default {
       return this.count === null ? l : `${ l } ${ this.count }`;
     },
     title() {
-      return [this.T.stateHint[this.value], this.reason].filter(Boolean).join('：');
+      return [this.T.stateHint[this.value], this.reason].filter(Boolean).join(this.T.colon);
     },
   },
 };

@@ -1,7 +1,7 @@
 // v5 change map: texts, the one /api/changemap request per user action, and URL <-> view state.
 // The backend computes every audit state; this file only formats what it returns.
 import { getJson, baseUrl } from './api.js';
-import { pad } from './model.js';
+import { pad, isZh, plural } from './model.js';
 
 // ---------- text ----------
 const ZH = {
@@ -19,6 +19,9 @@ const ZH = {
   resize:    '拖曳調整細節欄寬度；雙擊恢復預設',
   tzLine:    (tz) => `時間以 ${ tz } 顯示`,
   colon:     '：',
+  dot:       ' ・ ',
+  list:      '、',
+  paren:     (x) => `（${ x }）`,
   noActor:   '找不到執行者',
   cascade:   '刪除 namespace 時一併清空',
   groupOf:   (cat) => `${ cat }（群組）`,
@@ -90,13 +93,14 @@ const ZH = {
     state: '稽核狀態', object: '物件', where: '叢集／Namespace', ticks: '當天操作（00–24）', ops: '次數', last: '最後一次', who: '誰', via: '管道',
   },
   clusterScope:     '叢集範圍',
-  hiddenRows:       (s, u) => `已隱藏：系統元件 ${ s } 列、Rancher 介面自己的維護動作 ${ u } 列`,
+  hiddenRows:       (h) => `已隱藏：系統元件 ${ h.system } 筆、Rancher 介面自己的維護動作 ${ h.uiMaintenance } 筆${ h.failed || h.failedSystem ? `、失敗的請求 ${ h.failed } 筆（系統元件另有 ${ h.failedSystem } 筆）` : '' }`,
   show:             '顯示',
   hide:             '隱藏',
   more:             '載入更多',
   noRows:           '這一天、這個範圍內沒有物件變更。',
   loadFailed:       '讀取失敗',
   backendMissing:   (s) => `這座叢集找不到 Audit Loupe 後端（HTTP ${ s }）：audit-loupe-system namespace 裡沒有 audit-loupe 服務。`,
+  backendSession:   (s) => `你的 Rancher 登入已經失效（HTTP ${ s }）：請重新登入後再重新整理這一頁。`,
   backendForbidden: (s) => `你沒有權限讀取 Audit Loupe 的資料（HTTP ${ s }）：需要後端所在叢集 audit-loupe-system namespace 的 services/proxy 權限，請找管理者開。`,
   backendDown:      (s) => `Audit Loupe 後端沒有回應（HTTP ${ s }）：server 目前沒有在執行，或所在叢集連不上。這不是權限問題；請檢查 audit-loupe-system 的 server Pod。後端恢復後，讀 audit log 的收集元件會從中斷的地方接著送。`,
   busy:             '處理中…',
@@ -185,27 +189,30 @@ const EN = {
   resize:    'Drag to resize the detail panel; double-click to reset',
   tzLine:    (tz) => `Times in ${ tz }`,
   colon:     ': ',
-  noActor:   'No author found',
+  dot:       ' · ',
+  list:      ', ',
+  paren:     (x) => ` (${ x })`,
+  noActor:   'No actor found',
   cascade:   'emptied when the namespace was deleted',
   groupOf:   (cat) => `${ cat } (group)`,
   reason:    {
     'alert-high':         'High-risk alert this day',
     'alert-medium':       'Medium-risk alert this day',
-    'no-apiserver-audit': 'This cluster does not collect the apiserver audit log: the change is seen, not who made it',
+    'no-apiserver-audit': 'This cluster does not collect the API server audit log: the change is seen, but not who made it',
     'found-on-reconnect': 'Found by comparing versions after collection reconnected; no audit record matches',
-    'near-gap':           'Has records within 10 minutes of a collection gap; may be incomplete',
+    'near-gap':           'Has records within 10 minutes of a collection gap; the records may be incomplete',
   },
   note: {
     'sa-rancher':              'ServiceAccount of a component Rancher installed',
     'sa-kube-system':          'Built-in cluster component',
     'sa-workload':             'ServiceAccount of a workload',
-    'admin-cert':              'Admin certificate on a node; the person cannot be told',
-    'rancher-unauthenticated': 'Request Rancher could not authenticate; unknown who',
-    'no-actor':                'No author found',
+    'admin-cert':              'Node admin certificate; no individual can be identified',
+    'rancher-unauthenticated': 'Request Rancher could not authenticate; actor unknown',
+    'no-actor':                'No actor found',
     'system-component':        'Built-in cluster component',
     'rancher-provisioning':    'Rancher internal account (cluster provisioning)',
     'rancher-local-user':      'Rancher local account, possibly shared',
-    unclassified:              'Cannot tell person from program',
+    unclassified:              'Could not tell whether this is a person or a program',
   },
   depends: {
     'suse-security': {
@@ -213,70 +220,71 @@ const EN = {
       text:    'Commands typed inside a container are not in the audit log. When it is on, processes SUSE Security flagged are listed here.',
     },
     'no-apiserver-audit': {
-      setting: 'Whether this cluster collects the apiserver audit log',
-      text:    'Without it, object versions show that something changed, not who changed it.',
+      setting: 'Whether this cluster collects the API server audit log',
+      text:    'Without it, object versions show that something changed, but not who changed it.',
     },
   },
   evReason: {
     'first-alert':        () => 'First medium or high-risk alert this day',
-    'first-unattributed': () => 'First change with no author found this day',
-    'collector-stopped':  (c) => `${ c } collection stopped reporting`,
-    'collector-resumed':  (c) => `${ c } collection resumed reporting`,
-    'collector-silent':   (c) => `${ c } collection did not report`,
-    'collector-reported': (c, why) => `${ c } collection reported nothing was collected here (${ why })`,
-    'reported-gap-start': (c, why) => `${ c } collection reported that collecting stopped here (${ why })`,
-    'reported-gap-end':   (c) => `End of the gap ${ c } collection reported`,
+    'first-unattributed': () => 'First change with no actor found this day',
+    'collector-stopped':  (c) => `The ${ c } collector stopped reporting`,
+    'collector-resumed':  (c) => `The ${ c } collector resumed reporting`,
+    'collector-silent':   (c) => `The ${ c } collector did not report`,
+    'collector-reported': (c, why) => `The ${ c } collector reported a gap here (${ why })`,
+    'reported-gap-start': (c, why) => `The ${ c } collector reported that collection stopped here (${ why })`,
+    'reported-gap-end':   (c) => `End of the gap reported by the ${ c } collector`,
   },
   cause: {
     'collector-silent':     'the collector stopped reporting (no heartbeat); this time may not have been collected',
-    'collector-restart':    'the collector restarted; the downtime is not read afterwards',
-    'collector-state-lost': 'the collector lost where it was reading',
+    'collector-restart':    'the collector restarted; events during the restart were not read',
+    'collector-state-lost': 'the collector lost its read position',
     'file-removed':         'a rotated file was deleted before it was read',
     'file-replaced':        'the file was replaced before it was read',
   },
   progress: {
     index:     'Building the page index (first start after an upgrade); pages are slower until it is done',
-    recompute: (d, t) => `Judging records again under the new settings: ${ d } / ${ t }`,
+    recompute: (d, t) => `Re-evaluating records with the new settings: ${ d } / ${ t }`,
     since:     (t) => `started ${ t }`,
   },
   states: {
-    look: 'Look', unclear: 'Unclear', blind: 'Blind', clear: 'Clear',
+    look: 'Needs review', unclear: 'Actor unknown', blind: 'Possibly incomplete', clear: 'No issues',
   },
   sev:       { high: 'high', medium: 'medium' },
   stateHint: {
     look:    'Medium or high risk alerts this day',
-    unclear: 'Changed, but nobody can be named',
-    blind:   'Next to a gap with no collection',
+    unclear: 'Changed, but the actor is unknown',
+    blind:   'Next to a collection gap',
     clear:   'None of the above',
   },
-  summary:    (o, n) => [`${ o } objects changed`, `${ n } operations (system components excluded)`],
-  summarySys: (o, n) => [`${ o } objects changed`, `${ n } operations (system components included)`],
+  summary:    (o, n) => [`${ plural(o, 'object') } changed`, `${ plural(n, 'operation') } (system components excluded)`],
+  summarySys: (o, n) => [`${ plural(o, 'object') } changed`, `${ plural(n, 'operation') } (system components included)`],
   cols:       {
     state: 'Audit state', object: 'Object', where: 'Cluster / Namespace', ticks: 'Operations (00–24)', ops: 'Count', last: 'Last', who: 'Who', via: 'Via',
   },
   clusterScope:     'cluster-scoped',
-  hiddenRows:       (s, u) => `Hidden: ${ s } system component rows, ${ u } Rancher UI maintenance rows`,
+  hiddenRows:       (h) => `Hidden: ${ plural(h.system, 'system component record') }, ${ plural(h.uiMaintenance, 'Rancher UI maintenance record') }${ h.failed || h.failedSystem ? `, ${ plural(h.failed, 'failed request') } (plus ${ h.failedSystem } from system components)` : '' }`,
   show:             'Show',
   hide:             'Hide',
   more:             'Load more',
   noRows:           'No object changed on this day in this scope.',
   loadFailed:       'Load failed',
   backendMissing:   (s) => `No Audit Loupe backend in this cluster (HTTP ${ s }): there is no audit-loupe service in the audit-loupe-system namespace.`,
-  backendForbidden: (s) => `You may not read Audit Loupe data (HTTP ${ s }): it needs services/proxy in the audit-loupe-system namespace of the backend cluster. Ask an administrator for it.`,
+  backendForbidden: (s) => `You don't have permission to read Audit Loupe data (HTTP ${ s }). You need get on services/proxy in the audit-loupe-system namespace of the backend cluster; ask an administrator.`,
+  backendSession:   (s) => `Your Rancher session has ended (HTTP ${ s }). Log in again, then reload this page.`,
   backendDown:      (s) => `The Audit Loupe backend is not answering (HTTP ${ s }): the server is not running, or its cluster cannot be reached. This is not a permission problem; check the server pod in audit-loupe-system. Once it is back, the collectors that read audit logs continue from where they stopped.`,
   busy:             'Working…',
   category:         {
     human: 'person', component: 'cluster component', serviceaccount: 'ServiceAccount', rancher: 'Rancher internal', unknown: 'unknown',
   },
   via: {
-    rancher: 'Rancher', 'rancher-kubectl': 'Rancher kubectl', apiserver: 'direct apiserver', direct: 'direct apiserver', impersonation: 'Rancher proxy', unknown: 'unknown',
+    rancher: 'Rancher', 'rancher-kubectl': 'Rancher kubectl', apiserver: 'direct to API server', direct: 'direct to API server', impersonation: 'Rancher proxy', ace: 'Authorized Cluster Endpoint', unknown: 'unknown',
   },
   collect:   { ok: 'collected', blind: 'not collected' },
   collectOf: (c) => `Collection in cluster ${ c }`,
   collector: {
-    file: 'apiserver audit log', watch: 'Object versions', rancher: 'Rancher audit log', neuvector: 'SUSE Security'
+    file: 'API server audit log', watch: 'object watch', rancher: 'Rancher audit log', neuvector: 'SUSE Security'
   },
-  relCols:    ['Identity', 'Via', 'Cluster', 'Object (colour = audit state, thicker = more operations)'],
+  relCols:    ['Identity', 'Via', 'Cluster', 'Object (color = audit state, thicker = more operations)'],
   bypass:     'bypasses Rancher',
   filterOn:   'Only: ',
   clear:      'Clear',
@@ -286,9 +294,9 @@ const EN = {
     state: 'object', heartbeat: 'from heartbeats', reported: 'reported by the collector'
   },
   evEmpty:   'No audit state changed on this day.',
-  heldRows:  (n) => `${ n } lines held`,
+  heldRows:  (n) => `${ plural(n, 'line') } held`,
   batch:     'Batch',
-  batchHint: (res) => `Writes without a name (deletecollection, or a create whose name the server generated) ・ ${ res }`,
+  batchHint: (res) => `Writes without a name (deletecollection, or a create whose name the server generated) · ${ res }`,
   dataUntil: 'Newest record',
   detail:    {
     close:      'Close',
@@ -329,20 +337,14 @@ const EN = {
     ops:        (n, a) => `${ n } operation${ n === 1 ? '' : 's' }${ a ? ` (${ a } alert${ a === 1 ? '' : 's' })` : '' }`,
     clearRange: 'Clear range',
     legend:     {
-      look: 'Objects to look at', blind: 'Blind (not collected)', unknown: 'Not decidable yet', op: 'Bar height = operations'
+      look: 'Objects that need review', blind: 'Not collected', unknown: 'Not decided yet', op: 'Bar height = operations'
     },
     slot: (m) => `${ m }-minute slots`,
   },
 };
 
-export function textsV5(store) {
-  let locale = 'en-us';
-
-  try {
-    locale = store.getters['i18n/current']() || locale;
-  } catch (e) {}
-
-  return locale.startsWith('zh') ? ZH : EN;
+export function textsV5(store, lang = '') {
+  return isZh(store, lang) ? ZH : EN;
 }
 
 // ---------- states ----------

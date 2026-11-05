@@ -95,7 +95,7 @@ export default {
         return this.A.unknown;
       }
 
-      return g.granted_by_inferred ? `${ g.granted_by }（${ this.A.inferred }）` : g.granted_by;
+      return g.granted_by_inferred ? `${ g.granted_by }${ this.T.paren(this.A.inferred) }` : g.granted_by;
     },
     // Rancher names the per-cluster system account after the cluster ID; show the cluster name.
     personName(u) {
@@ -146,7 +146,7 @@ export default {
 <template>
   <div class="al al-page">
     <div class="topbar">
-      <span class="crumb">Audit Loupe ／ {{ T.crumb }}</span>
+      <span class="crumb">Audit Loupe<template v-if="T.crumb"> ／ {{ T.crumb }}</template></span>
       <h1>{{ A.title }}</h1>
       <div class="filters">
         <label class="check">{{ A.at }} <input
@@ -223,7 +223,7 @@ export default {
           <span
             v-if="user"
             class="muted"
-          >{{ user.user_id }}{{ user.groups.length ? `・${A.groups} ${user.groups.map(principalShort).join('、')}` : '' }}</span>
+          >{{ user.user_id }}{{ user.groups.length ? `${T.dot}${A.groups}${T.colon}${user.groups.map(principalShort).join(T.list)}` : '' }}</span>
         </div>
         <div class="col-body detail">
           <div

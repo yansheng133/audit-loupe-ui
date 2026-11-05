@@ -264,12 +264,12 @@ export default {
       const lines = [];
 
       if (meta.dataNote) {
-        lines.push(`${ meta.dataNote } ・ ${ this.T.dataUntil } ${ meta.dataUntilMs ? `${ this.isoDay(meta.dataUntilMs) } ${ fmtTime(meta.dataUntilMs, this.tz) }` : '—' }`);
+        lines.push(`${ meta.dataNote }${ this.T.dot }${ this.T.dataUntil } ${ meta.dataUntilMs ? `${ this.isoDay(meta.dataUntilMs) } ${ fmtTime(meta.dataUntilMs, this.tz) }` : '—' }`);
       }
       for (const p of meta.progress || []) {
         const what = p.what === 'recompute' ? this.T.progress.recompute(p.done ?? '—', p.total ?? '—') : (this.T.progress[p.what] || p.what);
 
-        lines.push(`${ what }${ p.startedMs ? `（${ this.T.progress.since(fmtTime(p.startedMs, this.tz)) }）` : '' }`);
+        lines.push(`${ what }${ p.startedMs ? this.T.paren(this.T.progress.since(fmtTime(p.startedMs, this.tz))) : '' }`);
       }
 
       return lines;
@@ -401,6 +401,7 @@ export default {
       </nav>
       <div class="filters">
         <MultiPick
+          :list-sep="T.list || T.listSep"
           :label="T.cluster"
           :options="clusterOptions"
           :value="v.cluster"
@@ -410,6 +411,7 @@ export default {
           @change="setClusters"
         />
         <MultiPick
+          :list-sep="T.list || T.listSep"
           :label="T.namespace"
           :options="nsOptions"
           :value="v.namespace"
@@ -477,7 +479,7 @@ export default {
       <section class="al5-content">
         <template v-if="v.tab === 'overview'">
           <div class="ov-sum">
-            <b class="num">{{ summary[0] }}</b> ・ <span class="num">{{ summary[1] }}</span>
+            <b class="num">{{ summary[0] }}</b>{{ T.dot }}<span class="num">{{ summary[1] }}</span>
             <AlStateTag
               v-for="s in $options.STATES"
               :key="s"

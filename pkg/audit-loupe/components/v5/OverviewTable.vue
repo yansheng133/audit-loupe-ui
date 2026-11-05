@@ -80,7 +80,7 @@ export default {
     whoTitle(r) {
       const w = r.who || {};
 
-      return [w.name, noteText(this.T, w.noteCode, w.note)].filter(Boolean).join(' ・ ');
+      return [w.name, noteText(this.T, w.noteCode, w.note)].filter(Boolean).join(this.T.dot);
     },
     dimmed(r) {
       if (!this.range) {
@@ -209,7 +209,7 @@ export default {
       >
         {{ T.more }}
       </button>
-      <span v-if="hidden">{{ T.hiddenRows(hidden.system, hidden.uiMaintenance) }} ・ </span>
+      <span v-if="hidden">{{ T.hiddenRows(hidden) }}{{ T.dot }}</span>
       <button
         type="button"
         class="link"

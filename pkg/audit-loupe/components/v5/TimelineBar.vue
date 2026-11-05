@@ -72,7 +72,7 @@ export default {
     barTitle(s) {
       const state = this.T.states[s.state] || this.T.tl.legend[s.state] || '';
 
-      return `${ this.fmt(s.t) }–${ this.fmt(s.t + this.slotMs) } ・ ${ state } ・ ${ this.T.tl.ops(s.ops, s.alerts) }`;
+      return `${ this.fmt(s.t) }–${ this.fmt(s.t + this.slotMs) }${ this.T.dot }${ state }${ this.T.dot }${ this.T.tl.ops(s.ops, s.alerts) }`;
     },
     lineGaps(line) {
       return this.gaps.filter((g) => line.cluster === null || g.cluster === line.cluster);

@@ -96,14 +96,14 @@ export default {
       return this.T.strip.bar(this.fmt(c.t), this.fmt(c.t + this.cellMs), c.people, c.other);
     },
     gapTitle(g) {
-      return `${ this.T.strip.gap } ${ this.fmt(g.fromMs) }–${ this.fmt(g.toMs) } ・ ${ clusterLabel(this.$store, g.cluster) }`;
+      return `${ this.T.strip.gap } ${ this.fmt(g.fromMs) }–${ this.fmt(g.toMs) }${ this.T.dot }${ clusterLabel(this.$store, g.cluster) }`;
     },
     // A dot at the operation that made the behaviour "look" (its title), else its start.
     dotAt(b) {
       return b.title?.t ?? b.fromMs;
     },
     dotTitle(b) {
-      return `${ this.T.strip.look } ・ ${ this.fmt(this.dotAt(b)) } ・ ${ headline(this.T, b) }`;
+      return `${ this.T.strip.look }${ this.T.dot }${ this.fmt(this.dotAt(b)) }${ this.T.dot }${ headline(this.T, b) }`;
     },
     shiftDay,
   },

@@ -100,7 +100,7 @@ export default {
           <span class="s">{{ T.scopeMeta(n(x.actors), n(x.behaviors)) }}<b
             v-if="x.look"
             class="lk"
-          > ・ {{ T.lookN(x.look) }}</b></span>
+          >{{ T.dot }}{{ T.lookN(x.look) }}</b></span>
         </button>
       </template>
     </nav>

@@ -41,7 +41,7 @@ export default {
       const k = parseKey(e.subject);
       const kind = kindOf(k.resource);
 
-      return `${ kindLabel(kind) } ${ k.name }${ k.namespace ? `（${ k.namespace }）` : '' }`;
+      return `${ kindLabel(kind) } ${ k.name }${ k.namespace ? this.T.paren(k.namespace) : '' }`;
     },
     // from / to are audit states for objects ("look", "look:high"), collection states
     // ("ok" / "blind") for the collector.
@@ -107,7 +107,7 @@ export default {
           </div>
           <div class="muted small">
             {{ eventReason(T, e) }}<template v-if="e.held">
-              ・ <a
+              {{ T.dot }}<a
                 :href="e.heldHref || undefined"
                 class="link"
               >{{ T.heldRows(e.held) }}</a>

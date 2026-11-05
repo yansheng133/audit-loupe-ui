@@ -1,6 +1,6 @@
 <script>
 import { getJson } from '../lib/api';
-import { fmtDate } from '../lib/model';
+import { fmtDate, isZh } from '../lib/model';
 import { textsV5, noteText, shortWho } from '../lib/v5';
 
 const CLASSES = ['human', 'serviceaccount', 'rancher', 'component', 'unknown'];
@@ -27,12 +27,12 @@ const ZH = {
 };
 
 const EN = {
-  title:     'Identity classes',
-  intro:     'Each identity is classed once, when first seen: person, ServiceAccount, Rancher internal, cluster component or unknown. Rules only check people; the change map hides cluster components and Rancher internals by default.',
+  title:     'Identity classification',
+  intro:     'Each identity is classified once, when first seen: person, ServiceAccount, Rancher internal, cluster component or unknown. Rules only check people; the change map hides cluster components and Rancher internals by default.',
   config:    'Depends on settings',
-  wlTitle:   'Whitelist (server.identities)',
-  wlEmpty:   'None set. Identities the built-in rules cannot tell (for example components known only by their certificate name) go in the Helm values under server.identities and take effect when the backend is redeployed; this page only shows them.',
-  wlHint:    'Like the rules, the whitelist is part of the settings code: after a change, earlier records keep their judgement and the top of this page offers to judge them again.',
+  wlTitle:   'Allowlist (server.identities)',
+  wlEmpty:   'None set. Identities the built-in rules cannot classify (for example components known only by their certificate name) go in the Helm values under server.identities and take effect when the backend is redeployed; this page only shows them.',
+  wlHint:    'Like the rules, the allowlist is part of the settings version: after a change, earlier records keep their classification and the top of this page offers to re-evaluate them.',
   names:     'Names',
   cls:       'Class',
   reason:    'Reason',
@@ -41,7 +41,7 @@ const EN = {
   all:       'All',
   source:    'Decided by',
   builtin:   'built-in rules',
-  whitelist: 'whitelist',
+  whitelist: 'allowlist',
   first:     'First seen',
   more:      (n) => `${ n } more; search to narrow down`,
   missing:   'The backend in use does not have this yet; it shows once the backend is upgraded.',
@@ -54,7 +54,7 @@ export default {
   name: 'IdentitiesSection',
 
   data() {
-    const zh = textsV5(this.$store).colon === '：';
+    const zh = isZh(this.$store);
 
     return {
       I: zh ? ZH : EN, T5: textsV5(this.$store), data: null, missing: false, cls: '', q: '',

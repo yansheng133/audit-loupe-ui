@@ -7,6 +7,8 @@ const ZH = {
   list:   '、',
   paren:  (x) => `（${ x }）`,
   colon:  '：',
+  semi:   '；',
+  slash:  ' ／ ',
   access: {
     title:          '權限覆核',
     at:             '時間點',
@@ -32,7 +34,7 @@ const ZH = {
     beforeTracking: '開始追蹤或保存期限前就存在',
     automatic:      'Rancher 自動建立',
     derived:        '由全域角色衍生',
-    unknown:        '找不到執行者',
+    unknown:        '未記錄執行者',
     grants:         (n) => `${ n } 項權限`,
     roleName:       '角色',
     change:         '變更',
@@ -267,7 +269,7 @@ const ZH = {
     credential:            '憑證',
     component:             '系統元件',
     who:                   '是誰',
-    unknown:               '不明',
+    unknown:               '未記錄',
     found:                 '發現方式',
     foundBy:               '重新連線後比對物件版本',
     paired:                '來源：Rancher audit log 與下游 apiserver audit log 對到同一筆，合併成一列。',
@@ -310,6 +312,8 @@ const EN = {
   list:   ', ',
   paren:  (x) => ` (${ x })`,
   colon:  ': ',
+  semi:   '; ',
+  slash:  ' / ',
   access: {
     title:          'Access Review',
     at:             'As of',
@@ -335,7 +339,7 @@ const EN = {
     beforeTracking: 'Granted before tracking began, or the record has expired',
     automatic:      'Created by Rancher',
     derived:        'Derived from a global role',
-    unknown:        'No actor found',
+    unknown:        'Actor not recorded',
     grants:         (n) => `${ n } permission${ n === 1 ? '' : 's' }`,
     roleName:       'Role',
     change:         'Change',
@@ -453,20 +457,20 @@ const EN = {
   sev:               {
     high: 'High', medium: 'Medium', low: 'Low'
   },
-  records:     (n, who, t) => `${ n } · last ${ who } ${ t }`,
+  records:     (n, who, t) => `${ n } · last: ${ who } ${ t }`,
   deletedUser: 'Deleted',
   readded:     (n) => `Deleted and re-added (${ plural(n, 'period') })`,
   lifetime:    (a, b) => `${ a } – ${ b || 'now' }`,
   split:       'Split',
   merge:       'Merge',
   storyBurst:  (who, m, n) => `${ who }: ${ n } privileged actions within ${ m } minutes`,
-  coverage:    'Collected: ',
+  coverage:    'Coverage: ',
   covFull:     'Full: API server audit + object versions',
   covRancher:  'Actions through Rancher',
   covObjects:  'What changed only',
   covAudit:    'API server audit only',
   covNone:     'No data in this period',
-  covGap:      (n) => `Collection gaps (${ n })`,
+  covGap:      (n) => plural(n, 'collection gap'),
   covNoAudit:  'No API server audit log found; auditing may be off',
   via:         {
     ui: 'Rancher UI', kubectl: 'Rancher kubectl', rancher: 'Through Rancher', direct: 'Bypassed Rancher', ace: 'Authorized Cluster Endpoint', imp: 'Other impersonation', controller: 'System component', unknown: 'Collection gap'
@@ -571,7 +575,7 @@ const EN = {
     credential:            'Credential',
     component:             'Component',
     who:                   'Who',
-    unknown:               'Unknown',
+    unknown:               'Not recorded',
     found:                 'Found by',
     foundBy:               'Comparing versions after reconnecting',
     paired:                'Source: the Rancher audit log and the downstream API server audit log, matched as one action.',
@@ -996,7 +1000,7 @@ export function buildModel({
     if (t < 0 || t > 1440) {
       continue;
     }
-    const actor = actorFor('__unknown', T.chain.unknown, true, T.via.unknown);
+    const actor = actorFor('__unknown', T.access.unknown, true, T.via.unknown);
 
     ACTORS[actor].color = GREY;
     const row = { ...u, unattributed: true };

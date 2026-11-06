@@ -105,3 +105,51 @@ test('hidden-count line leaves out zero items and formats counts', () => {
   assert.equal(en.hiddenLine({ system: 0, uiMaintenance: 0, requestOnly: 0, failed: 0, failedSystem: 0 }), '');
   assert.match(whatText(en, [{ verb: 'update', kind: 'ConfigMap', count: 2591 }]), /×2,591/);
 });
+
+test('times on another day carry their date; one name for a missing actor', async() => {
+  const { dayTime, dayStartMs } = await import('../lib/v5.js');
+  const tz = 'Asia/Taipei';
+  const d0 = dayStartMs('2026-11-06', tz);
+  const dayMs = 864e5;
+  const before = d0 - (11 * 60 - 3) * 60000; // 11/05 13:03
+
+  assert.equal(dayTime(en, d0 + 45 * 60000, tz, d0, dayMs), '00:45');
+  assert.equal(dayTime(en, before, tz, d0, dayMs), 'Nov 5, 13:03');
+  assert.equal(dayTime(zh, before, tz, d0, dayMs), '11/5 13:03');
+  assert.equal(dayTime(en, d0 + dayMs, tz, d0, dayMs), '24:00');
+  assert.equal(dayTime(en, d0 + dayMs + 3600000, tz, d0, dayMs), 'Nov 7, 01:00');
+
+  const v5en = textsV5(store('en-us'));
+  const v5zh = textsV5(store('zh-hant'));
+
+  assert.equal(v5en.noActor, en.groups.unrecorded);
+  assert.equal(v5en.states.unclear, en.groups.unrecorded);
+  assert.equal(texts(store('en-us')).access.unknown, en.groups.unrecorded);
+  assert.equal(v5zh.noActor, zh.groups.unrecorded);
+  assert.equal(texts(store('zh-hant')).access.unknown, zh.groups.unrecorded);
+});
+
+test('a title on its own starts with a capital in English only', async() => {
+  const { asHeading } = await import('../lib/v6.js');
+
+  assert.equal(asHeading(en, 'deleted Namespace shop'), 'Deleted Namespace shop');
+  assert.equal(asHeading(zh, '刪除 Namespace shop'), '刪除 Namespace shop');
+  assert.equal(asHeading(en, ''), '');
+});
+
+test('a heading never changes a namespace name', async() => {
+  const { heading } = await import('../lib/v6.js');
+  const b = { scope: 'suse-observability-agent', title: null, what: [{ verb: 'modified', kind: 'ConfigMap', count: 2 }] };
+
+  assert.match(heading(en, b), /^suse-observability-agent: /);
+  assert.match(heading(en, { ...b, title: { verb: 'delete', kind: 'Namespace', name: 'shop', code: 200 } }), /^Deleted Namespace shop/);
+});
+
+test('only an Audit Loupe 404 means an old backend; Kubernetes or Rancher 404s mean none', async() => {
+  const { isOldBackend } = await import('../lib/v6.js');
+
+  assert.equal(isOldBackend({ status: 404, body: null }), true);
+  assert.equal(isOldBackend({ status: 404, body: { kind: 'Status', code: 404 } }), false);
+  assert.equal(isOldBackend({ status: 404, body: { Code: { Code: 'NotFound', Status: 404 }, Message: 'clusters.management.cattle.io "x" not found' } }), false);
+  assert.equal(isOldBackend({ status: 500, body: null }), false);
+});

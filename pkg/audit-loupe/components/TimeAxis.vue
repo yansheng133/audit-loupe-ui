@@ -96,7 +96,7 @@ export default {
           dim:   ev.t < this.a || ev.t > this.b,
           sel:   ev.id === this.selEvent,
           color: this.ACTORS[ev.actor].color,
-          label: `${ ev.hhmm }\u3000${ this.ACTORS[ev.actor].label } ${ ev.verb }・${ o.kind } ${ o.name }・${ this.T.via[ev.via] || ev.via }`,
+          label: `${ ev.hhmm } ${ this.ACTORS[ev.actor].label } ${ ev.verb }${ this.T.dot }${ o.kind } ${ o.name }${ this.T.dot }${ this.T.via[ev.via] || ev.via }`,
         };
       });
     },
@@ -178,7 +178,7 @@ export default {
   <section class="timeline">
     <div class="tl-head">
       <span class="range num">{{ T.rangeLabel(fmtMin(a), fmtMin(b)) }}</span>
-      <span class="keys">{{ T.keys }}・{{ day }}</span>
+      <span class="keys">{{ T.keys }}{{ T.dot }}{{ day }}</span>
       <div class="presets">
         <button
           v-for="[p, q, label] in presets"

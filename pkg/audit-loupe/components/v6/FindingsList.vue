@@ -1,7 +1,7 @@
 <script>
 import AlBehaviourItem from './BehaviourItem.vue';
-import { fmtTime, eventReason, clusterLabel } from '../../lib/v5';
-import { findingsSections } from '../../lib/v6';
+import { eventReason, clusterLabel } from '../../lib/v5';
+import { findingsSections, dayTime } from '../../lib/v6';
 
 // Findings: behaviours by tier, most serious first. "Look" and "worth knowing" are open; the
 // others are closed until asked. The last section is the collection gaps (the collection
@@ -15,6 +15,8 @@ export default {
     open:       { type: Array, required: true },
     gaps:       { type: Array, default: () => [] },
     tz:         { type: String, required: true },
+    d0:         { type: Number, default: null },
+    dayMs:      { type: Number, default: 864e5 },
     sel:        { type: String, default: '' },
   },
   emits:    ['select', 'toggle'],
@@ -35,7 +37,7 @@ export default {
   },
   methods: {
     fmt(ms) {
-      return fmtTime(ms, this.tz);
+      return dayTime(this.T, ms, this.tz, this.d0, this.dayMs);
     },
   },
 };

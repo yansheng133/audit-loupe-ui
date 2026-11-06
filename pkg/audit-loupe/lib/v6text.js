@@ -67,6 +67,7 @@ const ZH = {
   summaryNone:  '沒有要看的。',
   summaryRest:  '其餘是一般操作或例行背景。',
   gapChip:      '沒有收集',
+  onDate:       (m, d, t) => `${ m }/${ d } ${ t }`,
   gapChipHint:  (c) => `收集元件 ${ c } 沒有回報；這段時間的操作不會補上`,
   axis:         {
     activity: '執行者／namespace', identities: 'namespace', scopes: '動過這裡的帳號'
@@ -215,6 +216,7 @@ const EN = {
   summaryNone:  'Nothing needs review. ',
   summaryRest:  'The rest is ordinary work or routine background.',
   gapChip:      'Not collected',
+  onDate:       (m, d, t) => `${ ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1] } ${ d }, ${ t }`,
   gapChipHint:  (c) => `Not reported by: ${ c }. Operations during this gap are lost and will not be backfilled.`,
   axis:         {
     activity: 'Actor / namespace', identities: 'Namespace', scopes: 'Accounts that changed it'

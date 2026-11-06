@@ -1,7 +1,7 @@
 <script>
 import { fmtTime, clusterLabel } from '../../lib/v5';
 import {
-  rangeText, headline, scopeLabel, settingNote, verbText, unseenText, noteOf, tagTexts
+  rangeText, heading, scopeLabel, settingNote, verbText, unseenText, noteOf, tagTexts
 } from '../../lib/v6';
 
 // The right-hand detail of one behaviour: title, who (and what that identity is), time, place,
@@ -26,7 +26,7 @@ export default {
       return this.b.tier === 'look' || this.b.tier === 'notable';
     },
     title() {
-      return headline(this.T, this.b);
+      return heading(this.T, this.b);
     },
     note() {
       return noteOf(this.T, this.b.actor);

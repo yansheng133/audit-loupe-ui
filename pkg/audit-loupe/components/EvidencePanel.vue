@@ -53,7 +53,7 @@ export default {
       return this.related.map((r) => ({
         ...r,
         onMap: !!this.OBJ[r.key],
-        text:  r.direction === 'out' ? `${ this.T.rel[r.rel] || r.rel } ${ r.kind } ${ r.name }` : `${ r.kind } ${ r.name }（${ this.T.rel[r.rel] || r.rel }）`,
+        text:  r.direction === 'out' ? `${ this.T.rel[r.rel] || r.rel } ${ r.kind } ${ r.name }` : `${ r.kind } ${ r.name }${ this.T.paren(this.T.rel[r.rel] || r.rel) }`,
       }));
     },
   },
@@ -103,7 +103,7 @@ export default {
     <template v-else>
       <div class="objhead">
         <h2>{{ obj.kind }} {{ obj.name }}</h2>
-        <span class="path">{{ obj.clusterLabel }} ／ {{ obj.project }} ／ {{ obj.ns }}</span>
+        <span class="path">{{ [obj.clusterLabel, obj.project, obj.ns].join(T.slash) }}</span>
       </div>
       <div class="sub">
         {{ T.opsToday(sorted.length, anyOut) }}
@@ -183,7 +183,7 @@ export default {
             :key="i"
             class="ctx"
           >
-            {{ fmtTs(f.tsMs) }} {{ f.process }}: {{ f.command }}（{{ f.parent }}）
+            {{ fmtTs(f.tsMs) }} {{ f.process }}: {{ f.command }}{{ T.paren(f.parent) }}
           </div>
         </div>
         <p class="chain-note">

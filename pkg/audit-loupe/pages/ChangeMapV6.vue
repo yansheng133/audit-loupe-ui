@@ -10,7 +10,7 @@ import { fmtTime, todayIso, clusterLabel, dayStartMs } from '../lib/v5';
 import { textsV6, savedLang, saveLang } from '../lib/v6text';
 import {
   TABS, normalize, viewFromQuery, queryFromView, apiParams, listSig, fetchBehaviours, fetchBehaviourDetail, prefetch, takePrefetched,
-  activityRows, actorsOpen, inRange, flipActor, behaviourSpan, summaryChips, headline, defaultIdentity, defaultPlace, actorLabel
+  activityRows, actorsOpen, inRange, flipActor, behaviourSpan, summaryChips, headline, defaultIdentity, defaultPlace, actorLabel, dayTime
 } from '../lib/v6';
 import { backendMessage } from '../lib/api';
 import { PRODUCT, BLANK_CLUSTER, routeName } from '../product';
@@ -362,6 +362,11 @@ export default {
       return fmtTime(ms, this.tz);
     },
 
+    // Same, with the date when the time falls on another day.
+    dayFmt(ms) {
+      return dayTime(this.T, ms, this.tz, this.d0, this.dayMs);
+    },
+
     cl(id) {
       return clusterLabel(this.$store, id);
     },
@@ -562,7 +567,7 @@ export default {
               :title="gapChipTitle(g)"
               @click="set({tab: 'findings'})"
             >
-              {{ T.gapChip }} <b class="num">{{ fmt(g.fromMs) }}–{{ fmt(g.toMs) }}</b> {{ T.inCluster(cl(g.cluster)) }}
+              {{ T.gapChip }} <b class="num">{{ dayFmt(g.fromMs) }}–{{ dayFmt(g.toMs) }}</b> {{ T.inCluster(cl(g.cluster)) }}
             </button>
           </div>
           <p
@@ -625,6 +630,8 @@ export default {
                 :open="v.show"
                 :gaps="data.gaps"
                 :tz="tz"
+                :d0="d0"
+                :day-ms="dayMs"
                 :sel="selId"
                 @select="select"
                 @toggle="toggleSection"

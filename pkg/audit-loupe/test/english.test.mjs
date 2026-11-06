@@ -105,3 +105,26 @@ test('hidden-count line leaves out zero items and formats counts', () => {
   assert.equal(en.hiddenLine({ system: 0, uiMaintenance: 0, requestOnly: 0, failed: 0, failedSystem: 0 }), '');
   assert.match(whatText(en, [{ verb: 'update', kind: 'ConfigMap', count: 2591 }]), /×2,591/);
 });
+
+test('times on another day carry their date; one name for a missing actor', async() => {
+  const { dayTime, dayStartMs } = await import('../lib/v5.js');
+  const tz = 'Asia/Taipei';
+  const d0 = dayStartMs('2026-11-06', tz);
+  const dayMs = 864e5;
+  const before = d0 - (11 * 60 - 3) * 60000; // 11/05 13:03
+
+  assert.equal(dayTime(en, d0 + 45 * 60000, tz, d0, dayMs), '00:45');
+  assert.equal(dayTime(en, before, tz, d0, dayMs), 'Nov 5, 13:03');
+  assert.equal(dayTime(zh, before, tz, d0, dayMs), '11/5 13:03');
+  assert.equal(dayTime(en, d0 + dayMs, tz, d0, dayMs), '24:00');
+  assert.equal(dayTime(en, d0 + dayMs + 3600000, tz, d0, dayMs), 'Nov 7, 01:00');
+
+  const v5en = textsV5(store('en-us'));
+  const v5zh = textsV5(store('zh-hant'));
+
+  assert.equal(v5en.noActor, en.groups.unrecorded);
+  assert.equal(v5en.states.unclear, en.groups.unrecorded);
+  assert.equal(texts(store('en-us')).access.unknown, en.groups.unrecorded);
+  assert.equal(v5zh.noActor, zh.groups.unrecorded);
+  assert.equal(texts(store('zh-hant')).access.unknown, zh.groups.unrecorded);
+});

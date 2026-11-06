@@ -2,7 +2,7 @@
 import AlStateTag from './StateTag.vue';
 import { kindLabel, kindOf } from '../../lib/model';
 import {
-  STATES, fmtTime, parseKey, eventReason, clusterLabel
+  STATES, dayTime, parseKey, eventReason, clusterLabel
 } from '../../lib/v5';
 
 // Audit state transitions only. Collection events keep their two sources apart: what the
@@ -16,6 +16,8 @@ export default {
     loading: { type: Boolean, default: false },
     tz:      { type: String, required: true },
     range:   { type: Array, default: null },
+    d0:      { type: Number, default: null },
+    dayMs:   { type: Number, default: 864e5 },
   },
   emits:    ['select'],
   computed: {
@@ -28,7 +30,7 @@ export default {
   methods: {
     eventReason,
     fmt(ms) {
-      return fmtTime(ms, this.tz);
+      return dayTime(this.T, ms, this.tz, this.d0, this.dayMs);
     },
     isObj(e) {
       return e.source === 'state';

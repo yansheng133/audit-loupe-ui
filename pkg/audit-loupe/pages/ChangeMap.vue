@@ -117,7 +117,7 @@ export default {
       return [...new Set(objs.map((o) => o.ns))].sort();
     },
     actorOptions() {
-      return Object.values(this.ACTORS).filter((a) => this.sys || !a.system).map((a) => [a.key, a.role ? `${ a.label }（${ a.role }）` : a.label]);
+      return Object.values(this.ACTORS).filter((a) => this.sys || !a.system).map((a) => [a.key, a.role ? `${ a.label }${ this.T.paren(a.role) }` : a.label]);
     },
     coverage() {
       const out = {};
@@ -342,7 +342,7 @@ export default {
         role="group"
         :aria-label="T.title"
       >
-        <span class="crumb">Audit Loupe ／ {{ T.crumb }}</span>
+        <span class="crumb">{{ ['Audit Loupe', T.crumb].filter(Boolean).join(T.slash) }}</span>
         <h1>{{ T.title }}</h1>
         <input
           v-model="day"

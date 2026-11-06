@@ -39,7 +39,7 @@ export default {
         const who = this.ACTORS[first.actor]?.label || s.actor;
         const span = Math.max(1, Math.round((evs[evs.length - 1].ts - first.ts) / 60000));
         const headline = evs.length > 1 ? this.T.storyBurst(who, span, evs.length) : this.headline(first);
-        const why = evs.length > 1 ? evs.map((e) => `${ e.verb } ${ this.OBJ[e.obj].kind } ${ this.OBJ[e.obj].name }`).join('；') : [...new Set(first.alerts.map((r) => this.T.rules[r] || r))].join('、');
+        const why = evs.length > 1 ? evs.map((e) => `${ e.verb } ${ this.OBJ[e.obj].kind } ${ this.OBJ[e.obj].name }`).join(this.T.semi) : [...new Set(first.alerts.map((r) => this.T.rules[r] || r))].join(this.T.list);
 
         return {
           id: s.id, sev, first, evs, headline, why, via: this.T.via[first.via] || first.via, sel: evs.some((e) => e.id === this.selEvent),
@@ -137,7 +137,7 @@ export default {
               class="pill"
               :class="c.sev"
             >{{ T.risk(T.sev[c.sev]) }}</span>
-            <span class="num">{{ c.evs.map((e) => e.hhmm).join('、') }}</span>
+            <span class="num">{{ c.evs.map((e) => e.hhmm).join(T.list) }}</span>
             <span>{{ c.via }}</span>
           </div>
           <span class="headline">{{ c.headline }}</span>
@@ -164,7 +164,7 @@ export default {
           >
             <span class="who"><i :style="{background: p.a.color}" />{{ p.a.label }}</span>
             <span class="bar"><i :style="{width: `${p.pct}%`, background: p.a.color}" /></span>
-            <span class="num muted">{{ p.risky ? `${p.n}・${p.risky}` : p.n }}</span>
+            <span class="num muted">{{ p.risky ? `${p.n}${T.dot}${p.risky}` : p.n }}</span>
           </button>
           <div
             v-if="p.a.deleted || p.a.lifetimes.length > 1"
@@ -180,7 +180,7 @@ export default {
                 type="button"
                 class="linkbtn"
                 @click="toggle(p.key)"
-              >{{ T.readded(p.a.lifetimes.length) }}・{{ expanded[p.key] ? T.merge : T.split }}</button>
+              >{{ T.readded(p.a.lifetimes.length) }}{{ T.dot }}{{ expanded[p.key] ? T.merge : T.split }}</button>
             </span>
             <template v-if="expanded[p.key]">
               <button

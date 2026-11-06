@@ -2,7 +2,7 @@
 // docs/lab/task-1101-behaviors.md §4). The server cuts the day into behaviours, judges their
 // tier and counts everything; this file only lays out what it returns (groups, lanes, lists,
 // positions) and words it. Nothing here segments operations or judges a tier.
-import { fmtTime } from './v5.js';
+import { fmtTime, dayTime } from './v5.js';
 import { num as fmtNum } from './model.js';
 import { baseUrl } from './api.js';
 
@@ -449,6 +449,8 @@ export function rangeText(b, tz) {
 
   return a === z ? a : `${ a }–${ z }`;
 }
+
+export { dayTime };
 
 export const scopeLabel = (T, scope) => scope || T.clusterScope;
 

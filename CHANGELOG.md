@@ -20,6 +20,12 @@
 - 英文：ServiceAccount 所在 namespace 那行改成「Namespace: …」，不再跟上一行「ServiceAccount of a workload」讀成一句；權限覆核的「Existed before tracking or retention」改成「Granted before tracking began, or the record has expired」。
 - V5 總覽表的狀態欄在英文時加寬，「Needs review · medium」不再被切掉。
 
+### 英文介面第二輪（11/06）
+- **沒有執行者只有一種叫法**：權限覆核的「由誰」、V5 的狀態與名稱以前叫「找不到執行者／No actor found／Actor unknown」，現在跟變更地圖一樣叫「未記錄執行者／Actor not recorded」。
+- **跨天的時間寫日期**：收集中斷從前一天開始時，以前寫「13:03–00:45」（看起來像時間倒過來），現在寫「11/5 13:03–00:45」，英文「Nov 5, 13:03–00:45」。變更地圖上方的標籤、稽核發現、V5 事件清單都是。
+- **舊的 v4 頁面**：寫死的全形標點（・、；（）／）改由文字表依語言提供；英文的頁首不再出現「Audit Loupe ／ 」。
+- 自訂資源顯示成複數小寫名稱（例如 `nvadmissioncontrolsecurityrules`）由後端修正（audit-loupe PR #34），介面不用改。
+
 ## 0.7.0（預覽版）
 
 配 Audit Loupe server 的 `/api/behaviors`（[audit-loupe](https://github.com/yansheng133/audit-loupe) `docs/api/behaviors-v0.md`）。後端還沒有這支 API 時，變更地圖會說明這一點並附上舊版（v5）頁面的連結；v5 的頁面還在 `changes-v5`。

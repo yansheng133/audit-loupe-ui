@@ -21,11 +21,12 @@ const ZH = {
   colon:     '：',
   dot:       ' ・ ',
   sevSep:    '・',
+  onDate:    (m, d, t) => `${ m }/${ d } ${ t }`,
   // Width of the overview table's state column: the English labels are longer.
   stateCol:  '118px',
   list:      '、',
   paren:     (x) => `（${ x }）`,
-  noActor:   '找不到執行者',
+  noActor:   '未記錄執行者',
   cascade:   '刪除 namespace 時一併清空',
   groupOf:   (cat) => `${ cat }（群組）`,
   // Reason codes from the backend (API contract v0.2); an unknown code falls back to its text.
@@ -42,7 +43,7 @@ const ZH = {
     'sa-workload':             '工作負載的 ServiceAccount',
     'admin-cert':              '節點上的管理者憑證，看不出是哪個人',
     'rancher-unauthenticated': 'Rancher 未通過驗證的請求，看不出是誰',
-    'no-actor':                '找不到執行者',
+    'no-actor':                '未記錄執行者',
     'system-component':        '叢集內建元件',
     'rancher-provisioning':    'Rancher 內部帳號（叢集佈建）',
     'rancher-local-user':      'Rancher 本機帳號，可能多人共用',
@@ -60,7 +61,7 @@ const ZH = {
   },
   evReason: {
     'first-alert':        () => '當天第一次出現中、高風險警示',
-    'first-unattributed': () => '當天第一次出現找不到執行者的變更',
+    'first-unattributed': () => '當天第一次出現未記錄執行者的變更',
     'collector-stopped':  (c) => `「${ c }」收集停止回報`,
     'collector-resumed':  (c) => `「${ c }」收集恢復回報`,
     'collector-silent':   (c) => `「${ c }」收集沒有回報`,
@@ -86,7 +87,7 @@ const ZH = {
   sev:       { high: '高', medium: '中' },
   stateHint: {
     look:    '當天有中、高風險警示',
-    unclear: '有變化但找不到執行者',
+    unclear: '有變化但沒有記錄執行者',
     blind:   '落在沒有收集的缺口邊緣',
     clear:   '以上都不是',
   },
@@ -194,10 +195,11 @@ const EN = {
   colon:     ': ',
   dot:       ' · ',
   sevSep:    ' · ',
+  onDate:    (m, d, t) => `${ ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1] } ${ d }, ${ t }`,
   stateCol:  '160px',
   list:      ', ',
   paren:     (x) => ` (${ x })`,
-  noActor:   'No actor found',
+  noActor:   'Actor not recorded',
   cascade:   'emptied when the namespace was deleted',
   groupOf:   (cat) => `${ cat } (group)`,
   reason:    {
@@ -213,7 +215,7 @@ const EN = {
     'sa-workload':             'ServiceAccount of a workload',
     'admin-cert':              'Node admin certificate; no individual can be identified',
     'rancher-unauthenticated': 'Request Rancher could not authenticate; actor unknown',
-    'no-actor':                'No actor found',
+    'no-actor':                'Actor not recorded',
     'system-component':        'Built-in cluster component',
     'rancher-provisioning':    'Rancher internal account (cluster provisioning)',
     'rancher-local-user':      'Rancher local account, possibly shared',
@@ -231,7 +233,7 @@ const EN = {
   },
   evReason: {
     'first-alert':        () => 'First medium or high-risk alert this day',
-    'first-unattributed': () => 'First change with no actor found this day',
+    'first-unattributed': () => 'First change with no recorded actor this day',
     'collector-stopped':  (c) => `The ${ c } collector stopped reporting`,
     'collector-resumed':  (c) => `The ${ c } collector resumed reporting`,
     'collector-silent':   (c) => `The ${ c } collector did not report`,
@@ -252,12 +254,12 @@ const EN = {
     since:     (t) => `started ${ t }`,
   },
   states: {
-    look: 'Needs review', unclear: 'Actor unknown', blind: 'Possibly incomplete', clear: 'No issues',
+    look: 'Needs review', unclear: 'Actor not recorded', blind: 'Possibly incomplete', clear: 'No issues',
   },
   sev:       { high: 'high', medium: 'medium' },
   stateHint: {
     look:    'Medium or high risk alerts this day',
-    unclear: 'Changed, but the actor is unknown',
+    unclear: 'Changed, but the actor was not recorded',
     blind:   'Next to a collection gap',
     clear:   'None of the above',
   },
@@ -428,6 +430,23 @@ export function fmtTime(ms, tz) {
   const local = new Date(ms + offsetAt(ms, tz) * 60000);
 
   return `${ pad(local.getUTCHours()) }:${ pad(local.getUTCMinutes()) }`;
+}
+
+// HH:MM for a time on the page's day; a time on another day (a collection gap that began the day
+// before, say) also gets its date, so "13:03–00:45" does not read as running backwards.
+export function dayTime(T, ms, tz, d0, dayMs) {
+  if (ms === null || ms === undefined || d0 === null || d0 === undefined) {
+    return fmtTime(ms, tz);
+  }
+  if (ms === d0 + dayMs) {
+    return '24:00';
+  }
+  if (ms >= d0 && ms < d0 + dayMs) {
+    return fmtTime(ms, tz);
+  }
+  const local = new Date(ms + offsetAt(ms, tz) * 60000);
+
+  return T.onDate(local.getUTCMonth() + 1, local.getUTCDate(), fmtTime(ms, tz));
 }
 
 export function shiftDay(day, n) {

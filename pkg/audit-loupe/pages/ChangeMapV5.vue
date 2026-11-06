@@ -7,7 +7,7 @@ import AlRelationsGraph from '../components/v5/RelationsGraph.vue';
 import AlTimelineBar from '../components/v5/TimelineBar.vue';
 import MultiPick from '../components/v5/MultiPick.vue';
 import {
-  STATES, textsV5, viewFromQuery, queryFromView, apiParams, fetchChangemap, fetchDetail, takePrefetched, dayStartMs, prefetch, fmtTime, clusterLabel
+  STATES, textsV5, viewFromQuery, queryFromView, apiParams, fetchChangemap, fetchDetail, takePrefetched, dayStartMs, shiftDay, prefetch, fmtTime, clusterLabel
 } from '../lib/v5';
 import { backendMessage } from '../lib/api';
 
@@ -70,6 +70,9 @@ export default {
     },
     d0() {
       return dayStartMs(this.v.day, this.tz);
+    },
+    dayLen() {
+      return dayStartMs(shiftDay(this.v.day, 1), this.tz) - this.d0;
     },
     counts() {
       return this.loading && !this.data ? null : this.data?.counts || null;
@@ -523,6 +526,8 @@ export default {
           :loading="loading"
           :tz="tz"
           :range="range"
+          :d0="d0"
+          :day-ms="dayLen"
           @select="select"
         />
       </section>

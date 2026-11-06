@@ -1,7 +1,7 @@
 <script>
 import { fmtTime, clusterLabel } from '../../lib/v5';
 import {
-  trackMarks, mergedGaps, actorLabel, saNamespace, scopeLabel, headline, settingNote, noteOf, overlapsOf
+  trackMarks, mergedGaps, actorLabel, saNamespace, scopeLabel, heading, settingNote, noteOf, overlapsOf
 } from '../../lib/v6';
 
 // Swim lanes over the day (00–24), shared by the activity, identity and scope tabs. Each row is
@@ -80,7 +80,7 @@ export default {
         return null;
       }
 
-      return { left: `${ this.pct(b.segments[b.segments.length - 1].toMs) }%`, text: headline(this.T, b) };
+      return { left: `${ this.pct(b.segments[b.segments.length - 1].toMs) }%`, text: heading(this.T, b) };
     },
     gapStyle(g) {
       return { left: `${ this.pct(g.fromMs) }%`, width: `${ Math.max(0.1, this.pct(g.toMs) - this.pct(g.fromMs)) }%` };

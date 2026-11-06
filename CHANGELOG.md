@@ -25,6 +25,11 @@
 - **跨天的時間寫日期**：收集中斷從前一天開始時，以前寫「13:03–00:45」（看起來像時間倒過來），現在寫「11/5 13:03–00:45」，英文「Nov 5, 13:03–00:45」。變更地圖上方的標籤、稽核發現、V5 事件清單都是。
 - **舊的 v4 頁面**：寫死的全形標點（・、；（）／）改由文字表依語言提供；英文的頁首不再出現「Audit Loupe ／ 」。
 - 自訂資源顯示成複數小寫名稱（例如 `nvadmissioncontrolsecurityrules`）由後端修正（audit-loupe PR #34），介面不用改。
+- 在 Rancher 實際看過之後再修的：
+  - 英文的動作標題大寫開頭（「Deleted Namespace …」「Port-forwarded to Pod …」）；以 namespace 名稱開頭的標題不動。句子中間（摘要那句）仍是小寫。
+  - **後端不存在時，變更地圖誤說「後端太舊、請升級」**：Rancher 回「叢集不存在」的 404 被當成舊版後端。現在只有 Audit Loupe 自己的 404（沒有內容）才算舊版，其他跟另外三頁一樣說「這座叢集沒有 Audit Loupe 後端」。
+  - V5 明細「Actor not recorded modified」改成「Actor not recorded: modified」。
+  - v4：「Collected: Collection gaps (9)」改成「Coverage: 9 collection gaps」；沒有執行者的列改叫 Actor not recorded（中文：未記錄執行者），「last」後面加冒號。
 
 ## 0.7.0（預覽版）
 

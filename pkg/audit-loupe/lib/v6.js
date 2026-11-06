@@ -452,6 +452,18 @@ export function rangeText(b, tz) {
 
 export { dayTime };
 
+// An action title shown on its own: English starts it with a capital ("Deleted Namespace x");
+// inside a sentence ("1 needs review: deleted Namespace x") it stays as titleText gives it.
+export const asHeading = (T, s) => (s && !T.zh ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+// headline() for a heading. Only an action is capitalised: the "where: what" form starts with a
+// namespace name, which is never changed.
+export function heading(T, b) {
+  const t = titleText(T, b.title);
+
+  return t ? asHeading(T, t) : headline(T, b);
+}
+
 export const scopeLabel = (T, scope) => scope || T.clusterScope;
 
 // A ServiceAccount by its own name (its namespace is said next to it); an actor nobody recorded
@@ -518,6 +530,15 @@ export function apiParams(v) {
 }
 
 export const listSig = (v) => apiParams({ ...v, select: '' }).toString();
+
+// A 404 from an Audit Loupe backend too old to have /api/behaviors (its router answers with an
+// empty body), as opposed to Kubernetes' "no such service" (a Status) or Rancher's "no such
+// cluster" ({"Code": {...}, "Message": ...}): those mean there is no backend at all.
+export function isOldBackend(e) {
+  const b = e?.body;
+
+  return e?.status === 404 && !(b && (b.kind === 'Status' || b.Code || b.type === 'error'));
+}
 
 export function fetchBehaviours(params) {
   return getJsonV6('/api/behaviors', params);

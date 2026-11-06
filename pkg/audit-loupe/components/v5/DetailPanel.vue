@@ -310,7 +310,7 @@ export default {
             <span class="num t">{{ fmt(o.t) }}</span>
             <div>
               <div>
-                <b :title="o.who">{{ o.who ? shortWho(o.who) : T.noActor }}</b> {{ o.verb }}
+                <b :title="o.who">{{ o.who ? shortWho(o.who) : T.noActor }}</b>{{ o.who ? ' ' : T.colon }}{{ o.verb }}
                 <span
                   v-if="o.cascade"
                   class="muted"

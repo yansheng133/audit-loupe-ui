@@ -10,7 +10,7 @@ import { fmtTime, todayIso, clusterLabel, dayStartMs } from '../lib/v5';
 import { textsV6, savedLang, saveLang } from '../lib/v6text';
 import {
   TABS, normalize, viewFromQuery, queryFromView, apiParams, listSig, fetchBehaviours, fetchBehaviourDetail, prefetch, takePrefetched,
-  activityRows, actorsOpen, inRange, flipActor, behaviourSpan, summaryChips, headline, defaultIdentity, defaultPlace, actorLabel, dayTime
+  activityRows, actorsOpen, inRange, flipActor, behaviourSpan, summaryChips, headline, defaultIdentity, defaultPlace, actorLabel, dayTime, isOldBackend
 } from '../lib/v6';
 import { backendMessage } from '../lib/api';
 import { PRODUCT, BLANK_CLUSTER, routeName } from '../product';
@@ -274,9 +274,7 @@ export default {
           return;
         }
         console.error('audit-loupe: behaviors failed', e); // eslint-disable-line no-console
-        // A 404 from the backend itself (not Kubernetes' "no such service") means an older
-        // backend without /api/behaviors.
-        this.old = e.status === 404 && e.body?.kind !== 'Status';
+        this.old = isOldBackend(e);
         this.missing = this.old ? this.T.oldBackend : (backendMessage(this.T, e) || false);
         if (!this.missing) {
           this.error = `${ this.T.loadFailed }: ${ e.message }`;

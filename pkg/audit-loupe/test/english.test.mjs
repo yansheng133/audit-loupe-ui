@@ -128,3 +128,28 @@ test('times on another day carry their date; one name for a missing actor', asyn
   assert.equal(v5zh.noActor, zh.groups.unrecorded);
   assert.equal(texts(store('zh-hant')).access.unknown, zh.groups.unrecorded);
 });
+
+test('a title on its own starts with a capital in English only', async() => {
+  const { asHeading } = await import('../lib/v6.js');
+
+  assert.equal(asHeading(en, 'deleted Namespace shop'), 'Deleted Namespace shop');
+  assert.equal(asHeading(zh, '刪除 Namespace shop'), '刪除 Namespace shop');
+  assert.equal(asHeading(en, ''), '');
+});
+
+test('a heading never changes a namespace name', async() => {
+  const { heading } = await import('../lib/v6.js');
+  const b = { scope: 'suse-observability-agent', title: null, what: [{ verb: 'modified', kind: 'ConfigMap', count: 2 }] };
+
+  assert.match(heading(en, b), /^suse-observability-agent: /);
+  assert.match(heading(en, { ...b, title: { verb: 'delete', kind: 'Namespace', name: 'shop', code: 200 } }), /^Deleted Namespace shop/);
+});
+
+test('only an Audit Loupe 404 means an old backend; Kubernetes or Rancher 404s mean none', async() => {
+  const { isOldBackend } = await import('../lib/v6.js');
+
+  assert.equal(isOldBackend({ status: 404, body: null }), true);
+  assert.equal(isOldBackend({ status: 404, body: { kind: 'Status', code: 404 } }), false);
+  assert.equal(isOldBackend({ status: 404, body: { Code: { Code: 'NotFound', Status: 404 }, Message: 'clusters.management.cattle.io "x" not found' } }), false);
+  assert.equal(isOldBackend({ status: 500, body: null }), false);
+});

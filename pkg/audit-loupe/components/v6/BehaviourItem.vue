@@ -1,7 +1,7 @@
 <script>
 import { clusterLabel } from '../../lib/v5';
 import {
-  rangeText, titleText, whatText, actorLabel, scopeLabel, tagTexts
+  rangeText, titleText, asHeading, whatText, actorLabel, scopeLabel, tagTexts
 } from '../../lib/v6';
 
 // One behaviour in a list (findings, identities): time, title (its most serious operation for
@@ -21,7 +21,7 @@ export default {
       return this.b.tier === 'look' || this.b.tier === 'notable';
     },
     head() {
-      return this.flagged ? (titleText(this.T, this.b.title) || this.T.tbc) : '';
+      return this.flagged ? (asHeading(this.T, titleText(this.T, this.b.title)) || this.T.tbc) : '';
     },
     time() {
       return rangeText(this.b, this.tz) || this.T.tbc;
